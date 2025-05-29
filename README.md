@@ -38,6 +38,7 @@ Melhorias na aba de arbitragem com análise neural avançada e dados de múltipl
 
 - **Dashboard Completo**: Visualização de dados em tempo real da blockchain Bitcoin
 - **Sistema Neural 24/7**: Aprendizado contínuo para insights cada vez mais precisos
+- **🚀 QuickTrade Monitor**: Sistema de intermediação multi-DEX com coleta automática de taxas de 0.05%
 - **Análise de Mineração**: Estatísticas detalhadas sobre pools, hashrate e descentralização
 - **Ordinals Explorer**: Explore e analise coleções de Ordinals com previsões de mercado
 - **Runes Tracker**: Acompanhe tokens Runes e suas métricas com análise neural
@@ -48,6 +49,25 @@ Melhorias na aba de arbitragem com análise neural avançada e dados de múltipl
 - **Card ID para NFT Holders**: Identificação e agradecimento aos detentores de coleções
 
 ## 📊 Componentes Principais
+
+### 🚀 QuickTrade Monitor (Novo!)
+
+Sistema de intermediação inteligente para DEXs que gera revenue automático:
+
+- **Multi-Chain**: Suporte a 8 redes (Ethereum, Arbitrum, Optimism, Polygon, Base, Avalanche, BSC, Solana)
+- **22+ DEXs Integradas**: Uniswap, SushiSwap, Jupiter, Orca, Raydium, e mais
+- **Taxa de Serviço**: 0.05% sobre cada transação processada
+- **Coleta Automática**: Revenue vai direto para suas carteiras configuradas
+- **Conexão com Carteiras Reais**: MetaMask, Phantom, e outras
+- **Dashboard de Revenue**: Monitoramento em tempo real dos ganhos
+- **API Completa**: Análise, processamento e monitoramento de trades
+
+**Potencial de Revenue:**
+- Conservador (100K/dia): $18.250/ano
+- Moderado (1M/dia): $182.500/ano  
+- Otimista (10M/dia): $1.825.000/ano
+
+[📖 Documentação completa do QuickTrade](./quicktrade-monitor/README.md)
 
 ### Sistema de Aprendizado Neural 24/7 com Armazenamento em Nuvem
 
