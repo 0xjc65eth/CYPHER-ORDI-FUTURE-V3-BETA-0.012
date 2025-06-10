@@ -6,7 +6,8 @@ import {
   RiBrainLine, RiLightbulbFlashLine, RiTimeLine, RiShieldCheckLine, 
   RiExchangeLine, RiLineChartLine, RiBarChartBoxLine, RiPulseLine,
   RiAlertLine, RiRefreshLine, RiDatabase2Line, RiArrowRightUpLine,
-  RiArrowRightDownLine, RiArrowRightLine, RiExternalLinkLine
+  RiArrowRightDownLine, RiArrowRightLine, RiExternalLinkLine,
+  RiPercentLine
 } from 'react-icons/ri'
 import { neuralLearningService } from '@/services/neural-learning-service'
 import { runesArbitrageService } from '@/services/runes-arbitrage-service'

@@ -4,6 +4,7 @@ import { DashboardCard } from '@/components/dashboard-card'
 import { RiBarChartBoxLine, RiLineChartLine, RiStockLine, RiRefreshLine } from 'react-icons/ri'
 import { useEffect, useState } from 'react'
 import { useMarketData } from '@/hooks/useMarketData'
+import { useSmartMoneyConcepts } from '@/hooks/ai/useSmartMoneyConcepts'
 
 export function SmcAnalysisCard() {
   const marketData = useMarketData()
@@ -13,6 +14,23 @@ export function SmcAnalysisCard() {
     orderBlocks: [],
     fairValueGaps: [],
     marketStructure: 'Analyzing...'
+  })
+
+  // Hook SMC com dados reais da CoinMarketCap usando API key
+  const {
+    analysis: smcAnalysis,
+    isLoading: smcLoading,
+    error: smcError,
+    lastUpdate,
+    confidence,
+    bias,
+    keyLevels,
+    updateAnalysis
+  } = useSmartMoneyConcepts({
+    symbol: 'BTC',
+    timeframe: '1h',
+    autoUpdate: true,
+    updateInterval: 15000 // 15 segundos para dados mais atualizados
   })
 
   useEffect(() => {

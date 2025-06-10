@@ -1,334 +1,213 @@
 /**
- * Cache Service
- * 
- * This service provides caching functionality for the application.
- * It includes methods for storing, retrieving, and invalidating cached data.
+ * CYPHER ORDI FUTURE v3.1.0 - Cache Service
+ * Sistema de cache avançado para aplicação
  */
 
-import { loggerService } from './logger';
+import { devLogger } from './logger';
 
-// Cache entry interface
 interface CacheEntry<T> {
-  value: T;
-  expiresAt: number;
+  data: T;
+  timestamp: number;
+  ttl: number;
 }
 
-// Cache configuration interface
-export interface CacheConfig {
-  ttl: number; // Time to live in milliseconds
-  staleWhileRevalidate?: boolean; // Whether to return stale data while revalidating
-}
+class MemoryCache {
+  private cache = new Map<string, CacheEntry<any>>();
+  private maxSize = 1000; // Máximo de entradas no cache
 
-// Predefined cache configurations
-export const cacheConfigs = {
-  short: { ttl: 60 * 1000 }, // 1 minute
-  medium: { ttl: 5 * 60 * 1000 }, // 5 minutes
-  long: { ttl: 30 * 60 * 1000 }, // 30 minutes
-  hour: { ttl: 60 * 60 * 1000 }, // 1 hour
-  day: { ttl: 24 * 60 * 60 * 1000 }, // 1 day
-  week: { ttl: 7 * 24 * 60 * 60 * 1000 }, // 1 week
-  month: { ttl: 30 * 24 * 60 * 60 * 1000 }, // 30 days
-  permanent: { ttl: Infinity }, // Never expires
-  
-  // Custom configurations for specific data types
-  portfolioData: { ttl: 5 * 60 * 1000 }, // 5 minutes
-  neuralInsights: { ttl: 15 * 60 * 1000 } // 15 minutes
-};
+  set<T>(key: string, data: T, ttlSeconds: number): void {
+    // Limpar cache se estiver muito grande
+    if (this.cache.size >= this.maxSize) {
+      this.cleanup();
+    }
 
-// Cache service class
-class CacheService {
-  private cache: Map<string, CacheEntry<any>> = new Map();
-  private defaultConfig: CacheConfig = cacheConfigs.medium;
-  private maxSize: number = 1000; // Maximum number of entries
-  private hits: number = 0;
-  private misses: number = 0;
-  
-  constructor() {
-    loggerService.info('Cache service initialized');
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+      ttl: ttlSeconds * 1000
+    };
+
+    this.cache.set(key, entry);
+    devLogger.log('Cache', `Set: ${key} (TTL: ${ttlSeconds}s)`);
   }
-  
-  /**
-   * Set the default cache configuration
-   */
-  public setDefaultConfig(config: CacheConfig): void {
-    this.defaultConfig = config;
-  }
-  
-  /**
-   * Get the default cache configuration
-   */
-  public getDefaultConfig(): CacheConfig {
-    return { ...this.defaultConfig };
-  }
-  
-  /**
-   * Set the maximum cache size
-   */
-  public setMaxSize(size: number): void {
-    this.maxSize = size;
-    this.trimCache();
-  }
-  
-  /**
-   * Get the maximum cache size
-   */
-  public getMaxSize(): number {
-    return this.maxSize;
-  }
-  
-  /**
-   * Get cache statistics
-   */
-  public getStats(): { size: number; hits: number; misses: number; hitRate: number } {
-    const total = this.hits + this.misses;
-    const hitRate = total > 0 ? this.hits / total : 0;
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
     
+    if (!entry) {
+      return null;
+    }
+
+    // Verificar se expirou
+    const now = Date.now();
+    if (now - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      devLogger.log('Cache', `Expired: ${key}`);
+      return null;
+    }
+
+    devLogger.log('Cache', `Hit: ${key}`);
+    return entry.data as T;
+  }
+
+  delete(key: string): boolean {
+    const deleted = this.cache.delete(key);
+    if (deleted) {
+      devLogger.log('Cache', `Deleted: ${key}`);
+    }
+    return deleted;
+  }
+
+  clear(): void {
+    this.cache.clear();
+    devLogger.log('Cache', 'Cleared all entries');
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    let cleaned = 0;
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (now - entry.timestamp > entry.ttl) {
+        this.cache.delete(key);
+        cleaned++;
+      }
+    }
+
+    // Se ainda estiver cheio, remover os mais antigos
+    if (this.cache.size >= this.maxSize) {
+      const entries = Array.from(this.cache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      
+      const toRemove = Math.floor(this.maxSize * 0.2); // Remove 20%
+      for (let i = 0; i < toRemove && i < entries.length; i++) {
+        this.cache.delete(entries[i][0]);
+        cleaned++;
+      }
+    }
+
+    if (cleaned > 0) {
+      devLogger.log('Cache', `Cleanup: removed ${cleaned} entries`);
+    }
+  }
+
+  getStats() {
     return {
       size: this.cache.size,
-      hits: this.hits,
-      misses: this.misses,
-      hitRate
+      maxSize: this.maxSize
     };
-  }
-  
-  /**
-   * Reset cache statistics
-   */
-  public resetStats(): void {
-    this.hits = 0;
-    this.misses = 0;
-  }
-  
-  /**
-   * Get a value from the cache
-   * If the value is not in the cache or has expired, the factory function is called to get the value
-   */
-  public async get<T>(
-    key: string,
-    factory: () => Promise<T>,
-    config: CacheConfig = this.defaultConfig
-  ): Promise<T> {
-    // Check if the value is in the cache and not expired
-    const entry = this.cache.get(key);
-    const now = Date.now();
-    
-    if (entry && entry.expiresAt > now) {
-      // Cache hit
-      this.hits++;
-      loggerService.debug(`Cache hit for key: ${key}`);
-      return entry.value as T;
-    }
-    
-    // Cache miss
-    this.misses++;
-    loggerService.debug(`Cache miss for key: ${key}`);
-    
-    try {
-      // Get the value from the factory function
-      const value = await factory();
-      
-      // Store the value in the cache
-      this.set(key, value, config);
-      
-      return value;
-    } catch (error) {
-      loggerService.error(`Error getting value for cache key: ${key}`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Set a value in the cache
-   */
-  public set<T>(key: string, value: T, config: CacheConfig = this.defaultConfig): void {
-    const now = Date.now();
-    const expiresAt = config.ttl === Infinity ? Infinity : now + config.ttl;
-    
-    // Store the value in the cache
-    this.cache.set(key, { value, expiresAt });
-    
-    // Trim the cache if it's too large
-    if (this.cache.size > this.maxSize) {
-      this.trimCache();
-    }
-    
-    loggerService.debug(`Cache set for key: ${key}`);
-  }
-  
-  /**
-   * Check if a key exists in the cache and is not expired
-   */
-  public has(key: string): boolean {
-    const entry = this.cache.get(key);
-    const now = Date.now();
-    
-    return !!entry && entry.expiresAt > now;
-  }
-  
-  /**
-   * Delete a value from the cache
-   */
-  public delete(key: string): boolean {
-    loggerService.debug(`Cache delete for key: ${key}`);
-    return this.cache.delete(key);
-  }
-  
-  /**
-   * Clear all values from the cache
-   */
-  public clear(): void {
-    this.cache.clear();
-    loggerService.info('Cache cleared');
-  }
-  
-  /**
-   * Get all keys in the cache
-   */
-  public keys(): string[] {
-    return Array.from(this.cache.keys());
-  }
-  
-  /**
-   * Get the number of entries in the cache
-   */
-  public size(): number {
-    return this.cache.size;
-  }
-  
-  /**
-   * Trim the cache to the maximum size
-   * Removes the oldest entries first
-   */
-  private trimCache(): void {
-    if (this.cache.size <= this.maxSize) {
-      return;
-    }
-    
-    // Get all keys sorted by expiration time (oldest first)
-    const now = Date.now();
-    const keys = Array.from(this.cache.entries())
-      .filter(([_, entry]) => entry.expiresAt !== Infinity) // Don't remove permanent entries
-      .sort(([_, a], [__, b]) => a.expiresAt - b.expiresAt)
-      .map(([key, _]) => key);
-    
-    // Calculate how many entries to remove
-    const removeCount = Math.max(0, this.cache.size - this.maxSize);
-    
-    // Remove the oldest entries
-    for (let i = 0; i < removeCount && i < keys.length; i++) {
-      this.cache.delete(keys[i]);
-    }
-    
-    loggerService.debug(`Trimmed cache, removed ${removeCount} entries`);
-  }
-  
-  /**
-   * Remove expired entries from the cache
-   */
-  public removeExpired(): number {
-    const now = Date.now();
-    let removedCount = 0;
-    
-    // Convert to array before iterating to avoid TypeScript issues
-    Array.from(this.cache.entries()).forEach(([key, entry]) => {
-      if (entry.expiresAt !== Infinity && entry.expiresAt <= now) {
-        this.cache.delete(key);
-        removedCount++;
-      }
-    });
-    
-    if (removedCount > 0) {
-      loggerService.debug(`Removed ${removedCount} expired cache entries`);
-    }
-    
-    return removedCount;
-  }
-  
-  /**
-   * Start automatic cache cleanup
-   */
-  public startCleanupInterval(intervalMs: number = 60000): NodeJS.Timeout {
-    loggerService.info(`Starting cache cleanup interval (${intervalMs}ms)`);
-    
-    return setInterval(() => {
-      this.removeExpired();
-    }, intervalMs);
-  }
-  
-  /**
-   * Invalidate cache entries by prefix
-   */
-  public invalidateByPrefix(prefix: string): number {
-    let removedCount = 0;
-    
-    // Convert to array before iterating to avoid TypeScript issues
-    Array.from(this.cache.keys()).forEach(key => {
-      if (key.startsWith(prefix)) {
-        this.cache.delete(key);
-        removedCount++;
-      }
-    });
-    
-    if (removedCount > 0) {
-      loggerService.debug(`Invalidated ${removedCount} cache entries with prefix: ${prefix}`);
-    }
-    
-    return removedCount;
-  }
-  
-  /**
-   * Invalidate cache entries by pattern
-   */
-  public invalidateByPattern(pattern: RegExp): number {
-    let removedCount = 0;
-    
-    // Convert to array before iterating to avoid TypeScript issues
-    Array.from(this.cache.keys()).forEach(key => {
-      if (pattern.test(key)) {
-        this.cache.delete(key);
-        removedCount++;
-      }
-    });
-    
-    if (removedCount > 0) {
-      loggerService.debug(`Invalidated ${removedCount} cache entries with pattern: ${pattern}`);
-    }
-    
-    return removedCount;
-  }
-  
-  /**
-   * Get a value from the cache without using the factory function
-   */
-  public getValue<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    const now = Date.now();
-    
-    if (entry && entry.expiresAt > now) {
-      return entry.value as T;
-    }
-    
-    return null;
-  }
-  
-  /**
-   * Set a value in the cache with a specific expiration time
-   */
-  public setWithExpiry<T>(key: string, value: T, expiryMs: number): void {
-    const now = Date.now();
-    const expiresAt = now + expiryMs;
-    
-    // Store the value in the cache
-    this.cache.set(key, { value, expiresAt });
-    
-    // Trim the cache if it's too large
-    if (this.cache.size > this.maxSize) {
-      this.trimCache();
-    }
-    
-    loggerService.debug(`Cache set for key: ${key} with custom expiry`);
   }
 }
 
-// Export singleton instance
+// Fallback Provider Interface
+interface FallbackProvider<T> {
+  name: string;
+  endpoint: string;
+  fetchFn: () => Promise<T>;
+}
+
+class CacheService {
+  private cache = new MemoryCache();
+
+  async get<T>(key: string): Promise<T | null> {
+    return this.cache.get<T>(key);
+  }
+
+  async set<T>(key: string, data: T, ttlSeconds: number): Promise<void> {
+    this.cache.set(key, data, ttlSeconds);
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return this.cache.delete(key);
+  }
+
+  async clear(): Promise<void> {
+    this.cache.clear();
+  }
+
+  async clearPattern(pattern: string): Promise<void> {
+    const keys = Array.from(this.cache.cache.keys());
+    const regex = new RegExp(pattern.replace('*', '.*'));
+    
+    for (const key of keys) {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Busca dados com sistema de fallback inteligente
+   */
+  async getWithFallback<T>(
+    key: string,
+    providers: FallbackProvider<T>[],
+    ttlSeconds: number
+  ): Promise<T> {
+    // Tentar cache primeiro
+    const cached = await this.get<T>(key);
+    if (cached) {
+      return cached;
+    }
+
+    // Ordenar providers por prioridade (pode ser customizado)
+    const sortedProviders = [...providers];
+
+    let lastError: Error | null = null;
+
+    for (const provider of sortedProviders) {
+      try {
+        devLogger.log('API', `Trying provider: ${provider.name} for ${provider.endpoint}`);
+        
+        const data = await provider.fetchFn();
+        
+        // Cache o resultado
+        await this.set(key, data, ttlSeconds);
+        
+        devLogger.log('API', `Success with provider: ${provider.name}`);
+        return data;
+
+      } catch (error) {
+        lastError = error as Error;
+        devLogger.error(lastError, `Provider ${provider.name} failed`);
+        continue;
+      }
+    }
+
+    // Todos os providers falharam
+    throw lastError || new Error('All providers failed');
+  }
+
+  getStats() {
+    return this.cache.getStats();
+  }
+}
+
+// Singleton instance
 export const cacheService = new CacheService();
+
+// Export cache TTL and keys configurations
+export const cacheTTL = {
+  BITCOIN_PRICE: 30, // 30 seconds
+  MARKET_DATA: 60, // 1 minute
+  ORDINALS_DATA: 300, // 5 minutes
+  RUNES_DATA: 300, // 5 minutes
+  MINING_DATA: 600, // 10 minutes
+  NEWS_DATA: 1800, // 30 minutes
+  STATIC_DATA: 3600, // 1 hour
+  LONG_TERM: 86400, // 24 hours
+};
+
+export const cacheKeys = {
+  BITCOIN_PRICE: 'bitcoin:price',
+  MARKET_DATA: 'market:data',
+  ORDINALS_COLLECTIONS: 'ordinals:collections',
+  ORDINALS_ACTIVITY: 'ordinals:activity',
+  RUNES_LIST: 'runes:list',
+  RUNES_ACTIVITY: 'runes:activity',
+  MINING_POOLS: 'mining:pools',
+  MINING_DIFFICULTY: 'mining:difficulty',
+  NEWS_FEED: 'news:feed',
+  NETWORK_HEALTH: 'network:health',
+  MEMPOOL_DATA: 'mempool:data',
+};

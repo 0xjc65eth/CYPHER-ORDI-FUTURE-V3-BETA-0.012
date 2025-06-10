@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, Title, Text, Button } from '@tremor/react'
-import { RiExchangeLine, RiTimeLine, RiShieldCheckLine, RiMoneyDollarCircleLine, RiPercentLine, RiExternalLinkLine } from 'react-icons/ri'
+import { RiExchangeLine, RiTimeLine, RiShieldCheckLine, RiMoneyDollarCircleLine, RiPercentLine, RiExternalLinkLine, RiInformationLine, RiAlertLine } from 'react-icons/ri'
 import { getCryptoPrices } from '@/services/coinmarketcap-service'
 
 // Interface para oportunidades de arbitragem

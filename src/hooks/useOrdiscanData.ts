@@ -7,10 +7,10 @@ export function useOrdiscanData(endpoint: string) {
   return useQuery({
     queryKey: ['ordiscan', endpoint],
     queryFn: () => fetchOrdiscanData(endpoint),
-    refetchInterval: 600000, // Refetch every 10 minutes
+    refetchInterval: 60000, // Refetch every minute
     retry: 3, // Retry failed requests 3 times
-    staleTime: 300000, // Consider data stale after 5 minutes
+    staleTime: 30000, // Consider data stale after 30 seconds
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnReconnect: true, // Refetch when internet connection is restored
   });
-}
+} 

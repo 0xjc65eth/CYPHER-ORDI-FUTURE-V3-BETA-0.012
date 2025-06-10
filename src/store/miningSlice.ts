@@ -1,31 +1,45 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { MiningState } from '@/types/store'
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+
+interface MiningState {
+  hashRate: number
+  difficulty: number
+  nextAdjustment: number
+  blockHeight: number
+  avgBlockTime: number
+  isLoading: boolean
+  error: string | null
+  lastUpdated: string | null
+}
 
 const initialState: MiningState = {
   hashRate: 0,
   difficulty: 0,
-  blockTime: 0,
-  lastUpdated: new Date().toISOString()
+  nextAdjustment: 0,
+  blockHeight: 0,
+  avgBlockTime: 600,
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
 }
 
 const miningSlice = createSlice({
-  name: 'mining',
+  name: "mining",
   initialState,
   reducers: {
-    setHashRate: (state, action: PayloadAction<number>) => {
-      state.hashRate = action.payload
+    setMiningData: (state, action: PayloadAction<Partial<MiningState>>) => {
+      Object.assign(state, action.payload)
+      state.lastUpdated = new Date().toISOString()
+      state.error = null
     },
-    setDifficulty: (state, action: PayloadAction<number>) => {
-      state.difficulty = action.payload
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload
     },
-    setBlockTime: (state, action: PayloadAction<number>) => {
-      state.blockTime = action.payload
-    },
-    setMiningData: (state, action: PayloadAction<MiningState>) => {
-      return { ...state, ...action.payload }
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload
+      state.isLoading = false
     },
   },
 })
 
-export const { setHashRate, setDifficulty, setBlockTime, setMiningData } = miningSlice.actions
-export default miningSlice.reducer 
+export const { setMiningData, setLoading, setError } = miningSlice.actions
+export default miningSlice.reducer

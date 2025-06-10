@@ -1,748 +1,399 @@
-'use client'
-import { Header } from '@/components/header'
-import { DashboardCard } from '@/components/dashboard-card'
-import { RunesStatsCard } from '@/components/runes/runes-stats-card'
-import { BitcoinPriceCard } from '@/components/bitcoin-price-card'
-import { useTopRunes } from '@/hooks/useTopRunes'
-import { useMemo, useState } from 'react'
+'use client';
+
+import { useState, useEffect } from 'react';
+import { TopNavLayout } from '@/components/layout/TopNavLayout';
+import { RunesTradingTerminal } from '@/components/runes/professional/RunesTradingTerminal';
+import { RunesAnalytics } from '@/components/runes/professional/RunesAnalytics';
+import { MintingCalculator } from '@/components/runes/professional/MintingCalculator';
+import { LiquidityAnalysis } from '@/components/runes/professional/LiquidityAnalysis';
+import { RunesPortfolio } from '@/components/runes/professional/RunesPortfolio';
+import { RunesPriceMatrix } from '@/components/runes/widgets/RunesPriceMatrix';
+import { MintingActivity } from '@/components/runes/widgets/MintingActivity';
+import { TopRunesMovers } from '@/components/runes/widgets/TopRunesMovers';
+import { RunesHeatmap } from '@/components/runes/widgets/RunesHeatmap';
+import { MarketCapRanking } from '@/components/runes/widgets/MarketCapRanking';
+import { RunesSystemV2 } from '@/components/runes/RunesSystemV2';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { NoSSRWrapper } from '@/components/ui/NoSSRWrapper';
+import { MintPlatformGrid, MintPlatform } from '@/components/ui/MintPlatform';
+import { bitcoinEcosystemService, type BitcoinEcosystemStats, type RuneData } from '@/services/BitcoinEcosystemService';
+import { Activity, Calculator, BarChart3, Wallet, TrendingUp, Droplets, Zap, Layers, DollarSign, Users } from 'lucide-react';
 
 export default function RunesPage() {
-  const [selectedRune, setSelectedRune] = useState<string | null>(null);
-  const { data, isLoading, error } = useTopRunes()
-
-  // Usar os dados diretamente da API
-  const tableData = useMemo(() => {
-    // Se os dados já estiverem formatados corretamente, usá-los diretamente
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map(rune => {
-        // Verificar se o objeto rune existe
-        if (!rune) {
-          console.error("Rune object is undefined");
-          return null;
-        }
-
-        // Garantir que todos os campos necessários existam
-        const price = typeof rune.price === 'number' ? rune.price : 0;
-
-        return {
-          ...rune,
-          rank: rune.rank || 0,
-          name: rune.name || 'Unknown',
-          formatted_name: rune.formatted_name || rune.name || 'Unknown',
-          price: price,
-          price_usd: rune.price_usd || (price * 65000),
-          market_cap: rune.market_cap || 0,
-          volume_24h: rune.volume_24h || 0,
-          buy_price: rune.buy_price || (price * 0.98).toFixed(6),
-          sell_price: rune.sell_price || (price * 1.02).toFixed(6),
-          holders: rune.holders || 0,
-          liquidity: rune.market_cap ? Math.floor(rune.market_cap * 0.2) : 0,
-          riskReturn: rune.riskReturn || rune.risk_return || "0.00",
-          arbitrage: rune.arbitrage || 'Não',
-          exchanges: rune.exchanges || [
-            {
-              name: "Unisat",
-              url: `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}`,
-              price: price * 1.02,
-              buyUrl: `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}/buy`,
-              sellUrl: `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}/sell`
-            },
-            {
-              name: "OKX",
-              url: `https://www.okx.com/web3/marketplace/ordinals/runes/${(rune.name || 'unknown').toLowerCase()}`,
-              price: price * 0.98,
-              buyUrl: `https://www.okx.com/web3/marketplace/ordinals/runes/${(rune.name || 'unknown').toLowerCase()}/buy`,
-              sellUrl: `https://www.okx.com/web3/marketplace/ordinals/runes/${(rune.name || 'unknown').toLowerCase()}/sell`
-            }
-          ],
-          supply: rune.supply || 0,
-          change_24h: typeof rune.change_24h === 'number' ? rune.change_24h : 0,
-          verified: rune.verified !== undefined ? rune.verified : true,
-          marketplaces: rune.marketplaces || [
-            { name: 'unisat.io', url: `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}` },
-            { name: 'magiceden.io', url: `https://magiceden.io/ordinals/runes/${(rune.name || 'unknown').toLowerCase()}` }
-          ],
-          runeLink: rune.runeLink || `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}`,
-          buyLink: rune.buyLink || `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}/buy`,
-          sellLink: rune.sellLink || `https://unisat.io/market/rune/${(rune.name || 'unknown').toLowerCase()}/sell`,
-          detailsLink: rune.detailsLink || `https://runealpha.xyz/rune/${(rune.name || 'unknown').toLowerCase()}`,
-          txLink: rune.txLink || `https://mempool.space/rune/${(rune.name || 'unknown').toLowerCase()}`,
-          explorerLink: rune.explorerLink || `https://runealpha.xyz/rune/${(rune.name || 'unknown').toLowerCase()}`
-        };
-      }).filter(Boolean); // Remover itens nulos
-    }
-
-    // Caso contrário, usar dados de fallback
-    console.error("Dados de runas inválidos:", data);
-
-    // Dados de fallback para garantir que sempre tenhamos algo para exibir
-    const fallbackRunes = [
-      {
-        rank: 1,
-        name: 'ORDI',
-        formatted_name: 'ORDI',
-        price: 0.000125,
-        price_usd: 7.5,
-        volume_24h: 245890000,
-        market_cap: 1245678900,
-        holders: 24567,
-        supply: 21000000,
-        buy_price: '0.000123',
-        sell_price: '0.000128',
-        change_24h: 5.2,
-        liquidity: 249135780,
-        riskReturn: '2.50',
-        arbitrage: 'Sim 4.2%',
-        verified: true,
-        marketplaces: [
-          { name: 'unisat.io', url: 'https://unisat.io/market/rune/ordi' },
-          { name: 'magiceden.io', url: 'https://magiceden.io/ordinals/runes/ordi' }
-        ],
-        exchanges: [
-          {
-            name: 'Unisat',
-            url: 'https://unisat.io/market/rune/ordi',
-            price: 0.000128,
-            buyUrl: 'https://unisat.io/market/rune/ordi/buy',
-            sellUrl: 'https://unisat.io/market/rune/ordi/sell'
-          },
-          {
-            name: 'OKX',
-            url: 'https://www.okx.com/web3/marketplace/ordinals/runes/ordi',
-            price: 0.000123,
-            buyUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/ordi/buy',
-            sellUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/ordi/sell'
-          }
-        ],
-        runeLink: 'https://unisat.io/market/rune/ordi'
-      },
-      {
-        rank: 2,
-        name: 'SATS',
-        formatted_name: 'SATS',
-        price: 0.0000875,
-        price_usd: 5.25,
-        volume_24h: 187300000,
-        market_cap: 945678900,
-        holders: 18932,
-        supply: 21000000,
-        buy_price: '0.000086',
-        sell_price: '0.000089',
-        change_24h: 3.8,
-        liquidity: 189135780,
-        riskReturn: '2.10',
-        arbitrage: 'Sim 3.5%',
-        verified: true,
-        marketplaces: [
-          { name: 'unisat.io', url: 'https://unisat.io/market/rune/sats' },
-          { name: 'magiceden.io', url: 'https://magiceden.io/ordinals/runes/sats' }
-        ],
-        exchanges: [
-          {
-            name: 'Unisat',
-            url: 'https://unisat.io/market/rune/sats',
-            price: 0.000089,
-            buyUrl: 'https://unisat.io/market/rune/sats/buy',
-            sellUrl: 'https://unisat.io/market/rune/sats/sell'
-          },
-          {
-            name: 'OKX',
-            url: 'https://www.okx.com/web3/marketplace/ordinals/runes/sats',
-            price: 0.000086,
-            buyUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/sats/buy',
-            sellUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/sats/sell'
-          }
-        ],
-        runeLink: 'https://unisat.io/market/rune/sats'
-      },
-      {
-        rank: 3,
-        name: 'MEME',
-        formatted_name: 'MEME',
-        price: 0.000052,
-        price_usd: 3.12,
-        volume_24h: 142600000,
-        market_cap: 745678900,
-        holders: 12845,
-        supply: 21000000,
-        buy_price: '0.000051',
-        sell_price: '0.000053',
-        change_24h: 7.4,
-        liquidity: 149135780,
-        riskReturn: '1.80',
-        arbitrage: 'Não',
-        verified: true,
-        marketplaces: [
-          { name: 'unisat.io', url: 'https://unisat.io/market/rune/meme' },
-          { name: 'magiceden.io', url: 'https://magiceden.io/ordinals/runes/meme' }
-        ],
-        exchanges: [
-          {
-            name: 'Unisat',
-            url: 'https://unisat.io/market/rune/meme',
-            price: 0.000053,
-            buyUrl: 'https://unisat.io/market/rune/meme/buy',
-            sellUrl: 'https://unisat.io/market/rune/meme/sell'
-          },
-          {
-            name: 'OKX',
-            url: 'https://www.okx.com/web3/marketplace/ordinals/runes/meme',
-            price: 0.000051,
-            buyUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/meme/buy',
-            sellUrl: 'https://www.okx.com/web3/marketplace/ordinals/runes/meme/sell'
-          }
-        ],
-        runeLink: 'https://unisat.io/market/rune/meme'
+  const [ecosystemStats, setEcosystemStats] = useState<BitcoinEcosystemStats | null>(null);
+  const [runesData, setRunesData] = useState<RuneData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadRunesData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('📊 Loading Runes ecosystem data...');
+        
+        const [stats, runes] = await Promise.all([
+          bitcoinEcosystemService.getEcosystemStats(),
+          bitcoinEcosystemService.getRunesData()
+        ]);
+        
+        setEcosystemStats(stats);
+        setRunesData(runes);
+        
+        console.log('✅ Loaded Runes data:', { stats, runesCount: runes.length });
+      } catch (error) {
+        console.error('❌ Error loading Runes data:', error);
+      } finally {
+        setIsLoading(false);
       }
-    ];
-
-    // Adicionar mais runas para ter pelo menos 10
-    const runeNames = ['PEPE', 'DOGE', 'WOJAK', 'SHIB', 'BITCOIN', 'BASED', 'MOON'];
-
-    for (let i = 0; i < runeNames.length; i++) {
-      const name = runeNames[i];
-      const rank = i + 4;
-      const popularity = 1 - (rank / 10);
-
-      fallbackRunes.push({
-        rank: rank,
-        name: name,
-        formatted_name: name,
-        price: 0.00001 + (0.0001 * popularity),
-        price_usd: (0.00001 + (0.0001 * popularity)) * 65000,
-        volume_24h: 10000 + (1000000 * popularity),
-        market_cap: (10000 + (1000000 * popularity)) * 10,
-        holders: Math.floor(5000 + (100000 * popularity)),
-        supply: 21000000,
-        buy_price: (0.00001 + (0.0001 * popularity) * 0.98).toFixed(6),
-        sell_price: (0.00001 + (0.0001 * popularity) * 1.02).toFixed(6),
-        change_24h: (Math.random() * 20) - 5,
-        liquidity: Math.floor(((10000 + (1000000 * popularity)) * 10) * 0.2),
-        riskReturn: ((Math.random() * 2) + 0.5).toFixed(2),
-        arbitrage: Math.random() > 0.7 ? `Sim ${((Math.random() * 5) + 3).toFixed(1)}%` : 'Não',
-        verified: true,
-        marketplaces: [
-          { name: 'unisat.io', url: `https://unisat.io/market/rune/${name.toLowerCase()}` },
-          { name: 'magiceden.io', url: `https://magiceden.io/ordinals/runes/${name.toLowerCase()}` }
-        ],
-        exchanges: [
-          {
-            name: 'Unisat',
-            url: `https://unisat.io/market/rune/${name.toLowerCase()}`,
-            price: (0.00001 + (0.0001 * popularity)) * 1.02,
-            buyUrl: `https://unisat.io/market/rune/${name.toLowerCase()}/buy`,
-            sellUrl: `https://unisat.io/market/rune/${name.toLowerCase()}/sell`
-          },
-          {
-            name: 'OKX',
-            url: `https://www.okx.com/web3/marketplace/ordinals/runes/${name.toLowerCase()}`,
-            price: (0.00001 + (0.0001 * popularity)) * 0.98,
-            buyUrl: `https://www.okx.com/web3/marketplace/ordinals/runes/${name.toLowerCase()}/buy`,
-            sellUrl: `https://www.okx.com/web3/marketplace/ordinals/runes/${name.toLowerCase()}/sell`
-          }
-        ],
-        runeLink: `https://unisat.io/market/rune/${name.toLowerCase()}`
-      });
-    }
-
-    return fallbackRunes;
-  }, [data])
-
-  // Obter os runes mais populares para destaque
-  const topRunes = useMemo(() => {
-    return tableData.slice(0, 6);
-  }, [tableData]);
-
-  // Obter oportunidades de arbitragem
-  const arbitrageOpportunities = useMemo(() => {
-    return tableData
-      .filter(item => item.arbitrage.startsWith('Sim'))
-      .slice(0, 6);
-  }, [tableData]);
-
+    };
+    
+    loadRunesData();
+  }, []);
+  
+  const topRunes = runesData.slice(0, 5);
+  const totalMarketCap = runesData.reduce((sum, rune) => sum + rune.marketCap, 0);
+  const avgChange24h = runesData.length > 0 ? runesData.reduce((sum, rune) => sum + rune.change24h, 0) / runesData.length : 0;
+  
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#121212] to-[#1D1D1D]">
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#F59E0B] via-[#FBBF24] to-[#F59E0B] text-transparent bg-clip-text">RUNES</h1>
-            <h2 className="text-lg text-gray-400">TOP TOKENS & MARKET DATA</h2>
-          </div>
-          <div className="mt-4 md:mt-0 flex items-center">
-            <span className="px-3 py-1.5 rounded-full bg-amber-500 text-xs font-bold animate-pulse text-white">Real-time Updates</span>
-          </div>
-        </div>
-
-        {/* Top Runes Section */}
-        <div className="mb-8">
-          <h3 className="text-xl font-bold mb-4 text-white">Top Runes</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoading ? (
-              Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-[#1D1D1D] rounded-xl p-4 border border-[#3D3D3D] animate-pulse h-48"></div>
-              ))
-            ) : (
-              topRunes.map((rune: any, i: number) => (
-                <div
-                  key={i}
-                  className={`bg-gradient-to-br from-[#1D1D1D] to-[#2D2D2D] rounded-xl p-4 border border-[#3D3D3D] shadow-xl hover:shadow-2xl transition-all cursor-pointer ${selectedRune === rune.name ? 'ring-2 ring-amber-500' : ''}`}
-                  onClick={() => setSelectedRune(rune.name === selectedRune ? null : rune.name)}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <a
-                      href={rune.links?.info || rune.runeLink || `https://runealpha.xyz/rune/${rune.name.toLowerCase()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-bold text-amber-300 text-lg hover:underline hover:text-amber-200 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {rune.formatted_name || rune.name}
-                      {rune.verified && (
-                        <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          Verified
-                        </span>
-                      )}
-                    </a>
-                    <span className="px-2 py-1 rounded-full bg-[#3D3D3D] text-xs font-medium">#{i + 1}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                    <div>
-                      <p className="text-gray-400">Price</p>
-                      <p className="font-bold text-white">${rune.price.toFixed(6)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Change 24h</p>
-                      <p className={`font-bold ${(rune.change_24h || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {(rune.change_24h || 0) >= 0 ? '+' : ''}{(typeof rune.change_24h === 'number' ? rune.change_24h : 0).toFixed(2)}%
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Volume 24h</p>
-                      <p className="font-bold text-blue-400">${(rune.volume_24h || 0).toLocaleString('en-US')}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Supply</p>
-                      <p className="font-bold text-purple-400">{Number(rune.supply || 0).toLocaleString('en-US')}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 border-t border-[#3D3D3D] pt-2">
-                    <p className="text-xs text-gray-400 mb-1">Exchanges:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {rune.marketplaces ? (
-                        // Use the new marketplaces data if available
-                        rune.marketplaces.map((marketplace: any, j: number) => (
-                          <a
-                            key={j}
-                            href={marketplace.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] px-2 py-1 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {marketplace.name.replace('.io', '')}
-                          </a>
-                        ))
-                      ) : rune.exchanges ? (
-                        // Fallback to exchanges if marketplaces not available
-                        rune.exchanges.map((exchange: any, j: number) => (
-                          <a
-                            key={j}
-                            href={exchange.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] px-2 py-1 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {exchange.name} (${exchange.price.toFixed(6)})
-                          </a>
-                        ))
-                      ) : (
-                        // Default link if neither is available
-                        <a
-                          href={`https://unisat.io/market/rune/${rune.name.toLowerCase()}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] px-2 py-1 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Unisat
-                        </a>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <a
-                        href={rune.links?.info || rune.detailsLink || rune.runeLink || `https://runealpha.xyz/rune/${rune.name.toLowerCase()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-blue-600/30 to-purple-600/30 border border-blue-500/30 text-blue-400 hover:border-blue-400 transition-all"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Details
-                      </a>
-                      <a
-                        href={rune.txLink || `https://mempool.space/rune/${rune.name.toLowerCase()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-green-600/30 to-emerald-600/30 border border-green-500/30 text-emerald-400 hover:border-emerald-400 transition-all"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Transactions
-                      </a>
-                      <a
-                        href={rune.explorerLink || `https://runealpha.xyz/rune/${rune.name.toLowerCase()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-amber-600/30 to-orange-600/30 border border-amber-500/30 text-amber-400 hover:border-amber-400 transition-all"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Explorer
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Stats, Bitcoin Price and Recent Activity */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <RunesStatsCard />
-          <BitcoinPriceCard />
-          <RecentRunesCard />
-        </div>
-
-        {/* Arbitrage Opportunities */}
-        <div className="mb-8">
-          <h3 className="text-xl font-bold mb-4 text-white">Arbitrage Opportunities</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {arbitrageOpportunities.map((rune: any, i: number) => (
-              <div key={i} className="bg-gradient-to-br from-[#1D1D1D] to-[#2D2D2D] rounded-xl p-4 border border-[#3D3D3D] shadow-xl">
-                <div className="flex justify-between items-start mb-3">
-                  <a
-                    href={rune.runeLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-amber-300 hover:underline hover:text-amber-200 transition-colors"
-                  >
-                    {rune.formatted_name || rune.name}
-                  </a>
-                  <span className="px-2 py-1 rounded-full bg-amber-500 text-xs font-medium text-white">{rune.arbitrage}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                  <div>
-                    <p className="text-gray-400">Compra em</p>
-                    <a
-                      href={rune.exchanges[1].buyUrl || rune.buyLink || rune.exchanges[1].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-bold text-white hover:text-emerald-300 transition-colors"
-                    >
-                      {rune.exchanges[1].name}
-                    </a>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-emerald-400">${rune.exchanges[1].price.toFixed(6)}</p>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">COMPRAR</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Venda em</p>
-                    <a
-                      href={rune.exchanges[0].sellUrl || rune.sellLink || rune.exchanges[0].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-bold text-white hover:text-rose-300 transition-colors"
-                    >
-                      {rune.exchanges[0].name}
-                    </a>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-rose-400">${rune.exchanges[0].price.toFixed(6)}</p>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/50 text-rose-400 border border-rose-800/50">VENDER</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 border-t border-[#3D3D3D] pt-2">
-                  <p className="text-xs text-gray-400">Profit Potencial:</p>
-                  <p className="font-bold text-emerald-400 text-sm">
-                    ${((rune.exchanges[0].price - rune.exchanges[1].price) * 1000000).toFixed(2)} por 1M tokens
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <a
-                      href={rune.links?.info || rune.detailsLink || rune.runeLink || `https://runealpha.xyz/rune/${rune.name.toLowerCase()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-blue-600/30 to-purple-600/30 border border-blue-500/30 text-blue-400 hover:border-blue-400 transition-all"
-                    >
-                      Details
-                    </a>
-                    <a
-                      href={rune.txLink || `https://mempool.space/rune/${rune.name.toLowerCase()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-green-600/30 to-emerald-600/30 border border-green-500/30 text-emerald-400 hover:border-emerald-400 transition-all"
-                    >
-                      Transactions
-                    </a>
-                    <a
-                      href={rune.explorerLink || `https://runealpha.xyz/rune/${rune.name.toLowerCase()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-amber-600/30 to-orange-600/30 border border-amber-500/30 text-amber-400 hover:border-amber-400 transition-all"
-                    >
-                      Explorer
-                    </a>
-                    {rune.marketplaces && rune.marketplaces.length > 0 && (
-                      <a
-                        href={rune.marketplaces[0].url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] px-2 py-1 rounded bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-purple-500/30 text-purple-400 hover:border-purple-400 transition-all"
-                      >
-                        {rune.marketplaces[0].name.replace('.io', '')}
-                      </a>
-                    )}
-                  </div>
-                </div>
+    <TopNavLayout>
+      <div className="bg-gradient-to-b from-background to-background/95">
+        {/* Header Section */}
+        <div className="border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                  Runes Professional Trading
+                </h1>
+                <p className="text-muted-foreground mt-1">Advanced analytics and trading tools for serious Runes traders</p>
               </div>
-            ))}
+              <div className="flex items-center gap-4">
+                {isLoading ? (
+                  <div className="flex gap-4">
+                    <div className="animate-pulse bg-gray-700 rounded h-10 w-32"></div>
+                    <div className="animate-pulse bg-gray-700 rounded h-10 w-32"></div>
+                  </div>
+                ) : (
+                  <>
+                    <Card className="px-3 py-2 bg-green-500/10 border-green-500/20">
+                      <span className="text-green-500 text-sm font-medium">
+                        24h Volume: ${(ecosystemStats?.runesVolume24h || 0).toLocaleString()}
+                      </span>
+                    </Card>
+                    <Card className="px-3 py-2 bg-blue-500/10 border-blue-500/20">
+                      <span className="text-blue-500 text-sm font-medium">
+                        Total Runes: {ecosystemStats?.totalRunes.toLocaleString() || 'Loading...'}
+                      </span>
+                    </Card>
+                    <Card className="px-3 py-2 bg-purple-500/10 border-purple-500/20">
+                      <span className="text-purple-500 text-sm font-medium">
+                        Market Cap: ${totalMarketCap > 0 ? (totalMarketCap / 1000000).toFixed(1) : '0'}M
+                      </span>
+                    </Card>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Runes Table */}
-        <DashboardCard title="Top 100 Runes" className="bg-[#1D1D1D] border border-[#3D3D3D] shadow-xl">
-          {isLoading && <p className="text-muted-foreground">Carregando...</p>}
-          {error && <p className="text-rose-500">Erro ao carregar dados.</p>}
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-xs">
-              <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-800">
-                  <th className="py-3 pr-2">#</th>
-                  <th className="py-3 pr-4">Token</th>
-                  <th className="py-3 pr-4">Preço</th>
-                  <th className="py-3 pr-4">24h %</th>
-                  <th className="py-3 pr-4">Volume 24h</th>
-                  <th className="py-3 pr-4">Preço Compra</th>
-                  <th className="py-3 pr-4">Preço Venda</th>
-                  <th className="py-3 pr-4">Market Cap</th>
-                  <th className="py-3 pr-4">Supply</th>
-                  <th className="py-3 pr-4">Holders</th>
-                  <th className="py-3 pr-4">Liquidez</th>
-                  <th className="py-3 pr-4">Risco/Retorno</th>
-                  <th className="py-3 pr-4">Arbitragem</th>
-                  <th className="py-3 pr-4">Exchanges</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map((item: any, i: number) => (
-                  <tr key={i} className="border-b border-gray-800 hover:bg-gray-900 transition">
-                    <td className="py-3 pr-2 font-bold text-gray-300">{item.rank}</td>
-                    <td className="py-3 pr-4 font-bold">
-                      <a
-                        href={item.runeLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-amber-300 hover:text-amber-200 hover:underline transition-colors"
-                      >
-                        {item.formatted_name || item.name}
-                      </a>
-                    </td>
-                    <td className="py-3 pr-4">${item.price.toFixed(6)}</td>
-                    <td className={`py-3 pr-4 font-bold ${item.change_24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {item.change_24h >= 0 ? '+' : ''}{item.change_24h.toFixed(2)}%
-                    </td>
-                    <td className="py-3 pr-4">${item.volume_24h?.toLocaleString('en-US')}</td>
-                    <td className="py-3 pr-4">
-                      <a
-                        href={item.exchanges[1].buyUrl || item.buyLink || item.exchanges[1].url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-white hover:text-emerald-300 transition-colors font-medium"
-                      >
-                        ${item.buy_price} <span className="text-emerald-400 text-[9px]">COMPRAR</span>
-                      </a>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <a
-                        href={item.exchanges[0].sellUrl || item.sellLink || item.exchanges[0].url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-white hover:text-rose-300 transition-colors font-medium"
-                      >
-                        ${item.sell_price} <span className="text-rose-400 text-[9px]">VENDER</span>
-                      </a>
-                    </td>
-                    <td className="py-3 pr-4">${item.market_cap?.toLocaleString('en-US')}</td>
-                    <td className="py-3 pr-4">{Number(item.supply).toLocaleString('en-US')}</td>
-                    <td className="py-3 pr-4">{item.holders?.toLocaleString('en-US')}</td>
-                    <td className="py-3 pr-4">${item.liquidity?.toLocaleString('en-US')}</td>
-                    <td className="py-3 pr-4 font-bold text-blue-400">{item.riskReturn}</td>
-                    <td className={`py-3 pr-4 font-bold ${item.arbitrage.startsWith('Sim') ? 'text-green-400' : 'text-gray-400'}`}>{item.arbitrage}</td>
-                    <td className="py-3 pr-4">
-                      <div className="flex flex-wrap gap-1">
-                        {item.marketplaces ? (
-                          // Use the new marketplaces data if available
-                          item.marketplaces.map((marketplace: any, j: number) => (
-                            <div key={j} className="flex gap-1 mb-1">
-                              <a
-                                href={marketplace.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                              >
-                                {marketplace.name.replace('.io', '')}
-                              </a>
-                              <a
-                                href={`${marketplace.url}/buy`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-400 transition border border-emerald-800/50"
-                              >
-                                Comprar
-                              </a>
-                              <a
-                                href={`${marketplace.url}/sell`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/50 hover:bg-rose-800/50 text-rose-400 transition border border-rose-800/50"
-                              >
-                                Vender
-                              </a>
-                            </div>
-                          ))
-                        ) : item.exchanges ? (
-                          // Fallback to exchanges if marketplaces not available
-                          item.exchanges.map((exchange: any, j: number) => (
-                            <div key={j} className="flex gap-1 mb-1">
-                              <a
-                                href={exchange.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                              >
-                                {exchange.name}
-                              </a>
-                              <a
-                                href={exchange.buyUrl || item.buyLink || exchange.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-400 transition border border-emerald-800/50"
-                              >
-                                Comprar
-                              </a>
-                              <a
-                                href={exchange.sellUrl || item.sellLink || exchange.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/50 hover:bg-rose-800/50 text-rose-400 transition border border-rose-800/50"
-                              >
-                                Vender
-                              </a>
-                            </div>
-                          ))
-                        ) : (
-                          // Default links if neither is available
-                          <div className="flex gap-1 mb-1">
-                            <a
-                              href={`https://unisat.io/market/rune/${item.name.toLowerCase()}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-[#3D3D3D] hover:bg-[#4D4D4D] text-white transition"
-                            >
-                              Unisat
-                            </a>
-                            <a
-                              href={`https://unisat.io/market/rune/${item.name.toLowerCase()}/buy`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-400 transition border border-emerald-800/50"
-                            >
-                              Comprar
-                            </a>
-                            <a
-                              href={`https://unisat.io/market/rune/${item.name.toLowerCase()}/sell`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/50 hover:bg-rose-800/50 text-rose-400 transition border border-rose-800/50"
-                            >
-                              Vender
-                            </a>
+        {/* Real-time Market Overview */}
+        <div className="container mx-auto px-4 py-6">
+          {/* Live Market Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Top Rune Price</span>
+                <TrendingUp className="h-4 w-4 text-orange-500" />
+              </div>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-16 mb-1"></div>
+                  <div className="h-3 bg-gray-700 rounded w-12"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xl font-bold">${topRunes[0]?.price.toFixed(4) || 'Loading...'}</p>
+                  <span className="text-xs text-gray-400">
+                    Top rune price
+                  </span>
+                </>
+              )}
+            </Card>
+            
+            <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Total Holders</span>
+                <Users className="h-4 w-4 text-blue-500" />
+              </div>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-16 mb-1"></div>
+                  <div className="h-3 bg-gray-700 rounded w-12"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xl font-bold">{runesData.length > 0 ? runesData.reduce((sum, rune) => sum + rune.holders, 0).toLocaleString() : 'Loading...'}</p>
+                  <span className="text-xs text-blue-500">Across {runesData.length} runes</span>
+                </>
+              )}
+            </Card>
+            
+            <Card className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Minted Today</span>
+                <Zap className="h-4 w-4 text-green-500" />
+              </div>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-16 mb-1"></div>
+                  <div className="h-3 bg-gray-700 rounded w-12"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xl font-bold">{runesData.length > 0 ? runesData.reduce((sum, rune) => sum + rune.mints, 0).toLocaleString() : 'Loading...'}</p>
+                  <span className="text-xs text-gray-400">Total mints</span>
+                </>
+              )}
+            </Card>
+            
+            <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Avg Supply</span>
+                <Layers className="h-4 w-4 text-purple-500" />
+              </div>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-16 mb-1"></div>
+                  <div className="h-3 bg-gray-700 rounded w-12"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xl font-bold">{runesData.length > 0 ? ((runesData.reduce((sum, rune) => sum + rune.supply, 0) / runesData.length) / 1000000).toFixed(1) : '0'}M</p>
+                  <span className="text-xs text-purple-500">Avg supply</span>
+                </>
+              )}
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <NoSSRWrapper fallback={
+              <Card className="p-6 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-1/2 mb-4"></div>
+                <div className="space-y-3">
+                  {Array.from({length: 4}).map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-700 rounded"></div>
+                  ))}
+                </div>
+              </Card>
+            }>
+              <RunesPriceMatrix />
+            </NoSSRWrapper>
+            
+            <NoSSRWrapper fallback={
+              <Card className="p-6 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-1/2 mb-4"></div>
+                <div className="space-y-3">
+                  {Array.from({length: 5}).map((_, i) => (
+                    <div key={i} className="h-10 bg-gray-700 rounded"></div>
+                  ))}
+                </div>
+              </Card>
+            }>
+              <TopRunesMovers />
+            </NoSSRWrapper>
+            
+            <NoSSRWrapper fallback={
+              <Card className="p-6 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-1/2 mb-4"></div>
+                <div className="h-32 bg-gray-700 rounded"></div>
+              </Card>
+            }>
+              <MintingActivity />
+            </NoSSRWrapper>
+          </div>
+
+          {/* Main Trading Interface */}
+          <Tabs defaultValue="terminal" className="space-y-6">
+            <TabsList className="w-full justify-start bg-background/50 backdrop-blur-sm">
+              <TabsTrigger value="terminal" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Trading Terminal
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="liquidity" className="flex items-center gap-2">
+                <Droplets className="h-4 w-4" />
+                Liquidity
+              </TabsTrigger>
+              <TabsTrigger value="minting" className="flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                Mint Platforms
+              </TabsTrigger>
+              <TabsTrigger value="portfolio" className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                Portfolio
+              </TabsTrigger>
+              <TabsTrigger value="heatmap" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Market Heatmap
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="terminal" className="mt-6">
+              <NoSSRWrapper fallback={
+                <Card className="p-6 animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="h-64 bg-gray-700 rounded"></div>
+                    <div className="h-64 bg-gray-700 rounded"></div>
+                  </div>
+                </Card>
+              }>
+                <RunesTradingTerminal />
+              </NoSSRWrapper>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-6">
+              <NoSSRWrapper fallback={
+                <Card className="p-6 animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="h-48 bg-gray-700 rounded"></div>
+                    <div className="h-48 bg-gray-700 rounded"></div>
+                    <div className="h-48 bg-gray-700 rounded"></div>
+                  </div>
+                </Card>
+              }>
+                <RunesAnalytics />
+              </NoSSRWrapper>
+            </TabsContent>
+
+            <TabsContent value="liquidity" className="mt-6">
+              <NoSSRWrapper fallback={
+                <Card className="p-6 animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+                  <div className="h-80 bg-gray-700 rounded"></div>
+                </Card>
+              }>
+                <LiquidityAnalysis />
+              </NoSSRWrapper>
+            </TabsContent>
+
+            <TabsContent value="minting" className="mt-6">
+              <NoSSRWrapper fallback={
+                <Card className="p-6 animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="h-96 bg-gray-700 rounded"></div>
+                    <div className="h-96 bg-gray-700 rounded"></div>
+                  </div>
+                </Card>
+              }>
+                <div className="space-y-6">
+                  <Card className="bg-gray-900 border-gray-700 p-6">
+                    <MintPlatformGrid 
+                      tokenType="rune" 
+                      title="Professional Rune Minting Platforms"
+                    />
+                  </Card>
+                  
+                  <Card className="bg-gray-900 border-gray-700 p-6">
+                    <h3 className="text-lg font-bold text-white mb-4 font-mono">Top Performing Runes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {topRunes.slice(0, 6).map((rune) => (
+                        <div key={rune.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-bold text-orange-500 font-mono text-sm">{rune.name}</h4>
+                            <span className="text-xs text-gray-400">#{rune.id}</span>
                           </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </DashboardCard>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Price:</span>
+                              <span className="text-white font-mono">${rune.price.toFixed(6)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Supply:</span>
+                              <span className="text-white">{(rune.supply / 1000000).toFixed(1)}M</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Progress:</span>
+                              <span className="text-green-400">{rune.mintProgress.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-gray-700">
+                            <div className="grid grid-cols-2 gap-2">
+                              <MintPlatform platform="unisat" tokenSymbol={rune.symbol} tokenType="rune" size="sm" />
+                              <MintPlatform platform="ordswap" tokenSymbol={rune.symbol} tokenType="rune" size="sm" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              </NoSSRWrapper>
+            </TabsContent>
 
-        {/* Market Insights */}
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-4 text-white">Market Insights</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-[#1D1D1D] to-[#2D2D2D] rounded-xl p-4 border border-[#3D3D3D] shadow-xl">
-              <h4 className="font-bold text-amber-300 mb-2">Runes Trading Volume</h4>
-              <p className="text-sm text-gray-300 mb-4">
-                O volume de negociação de Runes aumentou 35% nas últimas 24 horas, com os tokens ORDI, SATS e MEME liderando em termos de atividade.
-              </p>
-              <div className="text-xs text-gray-400">
-                Atualizado em: {new Date().toLocaleString()}
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-[#1D1D1D] to-[#2D2D2D] rounded-xl p-4 border border-[#3D3D3D] shadow-xl">
-              <h4 className="font-bold text-amber-300 mb-2">Tendências de Mercado</h4>
-              <p className="text-sm text-gray-300 mb-4">
-                Tokens relacionados a memes e gaming estão mostrando forte momentum, enquanto tokens de utilidade estão consolidando. Espera-se volatilidade nos próximos dias.
-              </p>
-              <div className="text-xs text-gray-400">
-                Atualizado em: {new Date().toLocaleString()}
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-[#1D1D1D] to-[#2D2D2D] rounded-xl p-4 border border-[#3D3D3D] shadow-xl">
-              <h4 className="font-bold text-amber-300 mb-2">Oportunidades de Arbitragem</h4>
-              <p className="text-sm text-gray-300 mb-4">
-                Diferenças de preço significativas entre exchanges para tokens ORDI, SATS e PEPE oferecem oportunidades de arbitragem com potencial de lucro de 3-8%.
-              </p>
-              <div className="text-xs text-gray-400">
-                Atualizado em: {new Date().toLocaleString()}
-              </div>
-            </div>
+            <TabsContent value="portfolio" className="mt-6">
+              <NoSSRWrapper fallback={
+                <Card className="p-6 animate-pulse">
+                  <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
+                  <div className="space-y-4">
+                    {Array.from({length: 6}).map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-700 rounded"></div>
+                    ))}
+                  </div>
+                </Card>
+              }>
+                <RunesPortfolio />
+              </NoSSRWrapper>
+            </TabsContent>
+
+            <TabsContent value="heatmap" className="mt-6">
+              <NoSSRWrapper fallback={
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="p-6 animate-pulse">
+                    <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+                    <div className="h-64 bg-gray-700 rounded"></div>
+                  </Card>
+                  <Card className="p-6 animate-pulse">
+                    <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+                    <div className="space-y-3">
+                      {Array.from({length: 8}).map((_, i) => (
+                        <div key={i} className="h-8 bg-gray-700 rounded"></div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              }>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <RunesHeatmap />
+                  <MarketCapRanking />
+                </div>
+              </NoSSRWrapper>
+            </TabsContent>
+          </Tabs>
+          
+          {/* Enhanced Runes Explorer */}
+          <div className="mt-8">
+            <NoSSRWrapper fallback={
+              <Card className="p-6 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="space-y-3">
+                  {Array.from({length: 5}).map((_, i) => (
+                    <div key={i} className="h-16 bg-gray-700 rounded"></div>
+                  ))}
+                </div>
+              </Card>
+            }>
+              <RunesSystemV2 />
+            </NoSSRWrapper>
           </div>
         </div>
       </div>
-    </main>
-  )
-}
-
-function RecentRunesCard() {
-  return (
-    <DashboardCard title="Recent Rune Activity" className="bg-[#1D1D1D] border border-[#3D3D3D] shadow-xl">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">Recent rune transactions will be displayed here.</p>
-          <span className="px-2 py-1 rounded bg-amber-500 text-xs font-bold animate-pulse text-white">Atualização em tempo real</span>
-        </div>
-        <div className="space-y-2">
-          {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="bg-[#2D2D2D] rounded-lg p-3 flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center mr-3">
-                  <span className="text-amber-400 text-xs">{['BUY', 'SELL', 'MINT', 'TRANSFER'][Math.floor(Math.random() * 4)]}</span>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-white">{['ORDI', 'SATS', 'MEME', 'PEPE', 'DOGE', 'SHIB'][Math.floor(Math.random() * 6)]}</p>
-                  <p className="text-[10px] text-gray-400">{Math.floor(Math.random() * 1000000).toLocaleString()} tokens</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-medium text-white">${(Math.random() * 1000).toFixed(2)}</p>
-                <p className="text-[10px] text-gray-400">{Math.floor(Math.random() * 60)} mins ago</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </DashboardCard>
-  )
+    </TopNavLayout>
+  );
 }

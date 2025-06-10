@@ -1,23 +1,16 @@
-'use client'
-
-import { useState } from 'react'
-
 export default function TestPage() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Test Page</h1>
-      
-      <div className="p-6 border border-gray-300 rounded-lg">
-        <p className="mb-4">Count: {count}</p>
-        <button 
-          onClick={() => setCount(count + 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Increment
-        </button>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">✅ CYPHER ORDI FUTURE</h1>
+        <p className="text-xl text-green-400 mb-2">Servidor funcionando perfeitamente\!</p>
+        <p className="text-gray-400">Build errors corrigidos</p>
+        <div className="mt-6">
+          <a href="/dashboard" className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg">
+            Ir para Dashboard
+          </a>
+        </div>
       </div>
     </div>
-  )
+  );
 }

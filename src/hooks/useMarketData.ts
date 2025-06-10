@@ -1,108 +1,158 @@
-'use client'
+// Custom hooks for data fetching
 
-import { useEffect, useState } from 'react'
-import { useAppDispatch, useAppSelector } from '@/store'
-import { setMarketData } from '@/store/marketSlice'
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query'
+import { bitcoinService } from '@/lib/api/bitcoin'
+import { realAnalyticsDataService } from '@/services/RealAnalyticsDataService'
+
+export function useBitcoinPrice() {
+  return useQuery({
+    queryKey: ['bitcoin-price'],
+    queryFn: () => bitcoinService.getPrice(),
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 20000, // Consider data stale after 20 seconds
+  })
+}
+
+export function useBitcoinChart(days: number = 7) {
+  return useQuery({
+    queryKey: ['bitcoin-chart', days],
+    queryFn: () => bitcoinService.getMarketChart(days),
+    staleTime: 300000, // 5 minutes
+  })
+}
+
+interface MarketData {
+  marketCap: {
+    total: number;
+    change24h: number;
+  };
+  volume24h: {
+    total: number;
+    change24h: number;
+  };
+  btcPrice?: number;
+  btcChange24h?: number;
+  btcDominance: number;
+  loading: boolean;
+  error: string | null;
+  isLoading?: boolean;
+  lastUpdated?: string;
+  source?: 'live' | 'cached' | 'fallback';
+}
+
+// Enhanced hook using real analytics data
+export function useRealMarketData() {
+  return useQuery({
+    queryKey: ['real-market-data'],
+    queryFn: () => realAnalyticsDataService.getRealMarketMetrics(),
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 20000, // Consider data stale after 20 seconds
+  })
+}
 
 export function useMarketData() {
-  const dispatch = useAppDispatch()
-  const marketData = useAppSelector(state => state.market)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
-  const maxRetries = 3
+  const [data, setData] = useState<MarketData>({
+    marketCap: { total: 0, change24h: 0 },
+    volume24h: { total: 0, change24h: 0 },
+    btcPrice: 0,
+    btcChange24h: 0,
+    btcDominance: 0,
+    loading: true,
+    error: null,
+    isLoading: true,
+    lastUpdated: undefined,
+    source: 'fallback'
+  });
 
   useEffect(() => {
     const fetchMarketData = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      console.log('Fetching Bitcoin price data...')
+      try {
+        // Try to get real data first
+        const realData = await realAnalyticsDataService.getRealMarketMetrics();
+        
+        setData({
+          marketCap: {
+            total: realData.marketCap,
+            change24h: realData.priceChange24h // Use price change as approximation
+          },
+          volume24h: {
+            total: realData.volume24h,
+            change24h: realData.volumeChange24h
+          },
+          btcPrice: realData.price,
+          btcChange24h: realData.priceChange24h,
+          btcDominance: realData.dominance,
+          loading: false,
+          error: null,
+          isLoading: false,
+          lastUpdated: realData.lastUpdated,
+          source: realData.source
+        });
+        
+        console.log('Real market data loaded successfully');
+        return;
+      } catch (realDataError) {
+        console.warn('Real data failed, trying CoinGecko fallback:', realDataError);
+      }
 
       try {
-        // Adicionar timestamp e número aleatório para evitar cache
-        const timestamp = new Date().getTime()
-        const randomParam = Math.floor(Math.random() * 1000000)
-        const response = await fetch(`/api/bitcoin-price?t=${timestamp}&r=${randomParam}`, {
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-            'Pragma': 'no-cache',
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        // Fallback to CoinGecko
+        const response = await fetch('https://api.coingecko.com/api/v3/global');
+        const result = await response.json();
+        
+        // Also get Bitcoin specific data
+        const btcResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true');
+        const btcResult = await btcResponse.json();
+        const btcData = btcResult.bitcoin;
+        
+        setData({
+          marketCap: {
+            total: result.data.total_market_cap.usd,
+            change24h: result.data.market_cap_change_percentage_24h_usd
           },
-        })
-
-        if (!response.ok) {
-          console.error(`API error: ${response.status}`)
-          throw new Error(`Failed to fetch Bitcoin price data: ${response.status}`)
-        }
-
-        const data = await response.json()
-        console.log('Bitcoin price data received:', data)
-
-        // Verificar se os dados são válidos
-        if (!data || typeof data.btcPrice !== 'number') {
-          console.error('Invalid data received:', data)
-          throw new Error('Invalid data format received from API')
-        }
-
-        // Atualizar o estado com os dados recebidos
-        dispatch(setMarketData({
-          ...data,
-          lastUpdated: data.lastUpdated || new Date().toISOString(),
-        }))
-
-        // Resetar contador de tentativas em caso de sucesso
-        setRetryCount(0)
-
-        // Definir isLoading como false apenas após os dados serem atualizados
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 300)
-      } catch (error) {
-        console.error('Error fetching market data:', error)
-
-        // Incrementar contador de tentativas
-        const newRetryCount = retryCount + 1
-        setRetryCount(newRetryCount)
-
-        if (newRetryCount < maxRetries) {
-          console.log(`Retry attempt ${newRetryCount}/${maxRetries} in 2 seconds...`)
-          // Tentar novamente após 2 segundos
-          setTimeout(fetchMarketData, 2000)
-          return
-        }
-
-        setError('Failed to fetch Bitcoin price')
-
-        // Dados de fallback em caso de erro - valores reais atualizados
-        const fallbackData = {
-          btcPrice: 67500.00,
-          btcChange24h: 2.35,
-          volume24h: 28500000000,
-          marketCap: 1320000000000,
+          volume24h: {
+            total: result.data.total_volume.usd,
+            change24h: 0 // CoinGecko doesn't provide this in global endpoint
+          },
+          btcPrice: btcData.usd,
+          btcChange24h: btcData.usd_24h_change,
+          btcDominance: result.data.market_cap_percentage.btc,
+          loading: false,
+          error: null,
+          isLoading: false,
           lastUpdated: new Date().toISOString(),
-        }
-
-        console.log('Using fallback market data:', fallbackData)
-        dispatch(setMarketData(fallbackData))
-
-        // Definir isLoading como false apenas após os dados serem atualizados
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 300)
+          source: 'fallback'
+        });
+      } catch (error) {
+        console.error('All market data sources failed:', error);
+        // Use fallback data
+        setData({
+          marketCap: {
+            total: 3890000000000,
+            change24h: 2.45
+          },
+          volume24h: {
+            total: 145000000000,
+            change24h: 8.5
+          },
+          btcPrice: 98750,
+          btcChange24h: 2.8,
+          btcDominance: 52.3,
+          loading: false,
+          error: 'Using fallback data',
+          isLoading: false,
+          lastUpdated: new Date().toISOString(),
+          source: 'fallback'
+        });
       }
-    }
+    };
 
-    // Initial fetch
-    fetchMarketData()
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 60000); // Update every minute
 
-    // Set up interval for periodic updates
-    const intervalId = setInterval(fetchMarketData, 30000) // Update every 30 seconds for Bitcoin price
+    return () => clearInterval(interval);
+  }, []);
 
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId)
-  }, [dispatch, retryCount])
-
-  return { ...marketData, isLoading, error }
+  return data;
 }

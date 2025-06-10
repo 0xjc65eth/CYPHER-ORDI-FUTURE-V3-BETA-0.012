@@ -21,7 +21,6 @@ export interface MarketState {
   btcChange24h: number
   volume24h: number
   marketCap: number
-  lastUpdated: string
 }
 
 export interface MempoolState {
@@ -52,4 +51,4 @@ export interface MiningState {
 }
 
 // Root state type
-export type RootState = ReturnType<typeof store.getState>
+export type RootState = ReturnType<typeof store.getState> 

@@ -1,232 +1,97 @@
+import fs from 'fs';
+import path from 'path';
+
 /**
- * Logger Service
- * 
- * This service provides logging functionality for the application.
- * It includes methods for logging messages at different levels (debug, info, warn, error).
+ * Sistema de Logging para Desenvolvimento
+ * Registra progresso, erros e métricas de performance
  */
 
-// Log levels
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  NONE = 4
-}
-
-// Logger configuration
-interface LoggerConfig {
-  level: LogLevel;
-  enableConsole: boolean;
-  enableStorage: boolean;
-  maxStoredLogs: number;
-}
-
-// Log entry interface
-export interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  data?: any;
-}
-
-// Logger service class
-class LoggerService {
-  private config: LoggerConfig = {
-    level: LogLevel.INFO,
-    enableConsole: true,
-    enableStorage: true,
-    maxStoredLogs: 1000
-  };
-  
-  private logs: LogEntry[] = [];
+export class DevelopmentLogger {
+  private logDir: string;
   
   constructor() {
-    // Initialize logger
-    this.info('Logger service initialized');
-  }
-  
-  /**
-   * Set logger configuration
-   */
-  public setConfig(config: Partial<LoggerConfig>): void {
-    this.config = { ...this.config, ...config };
-  }
-  
-  /**
-   * Get logger configuration
-   */
-  public getConfig(): LoggerConfig {
-    return { ...this.config };
-  }
-  
-  /**
-   * Log a debug message
-   */
-  public debug(message: string, data?: any): void {
-    this.log(LogLevel.DEBUG, message, data);
-  }
-  
-  /**
-   * Log an info message
-   */
-  public info(message: string, data?: any): void {
-    this.log(LogLevel.INFO, message, data);
-  }
-  
-  /**
-   * Log a warning message
-   */
-  public warn(message: string, data?: any): void {
-    this.log(LogLevel.WARN, message, data);
-  }
-  
-  /**
-   * Log an error message
-   */
-  public error(message: string, data?: any): void {
-    this.log(LogLevel.ERROR, message, data);
-  }
-  
-  /**
-   * Log a message with the specified level
-   */
-  private log(level: LogLevel, message: string, data?: any): void {
-    // Check if the log level is enabled
-    if (level < this.config.level) {
+    // Em ambiente browser, não usar fs
+    if (typeof window !== 'undefined') {
+      this.logDir = '';
       return;
     }
     
-    // Create log entry
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      data
-    };
+    this.logDir = path.join(process.cwd(), 'logs');
     
-    // Log to console if enabled
-    if (this.config.enableConsole) {
-      this.logToConsole(entry);
-    }
-    
-    // Store log if enabled
-    if (this.config.enableStorage) {
-      this.storeLog(entry);
+    // Criar diretório se não existir
+    try {
+      if (!fs.existsSync(this.logDir)) {
+        fs.mkdirSync(this.logDir, { recursive: true });
+      }
+    } catch (error) {
+      console.error('Erro ao criar diretório de logs:', error);
     }
   }
-  
-  /**
-   * Log to console
-   */
-  private logToConsole(entry: LogEntry): void {
-    const { timestamp, level, message, data } = entry;
+
+  log(category: string, message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] [${category}] ${message}\n${data ? JSON.stringify(data, null, 2) : ''}\n---\n`;
     
-    // Format timestamp
-    const formattedTimestamp = timestamp.replace('T', ' ').replace('Z', '');
+    // Log no console
+    console.log(`🔍 [${category}]`, message, data || '');
     
-    // Format level
-    let levelString: string;
-    let consoleMethod: 'log' | 'info' | 'warn' | 'error';
-    
-    switch (level) {
-      case LogLevel.DEBUG:
-        levelString = 'DEBUG';
-        consoleMethod = 'log';
-        break;
-      case LogLevel.INFO:
-        levelString = 'INFO';
-        consoleMethod = 'info';
-        break;
-      case LogLevel.WARN:
-        levelString = 'WARN';
-        consoleMethod = 'warn';
-        break;
-      case LogLevel.ERROR:
-        levelString = 'ERROR';
-        consoleMethod = 'error';
-        break;
-      default:
-        levelString = 'UNKNOWN';
-        consoleMethod = 'log';
+    // Em ambiente browser, apenas console
+    if (typeof window !== 'undefined') {
+      return;
     }
     
-    // Format message
-    const formattedMessage = `[${formattedTimestamp}] [${levelString}] ${message}`;
-    
-    // Log to console
-    if (data !== undefined) {
-      console[consoleMethod](formattedMessage, data);
-    } else {
-      console[consoleMethod](formattedMessage);
+    // Salvar em arquivo apenas no servidor
+    try {
+      const logFile = path.join(this.logDir, 'development-log.md');
+      fs.appendFileSync(logFile, logEntry);
+      
+      // Log específico por categoria
+      if (category === 'ERROR') {
+        fs.appendFileSync(path.join(this.logDir, 'errors.log'), logEntry);
+      } else if (category === 'PERFORMANCE') {
+        fs.appendFileSync(path.join(this.logDir, 'performance.log'), logEntry);
+      }
+    } catch (error) {
+      console.error('Erro ao escrever log:', error);
     }
   }
-  
-  /**
-   * Store log in memory
-   */
-  private storeLog(entry: LogEntry): void {
-    // Add log to storage
-    this.logs.push(entry);
+
+  milestone(title: string, details: string) {
+    const entry = `\n## 🎯 MILESTONE: ${title}\n${new Date().toISOString()}\n${details}\n\n`;
     
-    // Trim logs if needed
-    if (this.logs.length > this.config.maxStoredLogs) {
-      this.logs = this.logs.slice(-this.config.maxStoredLogs);
+    // Log no console
+    console.log('🎯 MILESTONE:', title);
+    console.log(details);
+    
+    // Em ambiente browser, apenas console
+    if (typeof window !== 'undefined') {
+      return;
+    }
+    
+    // Salvar em arquivo apenas no servidor
+    try {
+      fs.appendFileSync(path.join(this.logDir, 'development-log.md'), entry);
+    } catch (error) {
+      console.error('Erro ao escrever milestone:', error);
     }
   }
-  
-  /**
-   * Get all stored logs
-   */
-  public getLogs(): LogEntry[] {
-    return [...this.logs];
+
+  progress(feature: string, percentage: number) {
+    this.log('PROGRESS', `${feature}: ${percentage}% complete`);
   }
-  
-  /**
-   * Get logs filtered by level
-   */
-  public getLogsByLevel(level: LogLevel): LogEntry[] {
-    return this.logs.filter(log => log.level === level);
-  }
-  
-  /**
-   * Get logs filtered by time range
-   */
-  public getLogsByTimeRange(startTime: Date, endTime: Date): LogEntry[] {
-    return this.logs.filter(log => {
-      const logTime = new Date(log.timestamp);
-      return logTime >= startTime && logTime <= endTime;
+
+  error(error: Error, context?: string) {
+    this.log('ERROR', error.message, { 
+      stack: error.stack, 
+      context,
+      timestamp: new Date().toISOString()
     });
   }
-  
-  /**
-   * Clear all stored logs
-   */
-  public clearLogs(): void {
-    this.logs = [];
-    this.info('Logs cleared');
-  }
-  
-  /**
-   * Export logs to JSON
-   */
-  public exportLogs(): string {
-    return JSON.stringify(this.logs, null, 2);
-  }
-  
-  /**
-   * Import logs from JSON
-   */
-  public importLogs(json: string): void {
-    try {
-      const logs = JSON.parse(json) as LogEntry[];
-      this.logs = logs;
-      this.info(`Imported ${logs.length} logs`);
-    } catch (error) {
-      this.error('Failed to import logs', error);
-    }
+
+  performance(metric: string, value: number, unit: string = 'ms') {
+    this.log('PERFORMANCE', `${metric}: ${value}${unit}`);
   }
 }
 
-// Export singleton instance
-export const loggerService = new LoggerService();
+// Exportar instância singleton
+export const devLogger = new DevelopmentLogger();

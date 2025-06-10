@@ -1,0 +1,506 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Layers, AlertCircle, Clock } from 'lucide-react'
+import { useMarketMetrics } from '@/hooks/ordinals/useMarketMetrics'
+
+export default function MarketDepth() {
+  const [selectedCollection, setSelectedCollection] = useState('nodemonkes')
+  const [timeRange, setTimeRange] = useState('24h')
+  const { data: marketData, isLoading } = useMarketMetrics(selectedCollection)
+
+  // Mock order book data
+  const orderBookData = {
+    bids: [
+      { price: 0.0480, amount: 5, total: 0.24, depth: 5 },
+      { price: 0.0475, amount: 8, total: 0.38, depth: 13 },
+      { price: 0.0470, amount: 12, total: 0.564, depth: 25 },
+      { price: 0.0465, amount: 15, total: 0.6975, depth: 40 },
+      { price: 0.0460, amount: 20, total: 0.92, depth: 60 },
+      { price: 0.0455, amount: 25, total: 1.1375, depth: 85 },
+    ],
+    asks: [
+      { price: 0.0485, amount: 3, total: 0.1455, depth: 3 },
+      { price: 0.0490, amount: 7, total: 0.343, depth: 10 },
+      { price: 0.0495, amount: 10, total: 0.495, depth: 20 },
+      { price: 0.0500, amount: 18, total: 0.9, depth: 38 },
+      { price: 0.0505, amount: 22, total: 1.111, depth: 60 },
+      { price: 0.0510, amount: 30, total: 1.53, depth: 90 },
+    ],
+    spread: 0.0005,
+    spreadPercentage: 1.04
+  }
+
+  // Mock liquidity depth data
+  const liquidityDepthData = [
+    { price: 0.045, buyVolume: 85, sellVolume: 0 },
+    { price: 0.046, buyVolume: 60, sellVolume: 0 },
+    { price: 0.047, buyVolume: 40, sellVolume: 0 },
+    { price: 0.048, buyVolume: 25, sellVolume: 0 },
+    { price: 0.0485, buyVolume: 0, sellVolume: 20 },
+    { price: 0.049, buyVolume: 0, sellVolume: 38 },
+    { price: 0.050, buyVolume: 0, sellVolume: 60 },
+    { price: 0.051, buyVolume: 0, sellVolume: 90 },
+  ]
+
+  // Mock market maker activity
+  const marketMakerActivity = [
+    { time: '00:00', makers: 12, takers: 45, ratio: 0.27 },
+    { time: '04:00', makers: 15, takers: 38, ratio: 0.39 },
+    { time: '08:00', makers: 23, takers: 67, ratio: 0.34 },
+    { time: '12:00', makers: 34, takers: 89, ratio: 0.38 },
+    { time: '16:00', makers: 28, takers: 78, ratio: 0.36 },
+    { time: '20:00', makers: 19, takers: 56, ratio: 0.34 },
+    { time: '24:00', makers: 14, takers: 42, ratio: 0.33 },
+  ]
+
+  // Mock spread analysis
+  const spreadAnalysis = [
+    { time: '00:00', spread: 0.0004, volume: 23 },
+    { time: '04:00', spread: 0.0006, volume: 15 },
+    { time: '08:00', spread: 0.0005, volume: 45 },
+    { time: '12:00', spread: 0.0003, volume: 89 },
+    { time: '16:00', spread: 0.0004, volume: 67 },
+    { time: '20:00', spread: 0.0005, volume: 34 },
+    { time: '24:00', spread: 0.0007, volume: 12 },
+  ]
+
+  const collections = [
+    { value: 'nodemonkes', label: 'NodeMonkes' },
+    { value: 'bitcoin-puppets', label: 'Bitcoin Puppets' },
+    { value: 'runestones', label: 'Runestones' },
+    { value: 'quantum-cats', label: 'Quantum Cats' },
+    { value: 'bitcoin-frogs', label: 'Bitcoin Frogs' },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {collections.map(collection => (
+                <SelectItem key={collection.value} value={collection.value}>
+                  {collection.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1h">1 Hour</SelectItem>
+              <SelectItem value="24h">24 Hours</SelectItem>
+              <SelectItem value="7d">7 Days</SelectItem>
+              <SelectItem value="30d">30 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            Live Data
+          </Badge>
+          <span className="text-sm text-muted-foreground">Updates every 5s</span>
+        </div>
+      </div>
+
+      {/* Market Overview */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Best Bid
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-green-500">0.0480 BTC</p>
+            <p className="text-sm text-muted-foreground">5 items</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Best Ask
+              <TrendingDown className="h-4 w-4 text-red-500" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-red-500">0.0485 BTC</p>
+            <p className="text-sm text-muted-foreground">3 items</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              Spread
+              <Activity className="h-4 w-4 text-orange-500" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{orderBookData.spreadPercentage}%</p>
+            <p className="text-sm text-muted-foreground">{orderBookData.spread} BTC</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              24h Volume
+              <BarChart3 className="h-4 w-4 text-blue-500" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">234.5 BTC</p>
+            <p className="text-sm text-muted-foreground">1,234 trades</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Analysis */}
+      <Tabs defaultValue="orderbook" className="space-y-4">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="orderbook">Order Book</TabsTrigger>
+          <TabsTrigger value="depth">Liquidity Depth</TabsTrigger>
+          <TabsTrigger value="spread">Spread Analysis</TabsTrigger>
+          <TabsTrigger value="makers">Market Makers</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orderbook" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-green-500">Buy Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground pb-2 border-b">
+                    <span>Price</span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Total</span>
+                    <span className="text-right">Sum</span>
+                  </div>
+                  {orderBookData.bids.map((bid, index) => (
+                    <div key={index} className="grid grid-cols-4 gap-4 text-sm">
+                      <span className="font-mono text-green-500">{bid.price.toFixed(4)}</span>
+                      <span className="text-right">{bid.amount}</span>
+                      <span className="text-right font-mono">{bid.total.toFixed(4)}</span>
+                      <span className="text-right text-muted-foreground">{bid.depth}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-red-500">Sell Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground pb-2 border-b">
+                    <span>Price</span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Total</span>
+                    <span className="text-right">Sum</span>
+                  </div>
+                  {orderBookData.asks.map((ask, index) => (
+                    <div key={index} className="grid grid-cols-4 gap-4 text-sm">
+                      <span className="font-mono text-red-500">{ask.price.toFixed(4)}</span>
+                      <span className="text-right">{ask.amount}</span>
+                      <span className="text-right font-mono">{ask.total.toFixed(4)}</span>
+                      <span className="text-right text-muted-foreground">{ask.depth}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Book Visualization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={liquidityDepthData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="price" stroke="#666" />
+                    <YAxis stroke="#666" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                      labelStyle={{ color: '#999' }}
+                    />
+                    <Line type="stepAfter" dataKey="buyVolume" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                    <Line type="stepAfter" dataKey="sellVolume" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="depth" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Liquidity Depth Chart</CardTitle>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded" />
+                    <span>Buy Side: 85 items</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded" />
+                    <span>Sell Side: 90 items</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={liquidityDepthData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="price" stroke="#666" />
+                    <YAxis stroke="#666" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                      labelStyle={{ color: '#999' }}
+                    />
+                    <Line type="monotone" dataKey="buyVolume" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
+                    <Line type="monotone" dataKey="sellVolume" stroke="#ef4444" fill="#ef4444" fillOpacity={0.6} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Buy Side Metrics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Bids</span>
+                    <span className="font-mono">85 items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Value</span>
+                    <span className="font-mono">4.23 BTC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Bid Size</span>
+                    <span className="font-mono">14.2 items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Support Level</span>
+                    <span className="font-mono text-green-500">0.0455 BTC</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Sell Side Metrics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Asks</span>
+                    <span className="font-mono">90 items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Value</span>
+                    <span className="font-mono">4.53 BTC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Ask Size</span>
+                    <span className="font-mono">15.0 items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Resistance Level</span>
+                    <span className="font-mono text-red-500">0.0510 BTC</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="spread" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bid-Ask Spread Over Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={spreadAnalysis}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="time" stroke="#666" />
+                    <YAxis yAxisId="left" stroke="#666" />
+                    <YAxis yAxisId="right" orientation="right" stroke="#666" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                      labelStyle={{ color: '#999' }}
+                    />
+                    <Line yAxisId="left" type="monotone" dataKey="spread" stroke="#f97316" strokeWidth={2} dot={false} />
+                    <Bar yAxisId="right" dataKey="volume" fill="#f97316" fillOpacity={0.3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Current Spread</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">0.0005 BTC</p>
+                <p className="text-sm text-muted-foreground">1.04% of mid price</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Avg Spread (24h)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">0.0004 BTC</p>
+                <p className="text-sm text-muted-foreground">0.83% of mid price</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Spread Volatility</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">±28%</p>
+                <p className="text-sm text-muted-foreground">High volatility</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="makers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Market Maker Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={marketMakerActivity}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="time" stroke="#666" />
+                    <YAxis stroke="#666" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                      labelStyle={{ color: '#999' }}
+                    />
+                    <Bar dataKey="makers" stackId="a" fill="#10b981" />
+                    <Bar dataKey="takers" stackId="a" fill="#ef4444" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded" />
+                  <span className="text-sm">Maker Orders</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded" />
+                  <span className="text-sm">Taker Orders</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Top Market Makers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm">bc1q...abc</span>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">23 orders</p>
+                      <p className="text-xs text-muted-foreground">2.34 BTC volume</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm">bc1q...def</span>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">19 orders</p>
+                      <p className="text-xs text-muted-foreground">1.87 BTC volume</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm">bc1q...ghi</span>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">15 orders</p>
+                      <p className="text-xs text-muted-foreground">1.45 BTC volume</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Market Quality Metrics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Maker/Taker Ratio</span>
+                    <span className="font-mono">0.35</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Order Fill Rate</span>
+                    <span className="font-mono">87%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Time to Fill</span>
+                    <span className="font-mono">12 min</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Slippage (avg)</span>
+                    <span className="font-mono">0.23%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

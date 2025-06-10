@@ -93,9 +93,9 @@ const tradeCorrections = [
 export function NeuralArbitrageCard() {
   const [activeTab, setActiveTab] = useState('opportunities')
   const [showCorrectionDetails, setShowCorrectionDetails] = useState(false)
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null)
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null)
 
-  const handleOpportunityClick = (opportunity) => {
+  const handleOpportunityClick = (opportunity: any) => {
     setSelectedOpportunity(opportunity)
     setShowCorrectionDetails(true)
   }

@@ -298,7 +298,7 @@ export function QuickTradePanel() {
   };
 
   const analyzeTradeOpportunity = async () => {
-    console.log('🔍 Iniciando análise...', { fromToken, toToken, amount, network });
+    console.log('🔍 Iniciando análise otimizada...', { fromToken, toToken, amount, network });
     
     if (!amount || parseFloat(amount) < 10) {
       alert('Valor mínimo de $10 requerido');
@@ -314,9 +314,10 @@ export function QuickTradePanel() {
     setStep('analyzing');
 
     try {
-      console.log('📡 Enviando requisição para API...');
+      console.log('📡 Enviando requisição para API otimizada...');
       
-      const response = await fetch('/api/quicktrade/analyze', {
+      // Use the optimized analysis endpoint
+      const response = await fetch('/api/quicktrade/analyze/optimized', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -326,7 +327,10 @@ export function QuickTradePanel() {
           fromToken,
           toToken,
           amount: parseFloat(amount),
-          network
+          network,
+          userAddress,
+          slippagePreference: 0.5,
+          speedPreference: 'standard'
         })
       });
 
@@ -339,12 +343,18 @@ export function QuickTradePanel() {
       }
 
       const data = await response.json();
-      console.log('✅ Dados recebidos:', data);
+      console.log('✅ Dados otimizados recebidos:', data);
       
       if (data.success) {
-        setAnalysis(data.data);
+        // Transform optimized data to legacy format for compatibility
+        const transformedData = transformOptimizedData(data.data);
+        setAnalysis(transformedData);
         setStep('results');
-        console.log('🎉 Análise completa!');
+        console.log('🎉 Análise otimizada completa!', {
+          performance: data.performance,
+          confidence: data.data.confidence,
+          bestDEX: data.data.bestRoute.dexPath[0]
+        });
       } else {
         console.error('❌ Erro na resposta:', data.error);
         alert('Erro na análise: ' + data.error);
@@ -352,11 +362,87 @@ export function QuickTradePanel() {
       }
     } catch (error) {
       console.error('💥 Erro na análise:', error);
+      
+      // Fallback to original API if optimized fails
+      console.log('🔄 Tentando API original como fallback...');
+      try {
+        const fallbackResponse = await fetch('/api/quicktrade/analyze', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            fromToken,
+            toToken,
+            amount: parseFloat(amount),
+            network
+          })
+        });
+
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          if (fallbackData.success) {
+            setAnalysis(fallbackData.data);
+            setStep('results');
+            console.log('✅ Fallback bem-sucedido');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('💥 Fallback também falhou:', fallbackError);
+      }
+      
       alert(`Erro na comunicação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setStep('input');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Transform optimized data format to legacy format for UI compatibility
+  const transformOptimizedData = (optimizedData: any): QuickTradeAnalysis => {
+    const bestRoute = optimizedData.bestRoute;
+    const gasEstimates = optimizedData.gasEstimates;
+    
+    return {
+      fromToken,
+      toToken,
+      amount: parseFloat(amount),
+      bestExchange: {
+        name: bestRoute.dexPath[0],
+        network: network as any,
+        price: parseFloat(bestRoute.totalAmountOut) / parseFloat(amount),
+        liquidityUSD: bestRoute.liquidityScore,
+        estimatedGas: parseFloat(gasEstimates.gasLimit),
+        gasUSD: gasEstimates.totalCostUSD,
+        slippage: bestRoute.slippage,
+        route: bestRoute.dexPath,
+        confidence: optimizedData.confidence,
+        url: `https://app.uniswap.org/#/swap?inputCurrency=${fromToken}&outputCurrency=${toToken}`
+      },
+      allQuotes: optimizedData.allRoutes.map((route: any) => ({
+        name: route.dexPath[0],
+        network: network as any,
+        price: parseFloat(route.totalAmountOut) / parseFloat(amount),
+        liquidityUSD: route.liquidityScore,
+        estimatedGas: parseFloat(route.estimatedGas),
+        gasUSD: 5, // Mock gas cost
+        slippage: route.slippage,
+        route: route.dexPath,
+        confidence: route.confidence,
+        url: `https://app.uniswap.org/#/swap?inputCurrency=${fromToken}&outputCurrency=${toToken}`
+      })),
+      serviceFee: {
+        percentage: optimizedData.serviceFee.percentage * 100,
+        amountUSD: optimizedData.serviceFee.amountUSD,
+        totalCost: optimizedData.totalCosts.total.costUSD
+      },
+      totalTransactionCost: optimizedData.totalCosts.total.costUSD,
+      estimatedOutput: parseFloat(optimizedData.expectedOutput.amount),
+      priceImpact: bestRoute.totalPriceImpact,
+      savings: 0 // Will be calculated
+    };
   };
 
   const executeTradeRedirect = async () => {

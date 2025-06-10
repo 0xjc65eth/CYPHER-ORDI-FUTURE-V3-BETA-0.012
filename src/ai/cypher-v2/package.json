@@ -1,0 +1,40 @@
+{
+  "name": "cypher-ai-v2",
+  "version": "2.0.0",
+  "description": "CYPHER AI - Advanced Crypto Assistant with Voice Commands",
+  "dependencies": {
+    "openai": "^4.24.0",
+    "elevenlabs": "^0.2.2",
+    "@google/generative-ai": "^0.1.1",
+    "assemblyai": "^4.0.0",
+    "@google-cloud/speech": "^6.0.2",
+    "@google-cloud/text-to-speech": "^5.0.1",
+    "microsoft-cognitiveservices-speech-sdk": "^1.33.0",
+    "coingecko-api": "^1.0.10",
+    "binance-api-node": "^0.12.5",
+    "ccxt": "^4.1.22",
+    "tradingview-charting-library": "^24.001",
+    "compromise": "^14.10.0",
+    "natural": "^6.7.0",
+    "node-wit": "^6.0.1",
+    "@langchain/core": "^0.1.5",
+    "@langchain/openai": "^0.0.10",
+    "@langchain/community": "^0.0.10",
+    "ws": "^8.15.1",
+    "socket.io": "^4.6.0",
+    "socket.io-client": "^4.6.0",
+    "redis": "^4.6.11",
+    "node-cache": "^5.1.2",
+    "axios": "^1.6.2",
+    "ta-lib": "^0.11.0",
+    "technicalindicators": "^3.1.0",
+    "ml-regression": "^5.0.0",
+    "brain.js": "^2.0.0-beta.23",
+    "tensorflow": "^0.8.0",
+    "chroma-js": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/ws": "^8.5.10"
+  }
+}

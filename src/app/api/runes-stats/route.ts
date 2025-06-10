@@ -67,13 +67,13 @@ export async function GET() {
           runesData = unisatData.data.list
 
           // Calcular volume total
-          totalVolume = runesData.reduce((sum, rune) => sum + (rune.volume_24h || 0), 0)
+          totalVolume = runesData.reduce((sum: number, rune: any) => sum + (rune.volume_24h || 0), 0)
 
           // Calcular market cap total
-          totalMarketCap = runesData.reduce((sum, rune) => sum + (rune.market_cap || 0), 0)
+          totalMarketCap = runesData.reduce((sum: number, rune: any) => sum + (rune.market_cap || 0), 0)
 
           // Estimar holders únicos (soma com estimativa de sobreposição)
-          uniqueHolders = runesData.reduce((sum, rune) => sum + (rune.holders || 0), 0)
+          uniqueHolders = runesData.reduce((sum: number, rune: any) => sum + (rune.holders || 0), 0)
           uniqueHolders = Math.round(uniqueHolders * 0.7) // Estimativa com 30% de sobreposição
 
           console.log(`Fetched ${runesData.length} runes from Unisat API`)
@@ -94,7 +94,7 @@ export async function GET() {
           const mempoolData = await mempoolResponse.json()
 
           if (Array.isArray(mempoolData)) {
-            runesData = mempoolData.slice(0, 20).map(rune => ({
+            runesData = mempoolData.slice(0, 20).map((rune: any) => ({
               name: rune.ticker || rune.name,
               ticker: rune.ticker || rune.name,
               price: rune.price || (0.00001 + Math.random() * 0.0001),
@@ -105,9 +105,9 @@ export async function GET() {
             }))
 
             // Calcular métricas
-            totalVolume = runesData.reduce((sum, rune) => sum + (rune.volume_24h || 0), 0)
-            totalMarketCap = runesData.reduce((sum, rune) => sum + (rune.market_cap || 0), 0)
-            uniqueHolders = runesData.reduce((sum, rune) => sum + (rune.holders || 0), 0)
+            totalVolume = runesData.reduce((sum: number, rune: any) => sum + (rune.volume_24h || 0), 0)
+            totalMarketCap = runesData.reduce((sum: number, rune: any) => sum + (rune.market_cap || 0), 0)
+            uniqueHolders = runesData.reduce((sum: number, rune: any) => sum + (rune.holders || 0), 0)
             uniqueHolders = Math.round(uniqueHolders * 0.7) // Estimativa com 30% de sobreposição
 
             console.log(`Fetched ${runesData.length} runes from Mempool.space API`)
@@ -133,7 +133,7 @@ export async function GET() {
           const ordiscanData = await ordiscanResponse.json()
 
           if (ordiscanData.data && Array.isArray(ordiscanData.data)) {
-            runesData = ordiscanData.data.map(rune => ({
+            runesData = ordiscanData.data.map((rune: any) => ({
               name: rune.ticker || rune.name,
               ticker: rune.ticker || rune.name,
               price: rune.price || (0.00001 + Math.random() * 0.0001),
@@ -144,9 +144,9 @@ export async function GET() {
             }))
 
             // Calcular métricas
-            totalVolume = runesData.reduce((sum, rune) => sum + (rune.volume_24h || 0), 0)
-            totalMarketCap = runesData.reduce((sum, rune) => sum + (rune.market_cap || 0), 0)
-            uniqueHolders = runesData.reduce((sum, rune) => sum + (rune.holders || 0), 0)
+            totalVolume = runesData.reduce((sum: number, rune: any) => sum + (rune.volume_24h || 0), 0)
+            totalMarketCap = runesData.reduce((sum: number, rune: any) => sum + (rune.market_cap || 0), 0)
+            uniqueHolders = runesData.reduce((sum: number, rune: any) => sum + (rune.holders || 0), 0)
             uniqueHolders = Math.round(uniqueHolders * 0.7) // Estimativa com 30% de sobreposição
 
             console.log(`Fetched ${runesData.length} runes from Ordiscan API`)
@@ -197,14 +197,14 @@ export async function GET() {
       })
 
       // Calcular métricas
-      totalVolume = runesData.reduce((sum, rune) => sum + (rune.volume_24h || 0), 0)
-      totalMarketCap = runesData.reduce((sum, rune) => sum + (rune.market_cap || 0), 0)
-      uniqueHolders = runesData.reduce((sum, rune) => sum + (rune.holders || 0), 0)
+      totalVolume = runesData.reduce((sum: number, rune: any) => sum + (rune.volume_24h || 0), 0)
+      totalMarketCap = runesData.reduce((sum: number, rune: any) => sum + (rune.market_cap || 0), 0)
+      uniqueHolders = runesData.reduce((sum: number, rune: any) => sum + (rune.holders || 0), 0)
       uniqueHolders = Math.round(uniqueHolders * 0.7) // Estimativa com 30% de sobreposição
     }
 
     // Estimar taxa de mint diária
-    const mintRate = Math.round(runesData.reduce((sum, rune) => sum + (rune.supply || 0), 0) / 365)
+    const mintRate = Math.round(runesData.reduce((sum: number, rune: any) => sum + (rune.supply || 0), 0) / 365)
 
     // Calcular mudanças de volume e preço (simuladas, mas realistas)
     const volumeChange24h = (Math.random() * 20) - 5 // -5% a +15%
@@ -251,9 +251,9 @@ export async function GET() {
       })
 
       // Recalcular métricas
-      totalVolume = runesData.reduce((sum, rune) => sum + (rune.volume_24h || 0), 0)
-      totalMarketCap = runesData.reduce((sum, rune) => sum + (rune.market_cap || 0), 0)
-      uniqueHolders = runesData.reduce((sum, rune) => sum + (rune.holders || 0), 0)
+      totalVolume = runesData.reduce((sum: number, rune: any) => sum + (rune.volume_24h || 0), 0)
+      totalMarketCap = runesData.reduce((sum: number, rune: any) => sum + (rune.market_cap || 0), 0)
+      uniqueHolders = runesData.reduce((sum: number, rune: any) => sum + (rune.holders || 0), 0)
       uniqueHolders = Math.round(uniqueHolders * 0.7) // Estimativa com 30% de sobreposição
     }
 
@@ -264,13 +264,13 @@ export async function GET() {
       price_change_24h: priceChange24h,
       market_cap: totalMarketCap || 1245678900, // $1.24B market cap
       unique_holders: uniqueHolders || 180000,
-      available_supply: runesData.reduce((sum, rune) => sum + (rune.supply || 0), 0) || 21000000000,
+      available_supply: runesData.reduce((sum: number, rune: any) => sum + (rune.supply || 0), 0) || 21000000000,
       mint_rate: mintRate || 3000,
       total_runes: VERIFIED_RUNES.length, // Usar o número real de runas verificadas
-      popular_runes: runesData.slice(0, 10).map(rune => {
+      popular_runes: runesData.slice(0, 10).map((rune: any) => {
         const runeName = rune.name || rune.ticker;
         const isVerified = VERIFIED_RUNES.includes(runeName);
-        const marketplaces = isVerified ? RUNE_MARKETPLACES[runeName] || [] : [];
+        const marketplaces = isVerified ? RUNE_MARKETPLACES[runeName as keyof typeof RUNE_MARKETPLACES] || [] : [];
 
         // Garantir que temos marketplaces mesmo para runas não verificadas
         const finalMarketplaces = marketplaces.length > 0 ? marketplaces : ['unisat.io', 'magiceden.io'];
@@ -321,7 +321,7 @@ export async function GET() {
       const volume = (10000 + (1000000 * popularity)) * (0.8 + Math.random() * 0.4)
 
       // Obter marketplaces para esta runa
-      const marketplaces = RUNE_MARKETPLACES[runeName] || ['unisat.io', 'magiceden.io'];
+      const marketplaces = RUNE_MARKETPLACES[runeName as keyof typeof RUNE_MARKETPLACES] || ['unisat.io', 'magiceden.io'];
 
       return {
         name: runeName,
@@ -352,7 +352,7 @@ export async function GET() {
       price_change_24h: (Math.random() * 15) - 3, // -3% a +12%
       market_cap: 1245678900, // $1.24B market cap
       unique_holders: 180000,
-      available_supply: verifiedRunesData.reduce((sum, rune) => sum + rune.supply, 0),
+      available_supply: verifiedRunesData.reduce((sum: number, rune: any) => sum + rune.supply, 0),
       mint_rate: 3000 + Math.floor(Math.random() * 800),
       total_runes: VERIFIED_RUNES.length,
       popular_runes: verifiedRunesData,

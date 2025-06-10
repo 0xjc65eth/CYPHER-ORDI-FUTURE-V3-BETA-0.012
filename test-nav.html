@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #111; 
+            color: white; 
+        }
+        .nav { 
+            display: flex; 
+            gap: 10px; 
+            background: #222; 
+            padding: 10px; 
+            border-radius: 8px; 
+        }
+        .nav-link { 
+            padding: 8px 16px; 
+            background: #333; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .nav-link:hover { 
+            background: #555; 
+        }
+        .nav-link.active { 
+            background: #f97316; 
+        }
+        .content { 
+            margin-top: 20px; 
+            padding: 20px; 
+            background: #222; 
+            border-radius: 8px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Navigation Test - Static HTML</h1>
+    
+    <nav class="nav">
+        <a href="#dashboard" class="nav-link active" onclick="navigate('dashboard')">Dashboard</a>
+        <a href="#market" class="nav-link" onclick="navigate('market')">Market</a>
+        <a href="#cypher-ai" class="nav-link" onclick="navigate('cypher-ai')">CYPHER AI</a>
+        <a href="#ordinals" class="nav-link" onclick="navigate('ordinals')">Ordinals</a>
+        <a href="#runes" class="nav-link" onclick="navigate('runes')">Runes</a>
+    </nav>
+    
+    <div class="content" id="content">
+        <h2>Dashboard Content</h2>
+        <p>This is a static HTML test to verify basic navigation functionality works.</p>
+        <p>If these links work, the issue is with the React/Next.js implementation.</p>
+    </div>
+
+    <script>
+        function navigate(page) {
+            console.log('Navigation clicked:', page);
+            
+            // Remove active class from all links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active class to clicked link
+            event.target.classList.add('active');
+            
+            // Update content
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>${page.charAt(0).toUpperCase() + page.slice(1)} Content</h2>
+                <p>Successfully navigated to ${page} page!</p>
+                <p>This confirms basic navigation functionality works.</p>
+                <p>Timestamp: ${new Date().toLocaleTimeString()}</p>
+            `;
+            
+            return false; // Prevent default link behavior
+        }
+        
+        // Log when page loads
+        console.log('Navigation test page loaded');
+        
+        // Test if JavaScript is working
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - JavaScript is working');
+        });
+    </script>
+</body>
+</html>

@@ -133,7 +133,7 @@ export async function GET() {
       }
 
       const collectionName = collection.name.split(' (')[0]; // Remove any suffix in parentheses
-      const marketplaces = COLLECTION_MARKETPLACES[collectionName] || ['magiceden.io', 'gamma.io'];
+      const marketplaces = COLLECTION_MARKETPLACES[collectionName as keyof typeof COLLECTION_MARKETPLACES] || ['magiceden.io', 'gamma.io'];
       const slug = collection.slug || collectionName.toLowerCase().replace(/\s+/g, '-');
 
       // Adicionar marketplaces

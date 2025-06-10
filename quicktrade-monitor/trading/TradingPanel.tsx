@@ -13,15 +13,15 @@ import {
   CheckCircle2, Loader2, TrendingUp, TrendingDown 
 } from 'lucide-react'
 import { useWallet } from '@/contexts/WalletContext'
-import { binanceEngine } from '@/lib/trading/trading-engine'
-import { useWebSocketPrice } from '@/hooks/useWebSocketPrice'
+// import { binanceEngine } from '@/lib/trading/trading-engine'
+// import { useWebSocketPrice } from '@/hooks/useWebSocketPrice'
 
 export default function TradingPanel({ 
   symbol = 'BTCUSDT', 
   exchange = 'binance' 
 }) {
-  const { isConnected, address } = useWallet()
-  const { prices, getBestPrice } = useWebSocketPrice({ symbols: [symbol] })
+  const { connected: isConnected, address } = useWallet()
+  // const { prices, getBestPrice } = useWebSocketPrice({ symbols: [symbol] })
   
   const [side, setSide] = useState('buy')
   const [orderType, setOrderType] = useState('market')
@@ -31,7 +31,7 @@ export default function TradingPanel({
   const [orderResult, setOrderResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const currentPrice = getBestPrice(symbol, side as 'buy' | 'sell')?.price || 0
+  const currentPrice = 0 // getBestPrice(symbol, side as 'buy' | 'sell')?.price || 0
 
   const handleExecuteOrder = async () => {
     if (!isConnected) {
@@ -51,7 +51,8 @@ export default function TradingPanel({
         price: orderType !== 'market' ? parseFloat(price) : undefined
       }
 
-      const result = await binanceEngine.createOrder(orderParams)
+      // const result = await binanceEngine.createOrder(orderParams)
+      const result = { success: false, message: 'Trading engine not configured' }
       setOrderResult(result)
       setAmount('')
       setPrice('')

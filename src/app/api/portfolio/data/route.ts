@@ -1,156 +1,288 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+interface PortfolioAsset {
+  id: string;
+  type: 'bitcoin' | 'ordinal' | 'rune' | 'brc20';
+  name: string;
+  symbol: string;
+  balance: number;
+  value: number;
+  price: number;
+  change24h: number;
+  allocation: number;
+  metadata?: {
+    inscriptionId?: string;
+    runeId?: string;
+    tokenStandard?: string;
+    collectionName?: string;
+    rarity?: number;
+  };
+}
+
+interface PortfolioTransaction {
+  id: string;
+  type: 'buy' | 'sell' | 'receive' | 'send' | 'mint' | 'burn';
+  asset: string;
+  amount: number;
+  price: number;
+  value: number;
+  fee: number;
+  timestamp: Date;
+  txHash: string;
+  status: 'confirmed' | 'pending' | 'failed';
+  from?: string;
+  to?: string;
+}
+
+interface PortfolioData {
+  totalValue: number;
+  totalCost: number;
+  totalPnL: number;
+  totalPnLPercent: number;
+  assets: PortfolioAsset[];
+  transactions: PortfolioTransaction[];
+  performance: {
+    '24h': number;
+    '7d': number;
+    '30d': number;
+    '90d': number;
+    '1y': number;
+  };
+}
+
+// Mock portfolio data generator
+function generatePortfolioData(address: string): PortfolioData {
+  const assets: PortfolioAsset[] = [
+    {
+      id: '1',
+      type: 'bitcoin',
+      name: 'Bitcoin',
+      symbol: 'BTC',
+      balance: 0.5423,
+      value: 53457.15,
+      price: 98500,
+      change24h: 2.34,
+      allocation: 45.2,
+      metadata: {}
+    },
+    {
+      id: '2',
+      type: 'ordinal',
+      name: 'Bitcoin Punks #1234',
+      symbol: 'PUNK',
+      balance: 1,
+      value: 15000,
+      price: 15000,
+      change24h: 12.5,
+      allocation: 12.7,
+      metadata: {
+        inscriptionId: 'abc123def456',
+        collectionName: 'Bitcoin Punks',
+        rarity: 234
+      }
+    },
+    {
+      id: '3',
+      type: 'rune',
+      name: 'SATOSHI•NAKAMOTO',
+      symbol: 'SATOSHI',
+      balance: 1000000,
+      value: 8500,
+      price: 0.0085,
+      change24h: -3.2,
+      allocation: 7.2,
+      metadata: {
+        runeId: '2:1',
+        tokenStandard: 'RUNES'
+      }
+    },
+    {
+      id: '4',
+      type: 'brc20',
+      name: 'ORDI',
+      symbol: 'ORDI',
+      balance: 500,
+      value: 12500,
+      price: 25,
+      change24h: 5.7,
+      allocation: 10.6,
+      metadata: {
+        tokenStandard: 'BRC-20'
+      }
+    },
+    {
+      id: '5',
+      type: 'ordinal',
+      name: 'Ordinal Maxi Biz #567',
+      symbol: 'OMB',
+      balance: 1,
+      value: 8000,
+      price: 8000,
+      change24h: -2.1,
+      allocation: 6.8,
+      metadata: {
+        inscriptionId: 'xyz789uvw012',
+        collectionName: 'Ordinal Maxi Biz',
+        rarity: 567
+      }
+    }
+  ];
+
+  const totalValue = assets.reduce((sum, asset) => sum + asset.value, 0);
+  const totalCost = totalValue * 0.85; // Mock 15% profit
+  const totalPnL = totalValue - totalCost;
+  const totalPnLPercent = (totalPnL / totalCost) * 100;
+
+  const transactions: PortfolioTransaction[] = [
+    {
+      id: 't1',
+      type: 'buy',
+      asset: 'BTC',
+      amount: 0.5423,
+      price: 85000,
+      value: 46095.5,
+      fee: 50,
+      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      txHash: 'tx123...',
+      status: 'confirmed'
+    },
+    {
+      id: 't2',
+      type: 'buy',
+      asset: 'PUNK',
+      amount: 1,
+      price: 12000,
+      value: 12000,
+      fee: 100,
+      timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      txHash: 'tx456...',
+      status: 'confirmed'
+    },
+    {
+      id: 't3',
+      type: 'mint',
+      asset: 'SATOSHI',
+      amount: 1000000,
+      price: 0.005,
+      value: 5000,
+      fee: 25,
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      txHash: 'tx789...',
+      status: 'confirmed'
+    }
+  ];
+
+  return {
+    totalValue,
+    totalCost,
+    totalPnL,
+    totalPnLPercent,
+    assets,
+    transactions,
+    performance: {
+      '24h': 2.34,
+      '7d': 8.76,
+      '30d': 23.45,
+      '90d': 45.67,
+      '1y': 123.45
+    }
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // Get the wallet address from the URL
-    const { searchParams } = new URL(request.url)
-    const address = searchParams.get('address')
-
+    const searchParams = request.nextUrl.searchParams;
+    const address = searchParams.get('address');
+    
     if (!address) {
       return NextResponse.json(
-        { error: 'Wallet address is required' },
+        { 
+          success: false, 
+          error: 'Address parameter is required' 
+        },
         { status: 400 }
-      )
+      );
     }
 
-    console.log(`Fetching portfolio data for address: ${address}`)
-
-    // In a real implementation, this would fetch data from blockchain APIs
-    // For demo purposes, we'll use realistic mock data with neural enhancements
-
-    // Generate deterministic but realistic data based on the address
-    const addressSum = address.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
-    const seed = addressSum / 1000
-
-    console.log(`Neural system analyzing wallet ${address} with seed ${seed.toFixed(2)}`)
-
-    // Fetch real BTC price first to use in calculations
-    let btcPrice = 97000; // Default fallback price
-    try {
-      const btcPriceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
-      const btcPriceData = await btcPriceResponse.json()
-      if (btcPriceData.bitcoin?.usd) {
-        btcPrice = btcPriceData.bitcoin.usd;
-      }
-    } catch (error) {
-      console.error('Error fetching BTC price, using fallback:', error)
+    // Validate Bitcoin address format (basic validation)
+    if (!address.match(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/)) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid Bitcoin address format' 
+        },
+        { status: 400 }
+      );
     }
 
-    console.log(`Using current BTC price: $${btcPrice}`)
+    // Generate portfolio data (in production, this would fetch from blockchain/database)
+    const portfolioData = generatePortfolioData(address);
 
-    // Create accurate portfolio data based on real market values
-    const portfolioData = {
-      totalValue: 0, // Will be calculated
-      btc: {
-        amount: 0.12, // Fixed realistic amount
-        value: 0 // Will be calculated
-      },
-      ordinals: {
-        count: 3,
-        collections: [
-          { name: "Bitcoin Puppets", count: 1, floorPrice: 0.0015 * btcPrice },
-          { name: "Ordinal Punks", count: 1, floorPrice: 0.0022 * btcPrice },
-          { name: "Bitcoin Frogs", count: 1, floorPrice: 0.0018 * btcPrice }
-        ],
-        value: 0 // Will be calculated
-      },
-      runes: {
-        count: 4,
-        holdings: [
-          { ticker: "ORDI", amount: "12500", price: 42.15 },
-          { ticker: "SATS", amount: "25000", price: 0.00032 * btcPrice },
-          { ticker: "PEPE", amount: "1500000", price: 0.0000082 * btcPrice },
-          { ticker: "MEME", amount: "7500", price: 0.00012 * btcPrice }
-        ],
-        value: 0 // Will be calculated
-      },
-      rareSats: {
-        count: 2,
-        items: [
-          { type: "Uncommon", sat: "2099999997690000", value: 0.0008 * btcPrice },
-          { type: "Vintage", sat: "1000000", value: 0.0012 * btcPrice }
-        ],
-        value: 0 // Will be calculated
-      },
-      recentTransactions: [
-        {
-          type: 'Received',
-          amount: '0.05 BTC',
-          valueUSD: 0.05 * btcPrice,
-          date: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-          sentiment: 'positive',
-          marketImpact: 'minimal',
-          txid: '6d9c5b25f1bbac07d72eef256385545ac5c208952d5398d5008b62c9f0022e3e'
-        },
-        {
-          type: 'Sent',
-          amount: '0.01 BTC',
-          valueUSD: 0.01 * btcPrice,
-          date: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
-          sentiment: 'neutral',
-          marketImpact: 'minimal',
-          txid: '9f613dd8bbd7d040293f8bf5fe95f5e5ea5fe5cebf75099efb28e8bb2c3ca04e'
-        },
-        {
-          type: 'Received',
-          amount: 'Bitcoin Puppets #3542',
-          valueUSD: 0.0015 * btcPrice,
-          date: new Date(Date.now() - 86400000 * 8).toISOString(), // 8 days ago
-          sentiment: 'positive',
-          marketImpact: 'minimal',
-          txid: '42d238f7026a55b66e47f42dd9cd0a1cae4a2f5fea61c0b13a069f31dde02ec0'
-        },
-        {
-          type: 'Received',
-          amount: '5000 ORDI',
-          valueUSD: 5000 * 42.15,
-          date: new Date(Date.now() - 86400000 * 12).toISOString(), // 12 days ago
-          sentiment: 'positive',
-          marketImpact: 'minimal',
-          txid: '3fdc1a17cbafba445bde8e5401e332b4e7e48dd7dc2a038d47f792647888abcc'
-        }
-      ]
-    }
+    // Add some randomness to simulate real-time changes
+    portfolioData.assets.forEach(asset => {
+      asset.value = asset.value * (1 + (Math.random() - 0.5) * 0.01);
+      asset.change24h = asset.change24h + (Math.random() - 0.5) * 0.5;
+    });
 
-    // Calculate accurate values
-    // BTC value
-    portfolioData.btc.value = portfolioData.btc.amount * btcPrice;
+    // Recalculate allocations
+    const newTotalValue = portfolioData.assets.reduce((sum, asset) => sum + asset.value, 0);
+    portfolioData.assets.forEach(asset => {
+      asset.allocation = (asset.value / newTotalValue) * 100;
+    });
+    portfolioData.totalValue = newTotalValue;
 
-    // Ordinals value
-    portfolioData.ordinals.value = portfolioData.ordinals.collections.reduce(
-      (total, collection) => total + collection.floorPrice, 0
-    );
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      address,
+      data: portfolioData
+    });
 
-    // Runes value
-    portfolioData.runes.value = portfolioData.runes.holdings.reduce(
-      (total, holding) => {
-        const amount = parseFloat(holding.amount);
-        return total + (amount * holding.price);
-      }, 0
-    );
-
-    // Rare sats value
-    portfolioData.rareSats.value = portfolioData.rareSats.items.reduce(
-      (total, item) => total + item.value, 0
-    );
-
-    // Total value
-    portfolioData.totalValue =
-      portfolioData.btc.value +
-      portfolioData.ordinals.value +
-      portfolioData.runes.value +
-      portfolioData.rareSats.value;
-
-    console.log(`Portfolio analysis complete. Total value: $${portfolioData.totalValue.toFixed(2)}`)
-
-    console.log('Neural system portfolio analysis complete')
-
-    return NextResponse.json(portfolioData)
   } catch (error) {
-    console.error('Error fetching portfolio data:', error)
+    console.error('Portfolio data API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch portfolio data' },
+      { 
+        success: false, 
+        error: 'Failed to fetch portfolio data',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
-    )
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { address, transaction } = body;
+
+    if (!address || !transaction) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Address and transaction data are required' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // In production, this would save the transaction to database
+    // For now, just return success
+    return NextResponse.json({
+      success: true,
+      message: 'Transaction recorded successfully',
+      transactionId: `t${Date.now()}`
+    });
+
+  } catch (error) {
+    console.error('Portfolio transaction API error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Failed to record transaction',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }

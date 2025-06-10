@@ -1,59 +1,139 @@
 'use client'
 
-import { Header } from './components/header'
-import { Navbar } from './components/navbar'
-import { EnhancedMiningCard } from './components/enhanced-mining-card'
-import { Grid, Col } from '@tremor/react'
+import { TopNavLayout } from '@/components/layout/TopNavLayout'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useOrdiscanData } from '@/hooks/useOrdiscanData'
+import { useMempoolHashrate } from '@/hooks/useMempoolHashrate'
+import { useMempoolDifficulty } from '@/hooks/useMempoolDifficulty'
+import { useMempoolPools } from '@/hooks/useMempoolPools'
+import { useMempoolBlocks } from '@/hooks/useMempoolBlocks'
 
 export default function MinersPage() {
+  const { data: hashrateData, isLoading: isHashrateLoading } = useMempoolHashrate()
+  const { data: difficultyData, isLoading: isDifficultyLoading } = useMempoolDifficulty()
+  const { data: poolsData, isLoading: isPoolsLoading } = useMempoolPools()
+  const { data: blocksData, isLoading: isBlocksLoading } = useMempoolBlocks()
+
+  // Cálculo de descentralização (exemplo: % do maior pool)
+  const decentralization = poolsData && poolsData.length > 0 ? 100 - poolsData[0].share : 0
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B]">
-      <Navbar />
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-[#F7931A] rounded-full flex items-center justify-center mb-4 shadow-lg shadow-[#F7931A]/20">
-            <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#F7931A] via-[#F9A826] to-[#F7931A] text-transparent bg-clip-text text-center">
-            BITCOIN MINERS & NETWORK HEALTH
+    <TopNavLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#8B5CF6] via-[#6366F1] to-[#8B5CF6] text-transparent bg-clip-text">
+            MINERS & NETWORK HEALTH
           </h1>
-          <div className="w-24 h-1 bg-gradient-to-r from-[#F7931A] via-[#F9A826] to-[#F7931A] rounded-full mb-4"></div>
-          <h2 className="text-lg text-gray-300 max-w-2xl text-center">
-            Real-time analysis of Bitcoin mining, network decentralization, and mining pool statistics
+          <h2 className="text-lg text-muted-foreground mb-6">
+            Dados em tempo real da mineração Bitcoin
           </h2>
         </div>
-
-        <div className="max-w-7xl mx-auto">
-          <EnhancedMiningCard />
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <HashrateCard data={hashrateData} loading={isHashrateLoading} />
+          <DifficultyCard data={difficultyData} loading={isDifficultyLoading} />
+          <PoolsCard data={poolsData} loading={isPoolsLoading} />
+          <DecentralizationCard decentralization={decentralization} />
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-gray-400 text-sm max-w-2xl mx-auto">
-            Data is updated in real-time from the mempool.space API.
-            Support Bitcoin network decentralization by mining with smaller pools or setting up your own node.
-          </p>
-          <div className="flex justify-center mt-4 space-x-4">
-            <a
-              href="https://mempool.space/mining"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-[#F7931A]/20 text-[#F7931A] rounded-lg border border-[#F7931A]/30 hover:bg-[#F7931A]/30 transition-all text-sm font-medium"
-            >
-              Mining Statistics
-            </a>
-            <a
-              href="https://braiins.com/pool"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/30 hover:bg-blue-500/30 transition-all text-sm font-medium"
-            >
-              Decentralized Pools
-            </a>
-          </div>
-        </div>
+        <RecentBlocksCard data={blocksData} loading={isBlocksLoading} />
       </div>
-    </main>
+    </TopNavLayout>
+  )
+}
+
+function HashrateCard({ data, loading }: { data: any; loading: boolean }) {
+  return (
+    <Card className="bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white border-none">
+      <CardHeader>
+        <CardTitle className="text-white">Hashrate da Rede</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">
+          {loading || !Array.isArray(data) || data.length === 0
+            ? 'Carregando...'
+            : `${(data[data.length - 1].avgHashrate / 1e18).toLocaleString('en-US', { maximumFractionDigits: 2 })} EH/s`}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+function DifficultyCard({ data, loading }: { data: any; loading: boolean }) {
+  return (
+    <Card className="bg-gradient-to-br from-[#f59e42] to-[#fbbf24] text-white border-none">
+      <CardHeader>
+        <CardTitle className="text-white">Dificuldade Atual</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">
+          {loading || !data ? 'Carregando...' : `${(data/1e12).toLocaleString('en-US', { maximumFractionDigits: 2 })} T`}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PoolsCard({ data, loading }: { data: any; loading: boolean }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Mining Pools</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p>Carregando...</p>
+        ) : (
+          <div className="space-y-2">
+            {data?.slice(0, 3).map((pool: any, idx: number) => (
+              <div key={idx} className="flex justify-between">
+                <span>{pool.name || 'Unknown'}</span>
+                <span>{pool.share ? pool.share.toFixed(1) : '0.0'}%</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function DecentralizationCard({ decentralization }: { decentralization: number }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Descentralização</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{decentralization.toFixed(1)}%</div>
+        <p className="text-sm text-muted-foreground mt-2">
+          Nível de distribuição da rede
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function RecentBlocksCard({ data, loading }: { data: any; loading: boolean }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Blocos Recentes</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p>Carregando...</p>
+        ) : (
+          <div className="space-y-2">
+            {data?.slice(0, 5).map((block: any, idx: number) => (
+              <div key={idx} className="flex justify-between text-sm">
+                <span>#{block.height}</span>
+                <span>{block.poolName || 'Unknown'}</span>
+                <span>{(block.reward / 1e8).toFixed(2)} BTC</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

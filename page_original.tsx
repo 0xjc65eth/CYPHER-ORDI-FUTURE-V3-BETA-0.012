@@ -210,22 +210,11 @@ const runesMarket = {
 
 export default function DashboardPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('24H')
-  const { data: miningData = {
-    hashRate: 0,
-    blockTime: 0,
-    difficulty: 0
-  } } = useMiningData()
+  const miningData = useMiningData()
 
-  const { data: marketData = {
-    btcPrice: 0,
-    btcChange24h: 0,
-    volume24h: 0,
-    marketCap: 0
-  } } = useMarketData()
+  const marketData = useMarketData()
 
-  const { data: mempoolData = {
-    pendingTransactions: 0
-  } } = useMempoolData()
+  const mempoolData = useMempoolData()
 
   const deltaType: DeltaType = (marketData?.btcChange24h ?? 0) >= 0 ? "increase" : "decrease"
   const DeltaIcon = (marketData?.btcChange24h ?? 0) >= 0 ? RiArrowUpSLine : RiArrowDownSLine
@@ -295,7 +284,7 @@ export default function DashboardPage() {
                   showYAxis={true}
                   yAxisWidth={65}
                   curveType="natural"
-                  valueFormatter={(value) => `$${value.toLocaleString()}`}
+                  valueFormatter={(value: number) => `$${value.toLocaleString()}`}
                 />
               </div>
               <div className="mt-4 pt-3 border-t border-slate-700/30 text-xs text-gray-300 flex justify-between items-center">
@@ -350,7 +339,7 @@ export default function DashboardPage() {
                   colors={["purple", "indigo", "violet", "slate"]}
                   showAnimation
                   showTooltip
-                  valueFormatter={(value) => `${value} txs`}
+                  valueFormatter={(value: number) => `${value} txs`}
                 />
                 <Legend
                   className="mt-3"
@@ -412,7 +401,7 @@ export default function DashboardPage() {
                   showLegend={false}
                   showGridLines={false}
                   curveType="monotone"
-                  valueFormatter={(value) => `${value} EH/s`}
+                  valueFormatter={(value: number) => `${value} EH/s`}
                 />
               </div>
               <div className="mt-4 pt-3 border-t border-slate-700/30 text-xs text-gray-300 flex justify-between items-center">
@@ -439,7 +428,7 @@ export default function DashboardPage() {
                 <Title className="text-white font-bold">Neural Network Insights</Title>
               </div>
               <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
-                <BarList data={neuralInsights} valueFormatter={(number) => `${(number * 100).toFixed(0)}%`} />
+                <BarList data={neuralInsights} valueFormatter={(number: number) => `${(number * 100).toFixed(0)}%`} />
               </div>
               <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                 <Text className="text-sm text-white/90">Our neural engine currently detects a <b className="text-emerald-400">bullish</b> bias. Signals are updated in real time based on on-chain and market data.</Text>
@@ -457,7 +446,7 @@ export default function DashboardPage() {
                 <Title className="text-white font-bold">SMC Analysis</Title>
               </div>
               <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
-                <BarList data={smcAnalysis} valueFormatter={(number) => `$${number.toLocaleString()}`} />
+                <BarList data={smcAnalysis} valueFormatter={(number: number) => `$${number.toLocaleString()}`} />
               </div>
               <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
                 <Text className="text-sm text-white/90">Key support, resistance, and pivot levels for strategic trading decisions.</Text>
@@ -603,7 +592,7 @@ export default function DashboardPage() {
                   showAnimation
                   showLegend={false}
                   showGridLines={false}
-                  valueFormatter={(number) =>
+                  valueFormatter={(number: number) =>
                     `$${Intl.NumberFormat('us').format(number).toString()}B`
                   }
                 />
@@ -693,7 +682,7 @@ export default function DashboardPage() {
                   showAnimation
                   showLegend={false}
                   showGridLines={false}
-                  valueFormatter={(number) => `${number}T`}
+                  valueFormatter={(number: number) => `${number}T`}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
@@ -786,7 +775,7 @@ export default function DashboardPage() {
                     showAnimation
                     showLegend={false}
                     showGridLines={false}
-                    valueFormatter={(v) => `${v} BTC`}
+                    valueFormatter={(v: number) => `${v} BTC`}
                   />
                   <LineChart
                     className="h-24"
@@ -873,7 +862,7 @@ export default function DashboardPage() {
                     showAnimation
                     showLegend={false}
                     showGridLines={false}
-                    valueFormatter={(v) => `${v} BTC`}
+                    valueFormatter={(v: number) => `${v} BTC`}
                   />
                   <LineChart
                     className="h-24"

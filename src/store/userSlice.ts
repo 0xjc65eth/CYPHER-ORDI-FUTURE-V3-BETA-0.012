@@ -1,41 +1,57 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 interface UserState {
-  address: string | null
-  nftData: {
-    id: string
-    name: string
-    collection: string
-    image: string
-    verified: boolean
-    tier: string
-    version: string
-    benefits: string[]
-  } | null
-  subscription: 'free' | 'basic' | 'pro' | 'enterprise' | null
+  id: string | null
+  email: string | null
+  name: string | null
+  isAuthenticated: boolean
+  preferences: {
+    theme: "light" | "dark"
+    language: string
+    notifications: boolean
+  }
+  isLoading: boolean
+  error: string | null
 }
 
 const initialState: UserState = {
-  address: null,
-  nftData: null,
-  subscription: null,
+  id: null,
+  email: null,
+  name: null,
+  isAuthenticated: false,
+  preferences: {
+    theme: "dark",
+    language: "en",
+    notifications: true,
+  },
+  isLoading: false,
+  error: null,
 }
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
-    setAddress: (state, action: PayloadAction<string | null>) => {
-      state.address = action.payload
+    setUser: (state, action: PayloadAction<Partial<UserState>>) => {
+      Object.assign(state, action.payload)
+      state.error = null
     },
-    setNftData: (state, action: PayloadAction<UserState['nftData']>) => {
-      state.nftData = action.payload
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload
     },
-    setSubscription: (state, action: PayloadAction<UserState['subscription']>) => {
-      state.subscription = action.payload
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload
+      state.isLoading = false
+    },
+    logout: (state) => {
+      state.id = null
+      state.email = null
+      state.name = null
+      state.isAuthenticated = false
+      state.error = null
     },
   },
 })
 
-export const { setAddress, setNftData, setSubscription } = userSlice.actions
-export default userSlice.reducer 
+export const { setUser, setLoading, setError, logout } = userSlice.actions
+export default userSlice.reducer

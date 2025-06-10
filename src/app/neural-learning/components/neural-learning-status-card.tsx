@@ -245,7 +245,7 @@ export function NeuralLearningStatusCard() {
   const [newLogCount, setNewLogCount] = useState(0)
 
   // Format date helper
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleString()
@@ -347,7 +347,7 @@ export function NeuralLearningStatusCard() {
       setStageProgress(prev => {
         const updatedProgress = { ...prev }
         const randomStage = learningStages[Math.floor(Math.random() * learningStages.length)]
-        updatedProgress[randomStage] = Math.min(100, updatedProgress[randomStage] + Math.floor(Math.random() * 5))
+        updatedProgress[randomStage as keyof typeof updatedProgress] = Math.min(100, updatedProgress[randomStage as keyof typeof updatedProgress] + Math.floor(Math.random() * 5))
         return updatedProgress
       })
 

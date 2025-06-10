@@ -16,7 +16,7 @@ import {
   getWalletExplorerUrl,
   calculateServiceFee,
   SUPPORTED_NETWORKS 
-} from '@/config/quicktrade';
+} from '../config/quicktrade';
 
 export function RevenueDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);

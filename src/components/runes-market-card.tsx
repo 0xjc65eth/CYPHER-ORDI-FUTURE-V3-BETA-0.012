@@ -3,8 +3,10 @@
 import { DashboardCard } from '@/components/dashboard-card'
 import { useRunesStats } from '@/hooks/useRunesStats'
 import { useRunesMarket } from '@/hooks/useRunesMarket'
+import RechartsChart from '@/components/charts/RechartsChart'
 import { RiArrowUpSLine, RiArrowDownSLine, RiCoinLine, RiExchangeDollarLine, RiLineChartLine, RiRefreshLine } from 'react-icons/ri'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { Activity, BarChart3, TrendingUp } from 'lucide-react'
 
 export function RunesMarketCard() {
   const [mounted, setMounted] = useState(false)
@@ -17,6 +19,73 @@ export function RunesMarketCard() {
   }, [])
 
   const isLoading = isLoadingStats || isLoadingMarket || !mounted
+
+  // Generate Runes market chart data
+  const runesChartData = useMemo(() => {
+    const baseMarketCap = 1245678900
+    const baseVolume = 245890000
+    const hours = 24
+    const seed = 54321
+
+    const pseudoRandom = (index: number) => {
+      const x = Math.sin(seed + index) * 10000
+      return x - Math.floor(x)
+    }
+
+    return Array.from({ length: hours }, (_, i) => {
+      const timeAgo = hours - i
+      const now = new Date()
+      const time = new Date(now.getTime() - timeAgo * 60 * 60 * 1000)
+      
+      // Runes showing more volatile growth pattern
+      const trendFactor = 1 + (Math.sin(i * 0.18) * 0.012)
+      const volatility = 0.035
+      const randomFactor = 1 + (pseudoRandom(i) * volatility * 2 - volatility)
+      const marketCap = baseMarketCap * trendFactor * randomFactor
+      const volume = baseVolume * (1 + pseudoRandom(i + 50) * 0.5)
+      
+      return {
+        time: time.toISOString(),
+        value: marketCap,
+        volume
+      }
+    }).reverse()
+  }, [mounted])
+
+  // Runes volume chart data
+  const volumeChartData = useMemo(() => {
+    return runesChartData.map(item => ({
+      ...item,
+      value: item.volume
+    }))
+  }, [runesChartData])
+
+  // Chart configurations
+  const marketCapConfig = useMemo(() => ({
+    type: 'area' as const,
+    height: 100,
+    theme: 'dark' as const,
+    showGrid: false,
+    showCrosshair: true,
+    showTooltip: true,
+    colors: ['#8B5CF6', '#7C3AED'],
+    precision: 0,
+    realtime: true,
+    library: 'recharts' as const
+  }), [])
+
+  const volumeConfig = useMemo(() => ({
+    type: 'bar' as const,
+    height: 80,
+    theme: 'dark' as const,
+    showGrid: false,
+    showCrosshair: true,
+    showTooltip: true,
+    colors: ['#A855F7', '#9333EA'],
+    precision: 0,
+    realtime: true,
+    library: 'recharts' as const
+  }), [])
 
   return (
     <div className="bg-gradient-to-br from-[#2A1A3A] to-[#3A2A5A] border border-purple-500/20 rounded-lg overflow-hidden shadow-xl">
@@ -158,6 +227,53 @@ export function RunesMarketCard() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Professional Charts Section */}
+        <div className="space-y-4 mb-4">
+          {/* Market Cap Chart */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-white flex items-center">
+                <Activity className="w-4 h-4 text-purple-400 mr-2" />
+                Market Cap Trend
+              </h3>
+              <span className="text-xs text-purple-300 font-mono">24h</span>
+            </div>
+            {mounted && runesChartData.length > 0 ? (
+              <RechartsChart
+                data={runesChartData}
+                config={marketCapConfig}
+                className="bg-transparent border-0 p-0"
+              />
+            ) : (
+              <div className="h-24 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-purple-400 animate-pulse" />
+              </div>
+            )}
+          </div>
+
+          {/* Volume Chart */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-white flex items-center">
+                <BarChart3 className="w-4 h-4 text-purple-400 mr-2" />
+                Trading Volume
+              </h3>
+              <span className="text-xs text-purple-300 font-mono">Hourly</span>
+            </div>
+            {mounted && volumeChartData.length > 0 ? (
+              <RechartsChart
+                data={volumeChartData}
+                config={volumeConfig}
+                className="bg-transparent border-0 p-0"
+              />
+            ) : (
+              <div className="h-20 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-purple-400 animate-pulse" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Market Insights */}

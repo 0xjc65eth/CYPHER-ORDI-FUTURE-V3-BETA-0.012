@@ -1,0 +1,545 @@
+/**
+ * 📊 CYPHER ORDI FUTURE v3.0.0 - Technical Indicators
+ * Sistema completo de indicadores técnicos para análise de trading
+ */
+
+// Types
+export interface IndicatorResult {
+  value: number;
+  timestamp: number;
+  signal?: 'buy' | 'sell' | 'neutral';
+}
+
+export interface MAResult extends IndicatorResult {
+  period: number;
+}
+
+export interface RSIResult extends IndicatorResult {
+  period: number;
+  overbought: boolean;
+  oversold: boolean;
+}
+
+export interface MACDResult {
+  timestamp: number;
+  macd: number;
+  signal: number;
+  histogram: number;
+  trend: 'bullish' | 'bearish' | 'neutral';
+}
+
+export interface BollingerBandsResult {
+  timestamp: number;
+  upper: number;
+  middle: number;
+  lower: number;
+  bandwidth: number;
+  %b: number;
+}
+
+export interface VolumeProfileResult {
+  price: number;
+  volume: number;
+  percentage: number;
+  poc: boolean; // Point of Control
+}
+
+export interface FibonacciLevel {
+  level: number;
+  price: number;
+  label: string;
+}
+
+export interface SupportResistanceLevel {
+  price: number;
+  strength: number;
+  type: 'support' | 'resistance';
+  touches: number;
+}
+
+// Technical Indicators Calculator
+export class TechnicalIndicators {
+  
+  /**
+   * Simple Moving Average (SMA)
+   */
+  static calculateSMA(prices: number[], period: number): MAResult[] {
+    if (prices.length < period) return [];
+    
+    const results: MAResult[] = [];
+    
+    for (let i = period - 1; i < prices.length; i++) {
+      const sum = prices.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+      const sma = sum / period;
+      
+      results.push({
+        value: sma,
+        timestamp: Date.now() - (prices.length - 1 - i) * 60000, // Assuming 1-minute intervals
+        period,
+        signal: this.generateMASignal(prices, sma, i)
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Exponential Moving Average (EMA)
+   */
+  static calculateEMA(prices: number[], period: number): MAResult[] {
+    if (prices.length < period) return [];
+    
+    const results: MAResult[] = [];
+    const multiplier = 2 / (period + 1);
+    
+    // Calculate initial SMA for first EMA value
+    const initialSum = prices.slice(0, period).reduce((a, b) => a + b, 0);
+    let ema = initialSum / period;
+    
+    results.push({
+      value: ema,
+      timestamp: Date.now() - (prices.length - period) * 60000,
+      period,
+      signal: 'neutral'
+    });
+    
+    // Calculate subsequent EMA values
+    for (let i = period; i < prices.length; i++) {
+      ema = (prices[i] * multiplier) + (ema * (1 - multiplier));
+      
+      results.push({
+        value: ema,
+        timestamp: Date.now() - (prices.length - 1 - i) * 60000,
+        period,
+        signal: this.generateMASignal(prices, ema, i)
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Relative Strength Index (RSI)
+   */
+  static calculateRSI(prices: number[], period: number = 14): RSIResult[] {
+    if (prices.length < period + 1) return [];
+    
+    const results: RSIResult[] = [];
+    const gains: number[] = [];
+    const losses: number[] = [];
+    
+    // Calculate price changes
+    for (let i = 1; i < prices.length; i++) {
+      const change = prices[i] - prices[i - 1];
+      gains.push(change > 0 ? change : 0);
+      losses.push(change < 0 ? Math.abs(change) : 0);
+    }
+    
+    // Calculate RSI values
+    for (let i = period - 1; i < gains.length; i++) {
+      const avgGain = gains.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+      const avgLoss = losses.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+      
+      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      const rsi = 100 - (100 / (1 + rs));
+      
+      const overbought = rsi > 70;
+      const oversold = rsi < 30;
+      
+      results.push({
+        value: rsi,
+        timestamp: Date.now() - (gains.length - 1 - i) * 60000,
+        period,
+        overbought,
+        oversold,
+        signal: oversold ? 'buy' : overbought ? 'sell' : 'neutral'
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * MACD (Moving Average Convergence Divergence)
+   */
+  static calculateMACD(
+    prices: number[], 
+    fastPeriod: number = 12, 
+    slowPeriod: number = 26, 
+    signalPeriod: number = 9
+  ): MACDResult[] {
+    if (prices.length < slowPeriod) return [];
+    
+    const fastEMA = this.calculateEMA(prices, fastPeriod);
+    const slowEMA = this.calculateEMA(prices, slowPeriod);
+    
+    if (fastEMA.length === 0 || slowEMA.length === 0) return [];
+    
+    const results: MACDResult[] = [];
+    const macdLine: number[] = [];
+    
+    // Calculate MACD line
+    const minLength = Math.min(fastEMA.length, slowEMA.length);
+    for (let i = 0; i < minLength; i++) {
+      const macd = fastEMA[fastEMA.length - minLength + i].value - slowEMA[slowEMA.length - minLength + i].value;
+      macdLine.push(macd);
+    }
+    
+    // Calculate Signal line (EMA of MACD)
+    const signalEMA = this.calculateEMA(macdLine, signalPeriod);
+    
+    // Generate results
+    for (let i = 0; i < signalEMA.length; i++) {
+      const macd = macdLine[macdLine.length - signalEMA.length + i];
+      const signal = signalEMA[i].value;
+      const histogram = macd - signal;
+      
+      let trend: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+      if (i > 0) {
+        const prevHistogram = macdLine[macdLine.length - signalEMA.length + i - 1] - signalEMA[i - 1].value;
+        if (histogram > 0 && histogram > prevHistogram) trend = 'bullish';
+        else if (histogram < 0 && histogram < prevHistogram) trend = 'bearish';
+      }
+      
+      results.push({
+        timestamp: Date.now() - (signalEMA.length - 1 - i) * 60000,
+        macd,
+        signal,
+        histogram,
+        trend
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Bollinger Bands
+   */
+  static calculateBollingerBands(
+    prices: number[], 
+    period: number = 20, 
+    multiplier: number = 2
+  ): BollingerBandsResult[] {
+    if (prices.length < period) return [];
+    
+    const results: BollingerBandsResult[] = [];
+    const smaResults = this.calculateSMA(prices, period);
+    
+    for (let i = 0; i < smaResults.length; i++) {
+      const priceIndex = i + period - 1;
+      const sma = smaResults[i].value;
+      
+      // Calculate standard deviation
+      const variance = prices.slice(priceIndex - period + 1, priceIndex + 1)
+        .reduce((sum, price) => sum + Math.pow(price - sma, 2), 0) / period;
+      const stdDev = Math.sqrt(variance);
+      
+      const upper = sma + (multiplier * stdDev);
+      const lower = sma - (multiplier * stdDev);
+      const bandwidth = ((upper - lower) / sma) * 100;
+      const currentPrice = prices[priceIndex];
+      const percentB = (currentPrice - lower) / (upper - lower);
+      
+      results.push({
+        timestamp: smaResults[i].timestamp,
+        upper,
+        middle: sma,
+        lower,
+        bandwidth,
+        '%b': percentB
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Volume Profile
+   */
+  static calculateVolumeProfile(prices: number[], volumes: number[]): VolumeProfileResult[] {
+    if (prices.length !== volumes.length || prices.length === 0) return [];
+    
+    const priceVolumeMap = new Map<number, number>();
+    const priceStep = this.calculateOptimalPriceStep(prices);
+    
+    // Group volumes by price levels
+    for (let i = 0; i < prices.length; i++) {
+      const roundedPrice = Math.round(prices[i] / priceStep) * priceStep;
+      const currentVolume = priceVolumeMap.get(roundedPrice) || 0;
+      priceVolumeMap.set(roundedPrice, currentVolume + volumes[i]);
+    }
+    
+    const totalVolume = Array.from(priceVolumeMap.values()).reduce((a, b) => a + b, 0);
+    const maxVolume = Math.max(...Array.from(priceVolumeMap.values()));
+    
+    // Create results array
+    const results: VolumeProfileResult[] = [];
+    
+    for (const [price, volume] of priceVolumeMap.entries()) {
+      results.push({
+        price,
+        volume,
+        percentage: (volume / totalVolume) * 100,
+        poc: volume === maxVolume // Point of Control
+      });
+    }
+    
+    return results.sort((a, b) => b.price - a.price);
+  }
+
+  /**
+   * Fibonacci Retracement Levels
+   */
+  static calculateFibonacciRetracement(high: number, low: number): FibonacciLevel[] {
+    const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+    const range = high - low;
+    
+    return levels.map(level => ({
+      level,
+      price: high - (range * level),
+      label: `${(level * 100).toFixed(1)}%`
+    }));
+  }
+
+  /**
+   * Support and Resistance Levels
+   */
+  static calculateSupportResistance(
+    prices: number[], 
+    minTouches: number = 2,
+    tolerance: number = 0.01
+  ): SupportResistanceLevel[] {
+    if (prices.length < 10) return [];
+    
+    const levels: SupportResistanceLevel[] = [];
+    const localExtremes = this.findLocalExtremes(prices);
+    
+    // Group similar price levels
+    const groupedLevels = new Map<number, { prices: number[]; touches: number }>();
+    
+    for (const extreme of localExtremes) {
+      const price = extreme.price;
+      let foundGroup = false;
+      
+      for (const [groupPrice, group] of groupedLevels.entries()) {
+        if (Math.abs(price - groupPrice) / groupPrice <= tolerance) {
+          group.prices.push(price);
+          group.touches++;
+          foundGroup = true;
+          break;
+        }
+      }
+      
+      if (!foundGroup) {
+        groupedLevels.set(price, { prices: [price], touches: 1 });
+      }
+    }
+    
+    // Create support/resistance levels
+    for (const [basePrice, group] of groupedLevels.entries()) {
+      if (group.touches >= minTouches) {
+        const avgPrice = group.prices.reduce((a, b) => a + b, 0) / group.prices.length;
+        const currentPrice = prices[prices.length - 1];
+        
+        levels.push({
+          price: avgPrice,
+          strength: group.touches,
+          type: avgPrice < currentPrice ? 'support' : 'resistance',
+          touches: group.touches
+        });
+      }
+    }
+    
+    return levels.sort((a, b) => b.strength - a.strength);
+  }
+
+  /**
+   * Stochastic Oscillator
+   */
+  static calculateStochastic(
+    highs: number[], 
+    lows: number[], 
+    closes: number[], 
+    kPeriod: number = 14,
+    dPeriod: number = 3
+  ): { timestamp: number; %K: number; %D: number; signal: 'buy' | 'sell' | 'neutral' }[] {
+    if (highs.length < kPeriod || highs.length !== lows.length || highs.length !== closes.length) {
+      return [];
+    }
+    
+    const results: { timestamp: number; %K: number; %D: number; signal: 'buy' | 'sell' | 'neutral' }[] = [];
+    const kValues: number[] = [];
+    
+    // Calculate %K values
+    for (let i = kPeriod - 1; i < closes.length; i++) {
+      const periodHighs = highs.slice(i - kPeriod + 1, i + 1);
+      const periodLows = lows.slice(i - kPeriod + 1, i + 1);
+      
+      const highestHigh = Math.max(...periodHighs);
+      const lowestLow = Math.min(...periodLows);
+      const currentClose = closes[i];
+      
+      const k = ((currentClose - lowestLow) / (highestHigh - lowestLow)) * 100;
+      kValues.push(k);
+    }
+    
+    // Calculate %D values (SMA of %K)
+    for (let i = dPeriod - 1; i < kValues.length; i++) {
+      const dValue = kValues.slice(i - dPeriod + 1, i + 1).reduce((a, b) => a + b, 0) / dPeriod;
+      const kValue = kValues[i];
+      
+      let signal: 'buy' | 'sell' | 'neutral' = 'neutral';
+      if (kValue < 20 && dValue < 20) signal = 'buy';
+      else if (kValue > 80 && dValue > 80) signal = 'sell';
+      
+      results.push({
+        timestamp: Date.now() - (kValues.length - 1 - i) * 60000,
+        '%K': kValue,
+        '%D': dValue,
+        signal
+      });
+    }
+    
+    return results;
+  }
+
+  /**
+   * Williams %R
+   */
+  static calculateWilliamsR(
+    highs: number[], 
+    lows: number[], 
+    closes: number[], 
+    period: number = 14
+  ): IndicatorResult[] {
+    if (highs.length < period) return [];
+    
+    const results: IndicatorResult[] = [];
+    
+    for (let i = period - 1; i < closes.length; i++) {
+      const periodHighs = highs.slice(i - period + 1, i + 1);
+      const periodLows = lows.slice(i - period + 1, i + 1);
+      
+      const highestHigh = Math.max(...periodHighs);
+      const lowestLow = Math.min(...periodLows);
+      const currentClose = closes[i];
+      
+      const williamsR = ((highestHigh - currentClose) / (highestHigh - lowestLow)) * -100;
+      
+      let signal: 'buy' | 'sell' | 'neutral' = 'neutral';
+      if (williamsR < -80) signal = 'buy';
+      else if (williamsR > -20) signal = 'sell';
+      
+      results.push({
+        value: williamsR,
+        timestamp: Date.now() - (closes.length - 1 - i) * 60000,
+        signal
+      });
+    }
+    
+    return results;
+  }
+
+  // Utility Methods
+  
+  private static generateMASignal(prices: number[], ma: number, index: number): 'buy' | 'sell' | 'neutral' {
+    if (index === 0) return 'neutral';
+    
+    const currentPrice = prices[index];
+    const previousPrice = prices[index - 1];
+    
+    if (previousPrice <= ma && currentPrice > ma) return 'buy';
+    if (previousPrice >= ma && currentPrice < ma) return 'sell';
+    
+    return 'neutral';
+  }
+
+  private static calculateOptimalPriceStep(prices: number[]): number {
+    const priceRange = Math.max(...prices) - Math.min(...prices);
+    const numberOfBuckets = Math.min(50, Math.max(10, prices.length / 10));
+    return priceRange / numberOfBuckets;
+  }
+
+  private static findLocalExtremes(prices: number[]): { price: number; type: 'high' | 'low'; index: number }[] {
+    const extremes: { price: number; type: 'high' | 'low'; index: number }[] = [];
+    
+    for (let i = 1; i < prices.length - 1; i++) {
+      const prev = prices[i - 1];
+      const current = prices[i];
+      const next = prices[i + 1];
+      
+      if (current > prev && current > next) {
+        extremes.push({ price: current, type: 'high', index: i });
+      } else if (current < prev && current < next) {
+        extremes.push({ price: current, type: 'low', index: i });
+      }
+    }
+    
+    return extremes;
+  }
+
+  /**
+   * Composite Indicator Analysis
+   */
+  static generateCompositeSignal(
+    rsi: RSIResult[],
+    macd: MACDResult[],
+    stochastic: any[],
+    priceVsMA: 'above' | 'below' | 'neutral'
+  ): {
+    signal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell';
+    confidence: number;
+    reasons: string[];
+  } {
+    const signals: string[] = [];
+    let bullishSignals = 0;
+    let bearishSignals = 0;
+    const reasons: string[] = [];
+
+    if (rsi.length > 0) {
+      const latestRSI = rsi[rsi.length - 1];
+      if (latestRSI.oversold) {
+        bullishSignals++;
+        reasons.push(`RSI oversold (${latestRSI.value.toFixed(2)})`);
+      } else if (latestRSI.overbought) {
+        bearishSignals++;
+        reasons.push(`RSI overbought (${latestRSI.value.toFixed(2)})`);
+      }
+    }
+
+    if (macd.length > 0) {
+      const latestMACD = macd[macd.length - 1];
+      if (latestMACD.trend === 'bullish') {
+        bullishSignals++;
+        reasons.push('MACD bullish trend');
+      } else if (latestMACD.trend === 'bearish') {
+        bearishSignals++;
+        reasons.push('MACD bearish trend');
+      }
+    }
+
+    if (priceVsMA === 'above') {
+      bullishSignals++;
+      reasons.push('Price above moving average');
+    } else if (priceVsMA === 'below') {
+      bearishSignals++;
+      reasons.push('Price below moving average');
+    }
+
+    const totalSignals = bullishSignals + bearishSignals;
+    const confidence = totalSignals > 0 ? Math.max(bullishSignals, bearishSignals) / totalSignals : 0;
+
+    let signal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell';
+    
+    if (bullishSignals >= 3) signal = 'strong_buy';
+    else if (bullishSignals >= 2) signal = 'buy';
+    else if (bearishSignals >= 3) signal = 'strong_sell';
+    else if (bearishSignals >= 2) signal = 'sell';
+    else signal = 'neutral';
+
+    return { signal, confidence, reasons };
+  }
+}
+
+export default TechnicalIndicators;

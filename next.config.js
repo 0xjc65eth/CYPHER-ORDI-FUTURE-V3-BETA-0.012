@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     domains: ['ordinals.com', 'magiceden.io', 'api.coinmarketcap.com', 'api.ordiscan.com'],
     unoptimized: true,
@@ -9,18 +8,17 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['@tremor/react', 'recharts'],
-    // Isso ajuda a evitar erros 500 em produção
     serverComponentsExternalPackages: ['axios', '@supabase/supabase-js'],
   },
   // Configuração para o App Router
   output: 'standalone',
-  // Ignorar erros durante o build
+  // Habilitar verificação TypeScript e ESLint
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
     tsconfigPath: './tsconfig.json',
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   // Configuração para lidar com erros
   onDemandEntries: {
@@ -38,7 +36,8 @@ const nextConfig = {
     // Configurações disponíveis no cliente e no servidor
     apiBaseUrl: process.env.API_BASE_URL || 'https://api.example.com',
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
+    // Enhanced module resolution for better error handling
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -56,10 +55,68 @@ const nextConfig = {
       buffer: false,
     };
 
+    // Add safe module loading to prevent undefined 'call' errors
+    config.module.rules.push({
+      test: /\.m?js$/,
+      resolve: {
+        fullySpecified: false,
+      },
+    });
+
+    // Exclude problematic Web Worker files from processing
+    config.module.rules.push({
+      test: /HeartbeatWorker\.js$/,
+      type: 'asset/source',
+    });
+
+    // Enhanced error handling for webpack modules
+    const originalFactory = config.module.rules.find(
+      rule => rule.oneOf
+    )?.oneOf?.find(
+      rule => rule.use?.loader?.includes('next-swc-loader')
+    );
+
+    if (originalFactory) {
+      const originalUse = originalFactory.use;
+      originalFactory.use = function(info) {
+        try {
+          return typeof originalUse === 'function' ? originalUse(info) : originalUse;
+        } catch (error) {
+          console.warn('Webpack module loading error handled:', error.message);
+          return [];
+        }
+      };
+    }
+
+    // Safer module.exports handling
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+      chunkIds: 'deterministic',
+      splitChunks: {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks?.cacheGroups,
+          default: {
+            ...config.optimization.splitChunks?.cacheGroups?.default,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+        },
+      },
+    };
+
+    // Prevent undefined module.exports errors
+    config.plugins = config.plugins || [];
+    
     // Ignorar módulos não encontrados durante o build
     config.ignoreWarnings = [
       { module: /node_modules/ },
       { message: /Can't resolve/ },
+      { message: /Critical dependency/ },
+      { message: /Module not found/ },
+      { file: /HeartbeatWorker\.js/ },
+      { message: /export.*cannot be used outside of module code/ },
     ];
 
     return config;

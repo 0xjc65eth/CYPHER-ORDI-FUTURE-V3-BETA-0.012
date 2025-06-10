@@ -1,65 +1,32 @@
-import { Header } from '@/components/header'
-import { DashboardCard } from '@/components/dashboard-card'
 import Link from 'next/link'
 
 export default function NotFoundPage() {
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto py-8 px-4">
-        <h1 className="text-2xl font-bold mb-2">404</h1>
-        <h2 className="text-lg text-muted-foreground mb-6">PAGE NOT FOUND</h2>
+    <main className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="text-center space-y-6 max-w-md">
+        <div>
+          <h1 className="text-6xl font-bold text-orange-500 mb-2">404</h1>
+          <h2 className="text-2xl font-semibold">Page Not Found</h2>
+          <p className="text-muted-foreground mt-2">
+            The page you're looking for doesn't exist or has been moved.
+          </p>
+        </div>
         
-        <div className="grid gap-6 md:grid-cols-2">
-          <ErrorDetailsCard />
-          <NavigationOptionsCard />
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+          >
+            Go to Dashboard
+          </Link>
+          <Link
+            href="/trading"
+            className="inline-flex items-center justify-center px-6 py-3 border border-orange-500 text-orange-500 rounded-md hover:bg-orange-500/10 transition-colors"
+          >
+            Trading Page
+          </Link>
         </div>
       </div>
     </main>
   )
 }
-
-function ErrorDetailsCard() {
-  return (
-    <DashboardCard title="Error Details">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Status</p>
-          <p className="text-sm text-muted-foreground">404 Not Found</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Description</p>
-          <p className="text-sm text-muted-foreground">The page you are looking for does not exist.</p>
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Timestamp</p>
-          <p className="text-sm text-muted-foreground">{new Date().toLocaleString()}</p>
-        </div>
-      </div>
-    </DashboardCard>
-  )
-}
-
-function NavigationOptionsCard() {
-  return (
-    <DashboardCard title="Navigation Options">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Link href="/" className="text-sm font-medium text-primary hover:underline">
-            Return to Home
-          </Link>
-        </div>
-        <div className="space-y-2">
-          <Link href="/help" className="text-sm font-medium text-primary hover:underline">
-            Visit Help Center
-          </Link>
-        </div>
-        <div className="space-y-2">
-          <Link href="/contact" className="text-sm font-medium text-primary hover:underline">
-            Contact Support
-          </Link>
-        </div>
-      </div>
-    </DashboardCard>
-  )
-} 

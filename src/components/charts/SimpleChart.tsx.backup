@@ -1,0 +1,181 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Area,
+  AreaChart 
+} from 'recharts';
+import { Loader2 } from 'lucide-react';
+
+interface SimpleChartProps {
+  symbol: string;
+  interval?: string;
+}
+
+export const SimpleChart: React.FC<SimpleChartProps> = ({ 
+  symbol, 
+  interval = '1h' 
+}) => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch from our API
+        const response = await fetch(
+          `/api/binance/klines?symbol=${symbol}&interval=${interval}&limit=100`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          // Transform data for recharts
+          const chartData = result.data.map((item: any, index: number) => ({
+            time: new Date(item.time * 1000).toLocaleTimeString(),
+            price: item.close,
+            high: item.high,
+            low: item.low,
+            volume: item.volume,
+            index: index
+          }));
+
+          setData(chartData);
+          setCurrentPrice(chartData[chartData.length - 1]?.price || null);
+        } else {
+          throw new Error(result.error || 'No data received');
+        }
+      } catch (err) {
+        console.error('Chart error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load chart');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [symbol, interval]);
+
+  const formatPrice = (value: number) => {
+    if (value >= 1000) return `$${value.toFixed(0)}`;
+    if (value >= 1) return `$${value.toFixed(2)}`;
+    return `$${value.toFixed(6)}`;
+  };
+
+  if (loading) {
+    return (
+      <Card className="p-6 bg-gray-900">
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-2" />
+          <span>Loading chart...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 bg-gray-900">
+        <div className="text-center h-[400px] flex items-center justify-center">
+          <div>
+            <p className="text-red-500 mb-2">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6 bg-gray-900">
+      <div className="mb-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">{symbol.replace('USDT', '/USDT')}</h3>
+          {currentPrice && (
+            <div className="text-right">
+              <p className="text-2xl font-mono font-bold">{formatPrice(currentPrice)}</p>
+              <p className="text-sm text-gray-400">Last update: {new Date().toLocaleTimeString()}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={400}>
+        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis 
+            dataKey="time" 
+            stroke="#666"
+            tick={{ fontSize: 12 }}
+            interval="preserveStartEnd"
+          />
+          <YAxis 
+            stroke="#666"
+            tick={{ fontSize: 12 }}
+            tickFormatter={formatPrice}
+            domain={['dataMin - 100', 'dataMax + 100']}
+          />
+          <Tooltip 
+            formatter={(value: any) => formatPrice(value)}
+            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+            labelStyle={{ color: '#999' }}
+          />
+          <Area 
+            type="monotone" 
+            dataKey="price" 
+            stroke="#8884d8" 
+            fillOpacity={1} 
+            fill="url(#colorPrice)" 
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+        <div className="text-center">
+          <p className="text-gray-400">High</p>
+          <p className="font-semibold">{data.length > 0 ? formatPrice(Math.max(...data.map(d => d.high))) : '-'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-gray-400">Low</p>
+          <p className="font-semibold">{data.length > 0 ? formatPrice(Math.min(...data.map(d => d.low))) : '-'}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-gray-400">Data Points</p>
+          <p className="font-semibold">{data.length}</p>
+        </div>
+      </div>
+    </Card>
+  );
+};

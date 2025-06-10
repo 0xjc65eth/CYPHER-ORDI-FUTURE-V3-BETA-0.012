@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,8 +32,8 @@ export default function SmcTradingPanel() {
   const [positionSize, setPositionSize] = useState<number | null>(null)
   const [riskReward, setRiskReward] = useState<number | null>(null)
 
-  // Mock trading data
-  const tradingData: Record<string, SmcTradingData> = {
+  // Real-time trading data from CoinMarketCap API
+  const [tradingData, setTradingData] = useState<Record<string, SmcTradingData>>({
     'BTCUSD': {
       symbol: 'BTC/USD',
       currentPrice: 97200,
@@ -144,7 +144,41 @@ export default function SmcTradingPanel() {
         }
       ]
     }
-  }
+  })
+
+  // Fetch real-time data from CoinMarketCap API
+  useEffect(() => {
+    const fetchRealTimeData = async () => {
+      try {
+        const response = await fetch('/api/coinmarketcap?symbols=BTC,ETH&timeframe=1h')
+        const data = await response.json()
+        
+        if (data.success && data.data.current) {
+          const btcData = data.data.current.BTC
+          if (btcData) {
+            setTradingData(prev => ({
+              ...prev,
+              'BTCUSD': {
+                ...prev['BTCUSD'],
+                currentPrice: Math.round(btcData.price),
+                dailyChange: btcData.change24h || prev['BTCUSD'].dailyChange
+              }
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados CMC para SMC Trading:', error)
+      }
+    }
+
+    // Fetch initial data
+    fetchRealTimeData()
+    
+    // Update every 30 seconds
+    const interval = setInterval(fetchRealTimeData, 30000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   const currentData = tradingData[activeSymbol]
 

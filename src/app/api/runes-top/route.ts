@@ -73,7 +73,7 @@ export async function GET() {
       // Dados reais para runas verificadas
       const btcPrice = 65000 // Preço estimado do BTC em USD
 
-      runesData = VERIFIED_RUNES.map((runeName, index) => {
+      runesData = VERIFIED_RUNES.map((runeName: string, index: number) => {
         // Calcular métricas realistas com base na popularidade (posição no array)
         const popularity = 1 - (index / VERIFIED_RUNES.length)
 
@@ -93,7 +93,7 @@ export async function GET() {
         const supply = Math.floor(21000000 * (0.5 + Math.random()))
 
         // Obter marketplaces para esta runa
-        const marketplaces = RUNE_MARKETPLACES[runeName] || []
+        const marketplaces = RUNE_MARKETPLACES[runeName as keyof typeof RUNE_MARKETPLACES] || []
 
         // Calcular preço de compra e venda com pequena variação
         const buyPrice = priceInBtc * 0.98
@@ -161,10 +161,10 @@ export async function GET() {
       })
     } else {
       // Processar dados da API para o formato esperado
-      runesData = runesData.map((rune, index) => {
+      runesData = runesData.map((rune: any, index: number) => {
         const runeName = rune.name || rune.ticker
         const isVerified = VERIFIED_RUNES.includes(runeName)
-        const marketplaces = isVerified ? RUNE_MARKETPLACES[runeName] || [] : []
+        const marketplaces = isVerified ? RUNE_MARKETPLACES[runeName as keyof typeof RUNE_MARKETPLACES] || [] : []
 
         // Calcular preço de compra e venda com pequena variação
         const price = rune.price || 0.00001
@@ -236,7 +236,7 @@ export async function GET() {
     // Gerar oportunidades de arbitragem realistas
     const arbitrageOpportunities = runesData.slice(0, 20)
       .filter(() => Math.random() > 0.5) // Selecionar aleatoriamente algumas runas
-      .map(rune => {
+      .map((rune: any) => {
         // Criar uma cópia do rune para não modificar o original
         const arbitrageRune = { ...rune }
 

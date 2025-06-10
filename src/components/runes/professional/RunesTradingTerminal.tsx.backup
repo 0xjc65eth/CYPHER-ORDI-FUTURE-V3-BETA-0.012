@@ -1,0 +1,391 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { 
+  TrendingUp, TrendingDown, Clock, DollarSign, Activity, 
+  ArrowUpRight, ArrowDownRight, AlertCircle, Zap, Shield,
+  BarChart3, Layers, BookOpen, History
+} from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useRunesMarket } from '@/hooks/runes/useRunesMarket';
+import { useRunesLiquidity } from '@/hooks/runes/useRunesLiquidity';
+
+export function RunesTradingTerminal() {
+  const [selectedRune, setSelectedRune] = useState('DOG•GO•TO•THE•MOON');
+  const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
+  const [side, setSide] = useState<'buy' | 'sell'>('buy');
+  const [amount, setAmount] = useState('');
+  const [price, setPrice] = useState('');
+  const [slippage, setSlippage] = useState([0.5]);
+  const [advancedMode, setAdvancedMode] = useState(false);
+
+  const { data: marketData, isLoading: marketLoading } = useRunesMarket(selectedRune);
+  const { data: liquidityData, isLoading: liquidityLoading } = useRunesLiquidity(selectedRune);
+
+  // Mock data for charts
+  const priceData = Array.from({ length: 24 }, (_, i) => ({
+    time: `${i}:00`,
+    price: 0.0123 + Math.random() * 0.002 - 0.001,
+    volume: Math.random() * 50000 + 10000
+  }));
+
+  const orderBookData = {
+    bids: Array.from({ length: 15 }, (_, i) => ({
+      price: 0.0123 - i * 0.0001,
+      amount: Math.random() * 10000 + 1000,
+      total: 0
+    })),
+    asks: Array.from({ length: 15 }, (_, i) => ({
+      price: 0.0123 + i * 0.0001,
+      amount: Math.random() * 10000 + 1000,
+      total: 0
+    }))
+  };
+
+  // Calculate totals
+  orderBookData.bids.forEach((bid, i) => {
+    bid.total = orderBookData.bids.slice(0, i + 1).reduce((sum, b) => sum + b.amount, 0);
+  });
+  orderBookData.asks.forEach((ask, i) => {
+    ask.total = orderBookData.asks.slice(0, i + 1).reduce((sum, a) => sum + a.amount, 0);
+  });
+
+  const tradeHistory = Array.from({ length: 20 }, (_, i) => ({
+    time: new Date(Date.now() - i * 60000).toLocaleTimeString(),
+    price: 0.0123 + (Math.random() * 0.002 - 0.001),
+    amount: Math.random() * 5000 + 100,
+    side: Math.random() > 0.5 ? 'buy' : 'sell',
+    marketplace: ['Unisat', 'OKX', 'MagicEden'][Math.floor(Math.random() * 3)]
+  }));
+
+  const calculateSlippageImpact = () => {
+    const numAmount = parseFloat(amount) || 0;
+    const basePrice = 0.0123;
+    const slippagePercent = slippage[0];
+    const priceImpact = basePrice * (slippagePercent / 100);
+    const totalCost = numAmount * basePrice;
+    const slippageCost = numAmount * priceImpact;
+    
+    return {
+      expectedPrice: side === 'buy' ? basePrice + priceImpact : basePrice - priceImpact,
+      slippageCost,
+      totalCost: side === 'buy' ? totalCost + slippageCost : totalCost - slippageCost
+    };
+  };
+
+  const slippageImpact = calculateSlippageImpact();
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Left Column - Price Chart & Order Form */}
+      <div className="xl:col-span-2 space-y-6">
+        {/* Price Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                {selectedRune} Price Chart
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +15.2%
+                </Badge>
+                <span className="text-2xl font-bold">$0.0123</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={400}>
+              <AreaChart data={priceData}>
+                <defs>
+                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="time" stroke="#666" />
+                <YAxis stroke="#666" domain={['dataMin - 0.001', 'dataMax + 0.001']} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                  labelStyle={{ color: '#999' }}
+                />
+                <Area type="monotone" dataKey="price" stroke="#f97316" fillOpacity={1} fill="url(#colorPrice)" />
+              </AreaChart>
+            </ResponsiveContainer>
+            
+            {/* Time Frame Selector */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {['1H', '4H', '1D', '1W', '1M'].map((tf) => (
+                <Button key={tf} variant="ghost" size="sm" className="text-xs">
+                  {tf}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Trading Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Place Order</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Order Type Tabs */}
+            <Tabs value={side} onValueChange={(v) => setSide(v as 'buy' | 'sell')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="buy" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-500">
+                  Buy
+                </TabsTrigger>
+                <TabsTrigger value="sell" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-500">
+                  Sell
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Market/Limit Toggle */}
+            <div className="flex items-center gap-4">
+              <Button
+                variant={orderType === 'market' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setOrderType('market')}
+              >
+                Market
+              </Button>
+              <Button
+                variant={orderType === 'limit' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setOrderType('limit')}
+              >
+                Limit
+              </Button>
+            </div>
+
+            {/* Order Form */}
+            <div className="space-y-4">
+              {orderType === 'limit' && (
+                <div>
+                  <Label>Price (BTC)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0.0000"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              )}
+              
+              <div>
+                <Label>Amount ({selectedRune})</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Advanced Options */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="advanced"
+                  checked={advancedMode}
+                  onCheckedChange={setAdvancedMode}
+                />
+                <Label htmlFor="advanced">Advanced Options</Label>
+              </div>
+
+              {advancedMode && (
+                <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <Label>Slippage Tolerance: {slippage[0]}%</Label>
+                    <Slider
+                      value={slippage}
+                      onValueChange={setSlippage}
+                      max={5}
+                      step={0.1}
+                      className="mt-2"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>MEV Protection</Label>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Switch id="mev" />
+                      <Label htmlFor="mev" className="text-sm text-muted-foreground">
+                        Enable MEV protection (recommended)
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Order Summary */}
+              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Expected Price</span>
+                  <span>{slippageImpact.expectedPrice.toFixed(4)} BTC</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Slippage Impact</span>
+                  <span className="text-yellow-500">{slippageImpact.slippageCost.toFixed(4)} BTC</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>{slippageImpact.totalCost.toFixed(4)} BTC</span>
+                </div>
+              </div>
+
+              <Button 
+                className={`w-full ${side === 'buy' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
+                size="lg"
+              >
+                {side === 'buy' ? 'Buy' : 'Sell'} {selectedRune}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column - Order Book & Trade History */}
+      <div className="space-y-6">
+        {/* Order Book */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Order Book
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {/* Asks */}
+              <div className="space-y-1">
+                {orderBookData.asks.slice(0, 8).reverse().map((ask, i) => (
+                  <div key={i} className="relative">
+                    <div 
+                      className="absolute inset-0 bg-red-500/10" 
+                      style={{ width: `${(ask.total / orderBookData.asks[14].total) * 100}%` }}
+                    />
+                    <div className="relative flex justify-between text-xs py-1 px-2">
+                      <span className="text-red-400">{ask.price.toFixed(4)}</span>
+                      <span>{ask.amount.toFixed(0)}</span>
+                      <span className="text-muted-foreground">{ask.total.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Spread */}
+              <div className="flex justify-center py-2 border-y">
+                <span className="text-sm font-medium">
+                  Spread: {((orderBookData.asks[0].price - orderBookData.bids[0].price) * 10000).toFixed(2)} sats
+                </span>
+              </div>
+              
+              {/* Bids */}
+              <div className="space-y-1">
+                {orderBookData.bids.slice(0, 8).map((bid, i) => (
+                  <div key={i} className="relative">
+                    <div 
+                      className="absolute inset-0 bg-green-500/10" 
+                      style={{ width: `${(bid.total / orderBookData.bids[14].total) * 100}%` }}
+                    />
+                    <div className="relative flex justify-between text-xs py-1 px-2">
+                      <span className="text-green-400">{bid.price.toFixed(4)}</span>
+                      <span>{bid.amount.toFixed(0)}</span>
+                      <span className="text-muted-foreground">{bid.total.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Trades */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Recent Trades
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {tradeHistory.map((trade, i) => (
+                <div key={i} className="flex items-center justify-between text-xs py-2 border-b last:border-0">
+                  <div className="flex items-center gap-2">
+                    {trade.side === 'buy' ? (
+                      <ArrowUpRight className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <ArrowDownRight className="h-3 w-3 text-red-500" />
+                    )}
+                    <span className={trade.side === 'buy' ? 'text-green-500' : 'text-red-500'}>
+                      {trade.price.toFixed(4)}
+                    </span>
+                  </div>
+                  <span>{trade.amount.toFixed(0)}</span>
+                  <div className="text-right">
+                    <div className="text-muted-foreground">{trade.time}</div>
+                    <div className="text-[10px] text-muted-foreground">{trade.marketplace}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Market Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Market Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">24h Volume</span>
+                <span className="font-medium">124.5 BTC</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">24h Trades</span>
+                <span className="font-medium">3,847</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">24h High</span>
+                <span className="font-medium text-green-500">0.0145</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">24h Low</span>
+                <span className="font-medium text-red-500">0.0098</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Liquidity Score</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">8.7/10</span>
+                  <Badge variant="outline" className="text-xs">High</Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

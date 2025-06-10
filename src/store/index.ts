@@ -1,26 +1,30 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux'
-import userReducer from './userSlice'
-import marketReducer from './marketSlice'
-import mempoolReducer from './mempoolSlice'
-import miningReducer from './miningSlice'
-import { RootState } from '@/types/store'
+import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux'
+import marketSlice from './marketSlice'
+import miningSlice from './miningSlice'
+import mempoolSlice from './mempoolSlice'
+import userSlice from './userSlice'
+import assetSlice from './assetSlice'
 
-// Create the store
 export const store = configureStore({
   reducer: {
-    user: userReducer,
-    market: marketReducer,
-    mempool: mempoolReducer,
-    mining: miningReducer,
+    market: marketSlice,
+    mining: miningSlice,
+    mempool: mempoolSlice,
+    user: userSlice,
+    asset: assetSlice,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST'],
+      },
+    }),
 })
 
-// Export types
+export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
 
-// Export hooks
+// Typed hooks
 export const useAppDispatch = () => useDispatch<AppDispatch>()
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
-
-export default store 

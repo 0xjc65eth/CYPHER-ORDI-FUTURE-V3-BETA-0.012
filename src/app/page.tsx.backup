@@ -1,0 +1,150 @@
+'use client';
+
+import React from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { TradingTerminal } from '@/components/dashboard/professional/TradingTerminal';
+import { MarketMetrics } from '@/components/dashboard/professional/MarketMetrics';
+import PortfolioOverview from '@/components/dashboard/professional/PortfolioOverview';
+import { LiveActivityFeed } from '@/components/dashboard/professional/LiveActivityFeed';
+import { QuickTradePanel } from '@/components/dashboard/professional/QuickTradePanel';
+import { NetworkStatus } from '@/components/dashboard/widgets/NetworkStatus';
+import { TopMovers } from '@/components/dashboard/widgets/TopMovers';
+import { MiningMetrics } from '@/components/dashboard/widgets/MiningMetrics';
+import { LightningStats } from '@/components/dashboard/widgets/LightningStats';
+import { BitcoinPriceDisplay } from '@/components/bitcoin/BitcoinPriceDisplay';
+import { DashboardIcons } from '@/lib/icons/icon-system';
+import { WalletDashboard } from '@/components/dashboard/WalletDashboard';
+import { useWallet } from '@/contexts/WalletContext';
+import { OptimizedContainer, usePerformanceMonitor } from '@/lib/utils/PerformanceOptimizer';
+import { LazyComponent } from '@/lib/utils/LazyComponent';
+
+export default function HomePage() {
+  const wallet = useWallet();
+  usePerformanceMonitor('HomePage');
+  
+  return (
+    <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-gray-100">
+        {/* Professional Bloomberg Terminal-style 24-column grid layout */}
+        <div className="grid grid-cols-24 gap-2 p-4">
+          {/* Header Bar - Real-time Price Ticker */}
+          <div className="col-span-24 mb-2">
+            <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-lg p-3">
+              <BitcoinPriceDisplay />
+            </div>
+          </div>
+
+          {/* Main Trading Terminal - 16 columns */}
+          <div className="col-span-24 xl:col-span-16 space-y-2">
+            {/* Trading Terminal with enhanced styling */}
+            <OptimizedContainer name="TradingTerminal" threshold={100}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-purple-600/10 rounded-lg blur-xl" />
+                <div className="relative">
+                  <TradingTerminal />
+                </div>
+              </div>
+            </OptimizedContainer>
+            
+            {/* Market Metrics Grid - Professional Layout */}
+            <div className="grid grid-cols-2 gap-2">
+              <OptimizedContainer name="MarketMetrics" threshold={150}>
+                <div className="transform hover:scale-[1.01] transition-transform duration-200">
+                  <MarketMetrics />
+                </div>
+              </OptimizedContainer>
+              <OptimizedContainer name="PortfolioOverview" threshold={200}>
+                <div className="transform hover:scale-[1.01] transition-transform duration-200">
+                  <PortfolioOverview />
+                </div>
+              </OptimizedContainer>
+            </div>
+          </div>
+
+          {/* Right Sidebar - 8 columns */}
+          <div className="col-span-24 xl:col-span-8 space-y-2">
+            {/* Quick Trade Panel with glow effect */}
+            <OptimizedContainer name="QuickTradePanel" threshold={50}>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative">
+                  <QuickTradePanel />
+                </div>
+              </div>
+            </OptimizedContainer>
+            
+            {/* Live Activity Feed with enhanced styling */}
+            <OptimizedContainer name="LiveActivityFeed" threshold={300}>
+              <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-lg overflow-hidden">
+                <LiveActivityFeed />
+              </div>
+            </OptimizedContainer>
+          </div>
+
+          {/* Bottom Widget Bar - Professional Metrics Dashboard */}
+          <div className="col-span-24 mt-2">
+            <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center">
+                  {React.createElement(DashboardIcons.networkMetrics.icon, { 
+                    className: "w-5 h-5 mr-2 text-blue-500" 
+                  })}
+                  Network & Market Overview
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500">Last updated</span>
+                  <span className="text-xs text-gray-400 font-mono" suppressHydrationWarning>
+                    {typeof window !== 'undefined' ? new Date().toLocaleTimeString() : '--:--:--'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="transform hover:scale-[1.02] transition-all duration-200">
+                  <NetworkStatus />
+                </div>
+                <div className="transform hover:scale-[1.02] transition-all duration-200">
+                  <TopMovers />
+                </div>
+                <div className="transform hover:scale-[1.02] transition-all duration-200">
+                  <MiningMetrics />
+                </div>
+                <div className="transform hover:scale-[1.02] transition-all duration-200">
+                  <LightningStats />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Status Bar */}
+          <div className="col-span-24 mt-2">
+            <div className="bg-gray-900/30 backdrop-blur-sm border-t border-gray-800 px-4 py-2">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-6">
+                  <span className="flex items-center text-gray-400">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                    System Status: Operational
+                  </span>
+                  <span className="text-gray-500">
+                    Latency: <span className="text-green-400 font-mono">12ms</span>
+                  </span>
+                  <span className="text-gray-500">
+                    API Calls: <span className="text-blue-400 font-mono">2,847/min</span>
+                  </span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-500">
+                    v3.1.0
+                  </span>
+                  <span className="text-gray-600">
+                    © 2024 CYPHER ORDI FUTURE
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

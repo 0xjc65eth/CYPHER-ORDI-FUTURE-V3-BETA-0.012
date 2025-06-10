@@ -1,0 +1,23 @@
+
+> cypher-ordi-future-v3@3.0.0 dev
+> next dev -p 4444
+
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::4444
+    at Server.setupListenHandle [as _listen2] (node:net:1817:16)
+    at listenInCluster (node:net:1865:12)
+    at Server.listen (node:net:1953:7)
+    at /Users/juliocesar/Desktop/CYPHER ORDI FUTURE V3/node_modules/next/dist/server/lib/start-server.js:280:16
+    at new Promise (<anonymous>)
+    at startServer (/Users/juliocesar/Desktop/CYPHER ORDI FUTURE V3/node_modules/next/dist/server/lib/start-server.js:191:11)
+    at /Users/juliocesar/Desktop/CYPHER ORDI FUTURE V3/node_modules/next/dist/server/lib/start-server.js:310:52
+    at Span.traceAsyncFn (/Users/juliocesar/Desktop/CYPHER ORDI FUTURE V3/node_modules/next/dist/trace/trace.js:154:26)
+    at process.<anonymous> (/Users/juliocesar/Desktop/CYPHER ORDI FUTURE V3/node_modules/next/dist/server/lib/start-server.js:310:35)
+    at process.emit (node:events:517:28) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 4444
+}
+[?25h

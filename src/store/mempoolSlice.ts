@@ -1,38 +1,43 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { MempoolState } from '@/types/store'
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+
+interface MempoolState {
+  unconfirmedCount: number
+  totalSize: number
+  totalFees: number
+  medianFee: number
+  isLoading: boolean
+  error: string | null
+  lastUpdated: string | null
+}
 
 const initialState: MempoolState = {
-  pendingTransactions: 0,
-  averageFeeRate: 0,
-  mempoolSize: 0,
-  lastUpdated: new Date().toISOString(),
-  transactions: [],
-  feeRates: {
-    low: 0,
-    medium: 0,
-    high: 0
-  },
-  blocks: []
+  unconfirmedCount: 0,
+  totalSize: 0,
+  totalFees: 0,
+  medianFee: 0,
+  isLoading: false,
+  error: null,
+  lastUpdated: null,
 }
 
 const mempoolSlice = createSlice({
-  name: 'mempool',
+  name: "mempool",
   initialState,
   reducers: {
-    setPendingTransactions: (state, action: PayloadAction<number>) => {
-      state.pendingTransactions = action.payload
+    setMempoolData: (state, action: PayloadAction<Partial<MempoolState>>) => {
+      Object.assign(state, action.payload)
+      state.lastUpdated = new Date().toISOString()
+      state.error = null
     },
-    setAverageFeeRate: (state, action: PayloadAction<number>) => {
-      state.averageFeeRate = action.payload
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload
     },
-    setMempoolSize: (state, action: PayloadAction<number>) => {
-      state.mempoolSize = action.payload
-    },
-    setMempoolData: (state, action: PayloadAction<MempoolState>) => {
-      return { ...state, ...action.payload }
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload
+      state.isLoading = false
     },
   },
 })
 
-export const { setPendingTransactions, setAverageFeeRate, setMempoolSize, setMempoolData } = mempoolSlice.actions
-export default mempoolSlice.reducer 
+export const { setMempoolData, setLoading, setError } = mempoolSlice.actions
+export default mempoolSlice.reducer
