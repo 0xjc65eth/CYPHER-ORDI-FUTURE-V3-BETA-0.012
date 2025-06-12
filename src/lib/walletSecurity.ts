@@ -315,7 +315,12 @@ export class WalletSecurityManager {
    * Enforce Security Headers
    */
   private enforceSecurityHeaders(): void {
-    if (this.config.enforceHttps && location.protocol !== 'https:') {
+    // Skip HTTPS enforcement in development environment
+    const isDevelopment = process.env.NODE_ENV === 'development' || 
+                         location.hostname === 'localhost' || 
+                         location.hostname === '127.0.0.1';
+    
+    if (this.config.enforceHttps && location.protocol !== 'https:' && !isDevelopment) {
       this.logger.logSecurityEvent('INSECURE_CONNECTION_BLOCKED', {
         protocol: location.protocol,
         host: location.host

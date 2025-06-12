@@ -4,7 +4,18 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWalletContext } from '../contexts/WalletContext';
+
+// Safe wrapper for useWalletContext to prevent undefined errors
+function useSafeWalletContext() {
+  try {
+    // Dynamic import to prevent SSR issues
+    const { useWalletContext } = require('../contexts/WalletContext');
+    return useWalletContext();
+  } catch (error) {
+    console.warn('WalletContext not available:', error);
+    return null;
+  }
+}
 import type { 
   WalletType, 
   WalletAccount, 
@@ -58,7 +69,7 @@ export interface UseWalletOptions {
  * Provides comprehensive wallet functionality with computed properties
  */
 export function useWallet(options: UseWalletOptions = {}) {
-  const context = useWalletContext();
+  const context = useSafeWalletContext();
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   
   const {
@@ -71,7 +82,7 @@ export function useWallet(options: UseWalletOptions = {}) {
     switchNetwork,
     isWalletAvailable,
     setAutoRefresh
-  } = context;
+  } = context || {};
 
   // Apply options
   useEffect(() => {
@@ -126,7 +137,20 @@ export function useWallet(options: UseWalletOptions = {}) {
 
   // Computed state with additional properties
   const walletState: ExtendedWalletState = useMemo(() => {
-    const { balance, lastConnected } = connectionState;
+    const safeConnectionState = connectionState || {
+      isConnected: false,
+      isConnecting: false,
+      walletType: null,
+      account: null,
+      accounts: [],
+      balance: null,
+      network: null,
+      error: null,
+      lastConnected: null
+    };
+    
+    const { balance, lastConnected } = safeConnectionState;
+    const safeAvailableWallets = availableWallets || [];
     
     // Format balance
     const formatBalance = (sats: number): string => {
@@ -149,20 +173,20 @@ export function useWallet(options: UseWalletOptions = {}) {
 
     return {
       // Connection status
-      isConnected: connectionState.isConnected,
-      isConnecting: connectionState.isConnecting,
-      isAvailable: availableWallets.length > 0,
+      isConnected: safeConnectionState.isConnected,
+      isConnecting: safeConnectionState.isConnecting,
+      isAvailable: safeAvailableWallets.length > 0,
       
       // Current wallet data
-      walletType: connectionState.walletType,
-      account: connectionState.account,
-      accounts: connectionState.accounts,
-      balance: connectionState.balance,
-      network: connectionState.network,
+      walletType: safeConnectionState.walletType,
+      account: safeConnectionState.account,
+      accounts: safeConnectionState.accounts || [],
+      balance: safeConnectionState.balance,
+      network: safeConnectionState.network,
       
       // Error state
-      error: connectionState.error,
-      hasError: !!connectionState.error,
+      error: safeConnectionState.error,
+      hasError: !!safeConnectionState.error,
       
       // Computed properties
       formattedBalance: balance ? formatBalance(balance.total) : '0',
@@ -170,7 +194,7 @@ export function useWallet(options: UseWalletOptions = {}) {
       usdBalance,
       
       // Connection metadata
-      lastConnected: connectionState.lastConnected,
+      lastConnected: safeConnectionState.lastConnected,
       connectionDuration
     };
   }, [
@@ -223,23 +247,23 @@ export function useWallet(options: UseWalletOptions = {}) {
   return {
     // State
     ...walletState,
-    availableWallets,
+    availableWallets: availableWallets || [],
     
     // Actions
-    connectWallet,
-    disconnectWallet,
-    refreshBalance,
-    switchAccount,
-    switchNetwork,
+    connectWallet: connectWallet || (() => Promise.resolve(false)),
+    disconnectWallet: disconnectWallet || (() => Promise.resolve(false)),
+    refreshBalance: refreshBalance || (() => Promise.resolve()),
+    switchAccount: switchAccount || (() => Promise.resolve()),
+    switchNetwork: switchNetwork || (() => Promise.resolve()),
     signMessage,
     
     // Utilities
-    isWalletAvailable,
-    setAutoRefresh,
+    isWalletAvailable: isWalletAvailable || (() => false),
+    setAutoRefresh: setAutoRefresh || (() => {}),
     
     // Wallet instance for advanced operations
-    wallet: connectionState.isConnected ? (window as any)[connectionState.walletType] : null,
-    address: connectionState.account?.address || null,
+    wallet: connectionState?.isConnected ? (window as any)[connectionState.walletType] : null,
+    address: connectionState?.account?.address || null,
   };
 }
 
@@ -248,15 +272,25 @@ export function useWallet(options: UseWalletOptions = {}) {
  * Lightweight hook for components that only need connection status
  */
 export function useWalletConnection() {
-  const { connectionState, availableWallets } = useWalletContext();
+  const context = useSafeWalletContext();
+  const { connectionState, availableWallets } = context || {};
+  
+  const safeConnectionState = connectionState || {
+    isConnected: false,
+    isConnecting: false,
+    walletType: null,
+    error: null
+  };
+  
+  const safeAvailableWallets = availableWallets || [];
   
   return {
-    isConnected: connectionState.isConnected,
-    isConnecting: connectionState.isConnecting,
-    isAvailable: availableWallets.length > 0,
-    walletType: connectionState.walletType,
-    hasWallets: availableWallets.length > 0,
-    error: connectionState.error
+    isConnected: safeConnectionState.isConnected,
+    isConnecting: safeConnectionState.isConnecting,
+    isAvailable: safeAvailableWallets.length > 0,
+    walletType: safeConnectionState.walletType,
+    hasWallets: safeAvailableWallets.length > 0,
+    error: safeConnectionState.error
   };
 }
 
@@ -265,12 +299,13 @@ export function useWalletConnection() {
  * Lightweight hook for components that only need balance data
  */
 export function useWalletBalance(options: { enableUsdConversion?: boolean } = {}) {
-  const { connectionState } = useWalletContext();
+  const context = useSafeWalletContext();
+  const { connectionState } = context || {};
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   
   // Fetch BTC price if conversion is enabled
   useEffect(() => {
-    if (options.enableUsdConversion && connectionState.isConnected) {
+    if (options.enableUsdConversion && connectionState?.isConnected) {
       const fetchBtcPrice = async () => {
         try {
           const response = await fetch('/api/bitcoin-price');
@@ -288,10 +323,11 @@ export function useWalletBalance(options: { enableUsdConversion?: boolean } = {}
       
       return () => clearInterval(interval);
     }
-  }, [options.enableUsdConversion, connectionState.isConnected]);
+  }, [options.enableUsdConversion, connectionState?.isConnected]);
 
   return useMemo(() => {
-    const { balance } = connectionState;
+    const safeConnectionState = connectionState || { balance: null, isConnected: false };
+    const { balance } = safeConnectionState;
     
     if (!balance) {
       return {
@@ -330,16 +366,22 @@ export function useWalletBalance(options: { enableUsdConversion?: boolean } = {}
  * Lightweight hook for components that only need account data
  */
 export function useWalletAccount() {
-  const { connectionState, switchAccount } = useWalletContext();
+  const context = useSafeWalletContext();
+  const { connectionState, switchAccount } = context || {};
+  
+  const safeConnectionState = connectionState || {
+    account: null,
+    accounts: []
+  };
   
   return {
-    account: connectionState.account,
-    accounts: connectionState.accounts,
-    hasMultipleAccounts: connectionState.accounts.length > 1,
-    switchAccount,
-    address: connectionState.account?.address || null,
-    publicKey: connectionState.account?.publicKey || null,
-    addressType: connectionState.account?.addressType || null
+    account: safeConnectionState.account,
+    accounts: safeConnectionState.accounts,
+    hasMultipleAccounts: safeConnectionState.accounts.length > 1,
+    switchAccount: switchAccount || (() => Promise.resolve()),
+    address: safeConnectionState.account?.address || null,
+    publicKey: safeConnectionState.account?.publicKey || null,
+    addressType: safeConnectionState.account?.addressType || null
   };
 }
 
@@ -348,24 +390,27 @@ export function useWalletAccount() {
  * Lightweight hook for wallet selection components
  */
 export function useAvailableWallets() {
-  const { availableWallets, isWalletAvailable, connectWallet } = useWalletContext();
+  const context = useSafeWalletContext();
+  const { availableWallets, isWalletAvailable, connectWallet } = context || {};
+  
+  const safeAvailableWallets = availableWallets || [];
   
   const walletOptions = useMemo(() => {
     const allWallets: WalletType[] = ['xverse', 'unisat', 'oyl', 'magiceden'];
     
     return allWallets.map(walletType => ({
       type: walletType,
-      available: isWalletAvailable(walletType),
+      available: isWalletAvailable ? isWalletAvailable(walletType) : false,
       connected: false // This would need to be determined from current connection
     }));
-  }, [availableWallets, isWalletAvailable]);
+  }, [safeAvailableWallets, isWalletAvailable]);
 
   return {
-    availableWallets,
+    availableWallets: safeAvailableWallets,
     walletOptions,
-    hasWallets: availableWallets.length > 0,
-    connectWallet,
-    isWalletAvailable
+    hasWallets: safeAvailableWallets.length > 0,
+    connectWallet: connectWallet || (() => Promise.resolve()),
+    isWalletAvailable: isWalletAvailable || (() => false)
   };
 }
 
@@ -374,35 +419,42 @@ export function useAvailableWallets() {
  * Provides enhanced error handling and recovery
  */
 export function useWalletError() {
-  const { connectionState, connectWallet, disconnectWallet } = useWalletContext();
+  const context = useSafeWalletContext();
+  const { connectionState, connectWallet, disconnectWallet } = context || {};
+  
+  const safeConnectionState = connectionState || {
+    walletType: null,
+    isConnected: false,
+    error: null
+  };
   
   const retryConnection = useCallback(async (): Promise<boolean> => {
-    if (!connectionState.walletType) {
+    if (!safeConnectionState.walletType || !connectWallet || !disconnectWallet) {
       return false;
     }
     
     try {
       await disconnectWallet();
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      await connectWallet(connectionState.walletType);
+      await connectWallet(safeConnectionState.walletType);
       return true;
     } catch (error) {
       console.error('Retry connection failed:', error);
       return false;
     }
-  }, [connectionState.walletType, connectWallet, disconnectWallet]);
+  }, [safeConnectionState.walletType, connectWallet, disconnectWallet]);
 
   const clearError = useCallback(async (): Promise<void> => {
     // Error clearing would need to be implemented in the context
     // For now, we can try to refresh the connection
-    if (connectionState.isConnected) {
+    if (safeConnectionState.isConnected) {
       await retryConnection();
     }
-  }, [connectionState.isConnected, retryConnection]);
+  }, [safeConnectionState.isConnected, retryConnection]);
 
   return {
-    error: connectionState.error,
-    hasError: !!connectionState.error,
+    error: safeConnectionState.error,
+    hasError: !!safeConnectionState.error,
     retryConnection,
     clearError
   };

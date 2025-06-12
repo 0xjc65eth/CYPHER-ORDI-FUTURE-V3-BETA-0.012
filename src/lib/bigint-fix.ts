@@ -20,25 +20,54 @@ if (typeof globalThis !== 'undefined' && !globalThis.__BIGINT_FIXED__) {
   // Safe BigInt conversion
   function safeBigIntToNumber(value: any): number {
     if (typeof value === 'bigint') {
-      const stringValue = value.toString();
-      const numberValue = parseFloat(stringValue);
-      
-      if (numberValue > Number.MAX_SAFE_INTEGER) {
-        return Number.MAX_SAFE_INTEGER;
+      try {
+        const stringValue = value.toString();
+        const numberValue = parseFloat(stringValue);
+        
+        if (!isFinite(numberValue) || isNaN(numberValue)) {
+          return 0;
+        }
+        
+        if (numberValue > Number.MAX_SAFE_INTEGER) {
+          return Number.MAX_SAFE_INTEGER;
+        }
+        if (numberValue < Number.MIN_SAFE_INTEGER) {
+          return Number.MIN_SAFE_INTEGER;
+        }
+        return numberValue;
+      } catch (error) {
+        console.warn('BigInt conversion error:', error);
+        return 0;
       }
-      if (numberValue < Number.MIN_SAFE_INTEGER) {
-        return Number.MIN_SAFE_INTEGER;
-      }
-      return numberValue;
     }
-    return Number(value);
+    
+    if (typeof value === 'number') {
+      return isFinite(value) && !isNaN(value) ? value : 0;
+    }
+    
+    try {
+      const num = Number(value);
+      return isFinite(num) && !isNaN(num) ? num : 0;
+    } catch (error) {
+      return 0;
+    }
   }
 
   // Override ALL Math functions
   Math.pow = function(base: any, exponent: any) {
     try {
-      return originalMathPow(safeBigIntToNumber(base), safeBigIntToNumber(exponent));
-    } catch {
+      const safeBase = safeBigIntToNumber(base);
+      const safeExponent = safeBigIntToNumber(exponent);
+      
+      // Additional safety checks for Math.pow
+      if (!isFinite(safeBase) || !isFinite(safeExponent) || isNaN(safeBase) || isNaN(safeExponent)) {
+        return 0;
+      }
+      
+      const result = originalMathPow(safeBase, safeExponent);
+      return isFinite(result) && !isNaN(result) ? result : 0;
+    } catch (error) {
+      console.warn('Math.pow error:', error);
       return 0;
     }
   };

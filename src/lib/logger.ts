@@ -95,3 +95,4 @@ export class DevelopmentLogger {
 
 // Exportar instância singleton
 export const devLogger = new DevelopmentLogger();
+export const logger = devLogger;

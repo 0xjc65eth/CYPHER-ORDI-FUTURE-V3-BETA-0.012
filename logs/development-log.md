@@ -76,3 +76,99 @@
 [2025-06-10T17:06:21.755Z] [HiroAPI] Cache hit para: /runes/v1/etchings
 
 ---
+[2025-06-12T22:08:54.339Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:08:54.339Z"
+}
+---
+[2025-06-12T22:13:28.822Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:13:28.822Z"
+}
+---
+[2025-06-12T22:14:53.512Z] [HiroAPI] Enhanced API client initialized with baseURL: https://api.hiro.so
+
+---
+[2025-06-12T22:14:53.513Z] [HiroAPI] Rate limit: 100 requests per 60000ms
+
+---
+[2025-06-12T22:14:59.038Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:14:59.038Z"
+}
+---
+[2025-06-12T22:18:15.411Z] [HiroAPI] Enhanced API client initialized with baseURL: https://api.hiro.so
+
+---
+[2025-06-12T22:18:15.412Z] [HiroAPI] Rate limit: 100 requests per 60000ms
+
+---
+[2025-06-12T22:18:26.578Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:18:26.578Z"
+}
+---
+[2025-06-12T22:18:54.592Z] [HiroAPI] Enhanced API client initialized with baseURL: https://api.hiro.so
+
+---
+[2025-06-12T22:18:54.592Z] [HiroAPI] Rate limit: 100 requests per 60000ms
+
+---
+[2025-06-12T22:18:59.701Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:18:59.701Z"
+}
+---
+[2025-06-12T22:19:25.745Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:19:25.745Z"
+}
+---
+[2025-06-12T22:21:03.688Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:21:03.688Z"
+}
+---
+[2025-06-12T22:21:16.413Z] [HiroAPI] Enhanced API client initialized with baseURL: https://api.hiro.so
+
+---
+[2025-06-12T22:21:16.413Z] [HiroAPI] Rate limit: 100 requests per 60000ms
+
+---
+[2025-06-12T22:21:25.002Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:21:25.002Z"
+}
+---
+[2025-06-12T22:22:07.512Z] [HiroAPI] Enhanced API client initialized with baseURL: https://api.hiro.so
+
+---
+[2025-06-12T22:22:07.512Z] [HiroAPI] Rate limit: 100 requests per 60000ms
+
+---
+[2025-06-12T22:22:07.518Z] [HiroAPI] Attempt 1/3 for: https://api.hiro.so/ordinals/v1/inscriptions?offset=0&limit=20&order=desc&order_by=number
+
+---
+[2025-06-12T22:22:07.942Z] [HiroAPI] Data cached for: /ordinals/v1/inscriptions{"offset":0,"limit":20,"order":"desc","order_by":"number"} (TTL: 30000ms)
+
+---
+[2025-06-12T22:22:07.943Z] [HiroAPI] Request successful for /ordinals/v1/inscriptions (425ms)
+
+---
+[2025-06-12T22:22:07.982Z] [HiroAPI] Cache hit for: /ordinals/v1/inscriptions{"offset":0,"limit":20,"order":"desc","order_by":"number"}
+
+---
+[2025-06-12T22:22:21.235Z] [ERROR] undefined
+{
+  "context": {},
+  "timestamp": "2025-06-12T22:22:21.234Z"
+}
+---
