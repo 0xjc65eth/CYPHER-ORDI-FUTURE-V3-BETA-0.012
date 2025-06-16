@@ -1,0 +1,109 @@
+/* Global Select and Dropdown Overrides - Fix Transparency Issues */
+
+/* Native select elements */
+select {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+  opacity: 1 !important;
+}
+
+select:hover {
+  background-color: rgb(31, 41, 55) !important; /* gray-800 solid */
+}
+
+select:focus {
+  outline: 2px solid rgb(249, 115, 22) !important; /* orange-500 */
+  outline-offset: -2px;
+}
+
+/* Select options */
+select option {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+  color: white !important;
+  padding: 8px !important;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: rgb(249, 115, 22) !important; /* orange-500 */
+  color: white !important;
+}
+
+/* Radix UI Select overrides */
+[data-radix-popper-content-wrapper] {
+  z-index: 50 !important;
+}
+
+/* Select content */
+[role="listbox"],
+.select-content,
+[data-state="open"] {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+  border: 1px solid rgb(75, 85, 99) !important; /* gray-600 */
+  opacity: 1 !important;
+}
+
+/* Select items */
+[role="option"],
+.select-item {
+  background-color: transparent !important;
+  color: white !important;
+  opacity: 1 !important;
+}
+
+[role="option"]:hover,
+[role="option"]:focus,
+.select-item:hover,
+.select-item:focus {
+  background-color: rgb(249, 115, 22) !important; /* orange-500 */
+  color: white !important;
+}
+
+/* Dropdown menu overrides */
+.dropdown-menu,
+[role="menu"] {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+  border: 1px solid rgb(75, 85, 99) !important; /* gray-600 */
+  opacity: 1 !important;
+}
+
+/* Dropdown items */
+.dropdown-item,
+[role="menuitem"] {
+  background-color: transparent !important;
+  color: white !important;
+  opacity: 1 !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+[role="menuitem"]:hover,
+[role="menuitem"]:focus {
+  background-color: rgb(249, 115, 22) !important; /* orange-500 */
+  color: white !important;
+}
+
+/* Custom select classes fix */
+.bg-popover {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+  opacity: 1 !important;
+}
+
+.bg-background {
+  opacity: 1 !important;
+}
+
+/* Fix any transparent backgrounds */
+.bg-transparent {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 solid */
+}
+
+/* Ensure proper contrast */
+select,
+[role="listbox"],
+[role="option"],
+.select-trigger,
+.select-content {
+  color: white !important;
+  font-weight: 500;
+}

@@ -1,0 +1,153 @@
+# Prometheus Configuration for CYPHER ORDi Future V3
+# Advanced monitoring setup with multiple targets and alerting rules
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'cypher-ordi-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rules configuration
+rule_files:
+  - "rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # CYPHER ORDi Application
+  - job_name: 'cypher-app'
+    static_configs:
+      - targets: ['cypher-app:9090']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scheme: http
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Node Exporter (System metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # Redis monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # PostgreSQL monitoring
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # AlertManager monitoring
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    scrape_interval: 30s
+
+  # Custom service discovery for microservices
+  - job_name: 'cypher-services'
+    dns_sd_configs:
+      - names:
+        - 'cypher-app'
+        type: 'A'
+        port: 9090
+    relabel_configs:
+      - source_labels: [__meta_dns_name]
+        target_label: service
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'cypher-app:9090'
+
+  # WebSocket metrics
+  - job_name: 'websocket-metrics'
+    static_configs:
+      - targets: ['cypher-app:8080']
+    scrape_interval: 5s
+    metrics_path: /ws/metrics
+    scheme: http
+
+  # Trading engine metrics (high frequency)
+  - job_name: 'trading-engine'
+    static_configs:
+      - targets: ['cypher-app:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics/trading
+    params:
+      module: ['trading']
+
+  # ML/AI metrics
+  - job_name: 'ml-engine'
+    static_configs:
+      - targets: ['cypher-app:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics/ml
+    params:
+      module: ['ml']
+
+  # DeFi protocol metrics
+  - job_name: 'defi-protocols'
+    static_configs:
+      - targets: ['cypher-app:9090']
+    scrape_interval: 60s
+    metrics_path: /metrics/defi
+    params:
+      module: ['defi']
+
+  # Security metrics
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['cypher-app:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics/security
+    params:
+      module: ['security']
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: "http://prometheus:9090/api/v1/write"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'cypher_.*'
+        action: keep
+
+# Storage configuration
+storage:
+  tsdb:
+    retention_time: "15d"
+    retention_size: "10GB"
+    min_block_duration: "2h"
+    max_block_duration: "25h"

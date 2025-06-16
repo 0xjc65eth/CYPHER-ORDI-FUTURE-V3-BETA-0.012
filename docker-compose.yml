@@ -1,0 +1,221 @@
+# Docker Compose for CYPHER ORDi Future V3
+# Complete monitoring stack with Prometheus, Grafana, and Redis
+
+version: '3.8'
+
+services:
+  # Main Application
+  cypher-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: cypher-ordi-app
+    ports:
+      - "4444:4444"
+      - "8080:8080"  # WebSocket port
+      - "9090:9090"  # Metrics port
+    environment:
+      - NODE_ENV=production
+      - PORT=4444
+      - WS_PORT=8080
+      - METRICS_PORT=9090
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=cypher_ordi
+      - POSTGRES_USER=cypher
+      - POSTGRES_PASSWORD=cypher_password_2025
+      - JWT_SECRET=cypher_jwt_secret_2025_production
+      - ADMIN_JWT_SECRET=cypher_admin_jwt_secret_2025_production
+    depends_on:
+      - redis
+      - postgres
+      - prometheus
+    networks:
+      - cypher-network
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cypher-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - cypher-network
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: cypher-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=cypher_ordi
+      - POSTGRES_USER=cypher
+      - POSTGRES_PASSWORD=cypher_password_2025
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    networks:
+      - cypher-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cypher -d cypher_ordi"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: cypher-prometheus
+    ports:
+      - "9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - cypher-network
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/rules:/etc/prometheus/rules
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: cypher-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=cypher_admin_2025
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel
+      - GF_FEATURE_TOGGLES_ENABLE=newNavigation
+    networks:
+      - cypher-network
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Node Exporter (System Metrics)
+  node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: cypher-node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - cypher-network
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+    pid: host
+
+  # AlertManager (Alerting)
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: cypher-alertmanager
+    ports:
+      - "9093:9093"
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - cypher-network
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: cypher-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - cypher-network
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - cypher-app
+      - grafana
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  cypher-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local

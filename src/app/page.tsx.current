@@ -1,0 +1,80 @@
+'use client';
+
+export default function HomePage() {
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(to bottom, #111827, #000000)',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <h1 style={{ fontSize: '4rem', fontWeight: 'bold', color: '#FB923C', marginBottom: '2rem' }}>
+        🚀 CYPHER ORDI FUTURE
+      </h1>
+      
+      <p style={{ fontSize: '1.5rem', marginBottom: '3rem', color: '#94A3B8' }}>
+        Bitcoin Blockchain Analytics Platform
+      </p>
+      
+      <div style={{ display: 'flex', gap: '2rem' }}>
+        <a 
+          href="/analytics" 
+          style={{
+            padding: '1rem 2rem',
+            background: '#FB923C',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            transition: 'transform 0.2s',
+          }}
+        >
+          📊 Analytics
+        </a>
+        
+        <a 
+          href="/cypher-ai" 
+          style={{
+            padding: '1rem 2rem',
+            background: '#8B5CF6',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            transition: 'transform 0.2s',
+          }}
+        >
+          🤖 CYPHER AI
+        </a>
+        
+        <a 
+          href="/portfolio" 
+          style={{
+            padding: '1rem 2rem',
+            background: '#3B82F6',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            transition: 'transform 0.2s',
+          }}
+        >
+          💼 Portfolio
+        </a>
+      </div>
+      
+      <div style={{ marginTop: '4rem', textAlign: 'center' }}>
+        <p style={{ color: '#64748B', marginBottom: '0.5rem' }}>
+          ✅ Server is running successfully!
+        </p>
+        <p style={{ color: '#475569', fontSize: '0.875rem' }}>
+          v3.1.0 | Next.js 14.2.0 | © 2024
+        </p>
+      </div>
+    </div>
+  );
+}

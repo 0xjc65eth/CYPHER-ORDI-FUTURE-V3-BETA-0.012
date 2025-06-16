@@ -1,0 +1,329 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { TopNavLayout } from '@/components/layout/TopNavLayout';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Import icons safely
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Users, 
+  Activity,
+  Bitcoin,
+  BarChart3,
+  Wallet,
+  Globe,
+  Target
+} from 'lucide-react';
+
+// Simple mock data
+const mockTokens = [
+  {
+    ticker: 'ordi',
+    name: 'Ordinals',
+    supply: 21000000,
+    maxSupply: 21000000,
+    mintedSupply: 21000000,
+    limitPerMint: 1000,
+    holders: 15420,
+    price: 45.67,
+    priceChange24h: 8.5,
+    change24h: 8.5,
+    volume24h: 2500000,
+    marketCap: 959070000,
+    deployedAt: '2023-03-08T00:00:00Z',
+    deployer: 'bc1qhj0h0r2eqz0a8q6m5a0f8k4n3r7v9w2x5y8z1c4',
+    deployBlock: 837000,
+    progress: 100,
+    transfers: 250000,
+    mintable: false,
+    verified: true,
+    description: 'The first BRC-20 token'
+  },
+  {
+    ticker: 'sats',
+    name: 'Satoshis',
+    supply: 2100000000000000,
+    maxSupply: 2100000000000000,
+    mintedSupply: 1950000000000000,
+    limitPerMint: 100000000,
+    holders: 28500,
+    price: 0.0000005,
+    priceChange24h: 12.3,
+    change24h: 12.3,
+    volume24h: 1800000,
+    marketCap: 1050000,
+    deployedAt: '2023-03-09T00:00:00Z',
+    deployer: 'bc1q9x4y7z8a9b0c1d2e3f4g5h6i7j8k9l0m1n2o3p4',
+    deployBlock: 837125,
+    progress: 92.8,
+    transfers: 180000,
+    mintable: true,
+    verified: true,
+    description: 'A BRC-20 token representing the smallest unit of Bitcoin'
+  }
+];
+
+const mockAnalytics = {
+  totalMarketCap: 978634519,
+  totalVolume24h: 5348000,
+  totalTokens: 125,
+  totalHolders: 71420
+};
+
+export default function BRC20Page() {
+  console.log('🔍 BRC20Page - Hybrid version rendering');
+  
+  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState('overview');
+
+  useEffect(() => {
+    console.log('🔍 BRC20Page - Setting mounted to true');
+    setMounted(true);
+    
+    // Simulate data loading
+    setTimeout(() => {
+      console.log('🔍 BRC20Page - Simulated data loading complete');
+      setLoading(false);
+    }, 2000);
+  }, []);
+
+  const formatNumber = (num: number, compact = false) => {
+    if (compact && num >= 1000000000) {
+      return `${(num / 1000000000).toFixed(1)}B`;
+    }
+    if (compact && num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
+    if (compact && num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toLocaleString();
+  };
+
+  console.log('🔍 BRC20Page - Render check - mounted:', mounted, 'loading:', loading);
+
+  if (!mounted || loading) {
+    console.log('🔍 BRC20Page - Returning loading state');
+    return (
+      <TopNavLayout>
+        <div className="space-y-6 min-h-screen bg-black p-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-800 rounded w-1/3 mb-4"></div>
+            <div className="grid gap-4 md:grid-cols-4 mb-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 bg-gray-800 rounded"></div>
+              ))}
+            </div>
+            <div className="h-96 bg-gray-800 rounded"></div>
+          </div>
+          <div className="text-center text-orange-500 mt-8">
+            <h2 className="text-xl font-bold mb-2">BRC-20 Intelligence Hub</h2>
+            <p className="text-sm font-mono">
+              {!mounted ? 'INITIALIZING BRC-20 HUB...' : 'LOADING TOKEN DATA...'}
+            </p>
+            <div className="mt-4 text-xs text-gray-500">
+              Debug: mounted={String(mounted)}, loading={String(loading)}
+            </div>
+          </div>
+        </div>
+      </TopNavLayout>
+    );
+  }
+
+  console.log('🔍 BRC20Page - Rendering main content');
+
+  return (
+    <TopNavLayout>
+      <div className="space-y-6 min-h-screen bg-black p-8">
+        {/* Professional Header */}
+        <div className="border-b border-gray-700 pb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                BRC-20 Intelligence Hub - Hybrid Version
+              </h1>
+              <p className="text-gray-400 mt-1">
+                Professional-grade analytics for Bitcoin BRC-20 tokens with real-time data and trading tools
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Card className="px-4 py-2 bg-orange-500/10 border-orange-500/20">
+                <span className="text-orange-500 text-sm font-medium">
+                  ORDI: $45.67 <span className="text-green-400">+8.5%</span>
+                </span>
+              </Card>
+              <Card className="px-4 py-2 bg-blue-500/10 border-blue-500/20">
+                <span className="text-blue-500 text-sm font-medium">
+                  {mockTokens.length} BRC-20 Tokens Loaded
+                </span>
+              </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Stats Overview */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Market Cap</p>
+                <p className="text-2xl font-bold text-white">
+                  ${formatNumber(mockAnalytics.totalMarketCap, true)}
+                </p>
+                <p className="text-xs text-green-400 mt-1">+12.5% from last month</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-green-500" />
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">24h Volume</p>
+                <p className="text-2xl font-bold text-white">
+                  ${formatNumber(mockAnalytics.totalVolume24h, true)}
+                </p>
+                <p className="text-xs text-blue-400 mt-1">+8.3% from yesterday</p>
+              </div>
+              <Activity className="w-8 h-8 text-blue-500" />
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Active Tokens</p>
+                <p className="text-2xl font-bold text-white">{formatNumber(mockAnalytics.totalTokens)}</p>
+                <p className="text-xs text-purple-400 mt-1">+15 new this week</p>
+              </div>
+              <Target className="w-8 h-8 text-purple-500" />
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Holders</p>
+                <p className="text-2xl font-bold text-white">
+                  {formatNumber(mockAnalytics.totalHolders, true)}
+                </p>
+                <p className="text-xs text-orange-400 mt-1">+2.1K new holders</p>
+              </div>
+              <Users className="w-8 h-8 text-orange-500" />
+            </div>
+          </Card>
+        </div>
+
+        {/* Professional Tabs Interface */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="tokens" className="flex items-center gap-2">
+              <Bitcoin className="h-4 w-4" />
+              Tokens
+            </TabsTrigger>
+            <TabsTrigger value="portfolio" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="trading" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Trading
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-gray-900 border-gray-700 p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-500" />
+                  Top Performers (24h)
+                </h3>
+                <div className="space-y-3">
+                  {mockTokens.slice(0, 2).map((token, index) => (
+                    <div key={token.ticker} className="flex items-center justify-between p-3 bg-gray-800 rounded hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-400 text-sm">#{index + 1}</span>
+                        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-xs uppercase">
+                            {token.ticker.slice(0, 2)}
+                          </span>
+                        </div>
+                        <span className="font-bold text-white uppercase">{token.ticker}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-medium ${
+                          token.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {token.priceChange24h >= 0 ? '+' : ''}{token.priceChange24h.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              
+              <Card className="bg-gray-900 border-gray-700 p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-blue-500" />
+                  Market Activity
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-3 bg-gray-800 rounded">
+                    <span className="text-gray-400">Most Active Token</span>
+                    <span className="text-white font-bold">ORDI</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-800 rounded">
+                    <span className="text-gray-400">Highest Market Cap</span>
+                    <span className="text-white font-bold">ORDI</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="tokens">
+            <Card className="bg-gray-900 border-gray-700 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Token List</h3>
+              <p className="text-gray-400">Token list component would go here</p>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="portfolio">
+            <Card className="bg-gray-900 border-gray-700 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Portfolio</h3>
+              <p className="text-gray-400">Portfolio component would go here</p>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="trading">
+            <Card className="bg-gray-900 border-gray-700 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Trading</h3>
+              <p className="text-gray-400">Trading component would go here</p>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Status Footer */}
+        <div className="mt-8 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+          <h3 className="text-green-400 font-bold mb-2">✅ Status: Working</h3>
+          <p className="text-green-200 text-sm">
+            This hybrid version demonstrates that the basic structure works. 
+            The original complex version has been backed up to page.tsx.backup
+          </p>
+        </div>
+      </div>
+    </TopNavLayout>
+  );
+}

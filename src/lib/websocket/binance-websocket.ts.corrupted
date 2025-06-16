@@ -1,0 +1,121 @@
+/**
+ * Binance WebSocket Streams Integration
+ * Real-time cryptocurrency data from Binance API
+ * Features: Multiple stream types, automatic reconnection, data validation
+ */
+
+'use client';
+
+import { logger } from '@/lib/logger';
+import { priceCache } from '@/lib/cache/enhanced-api-cache';
+
+export interface BinanceWebSocketConfig {
+  baseUrl?: string;
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
+  pingInterval?: number;
+  enableCompression?: boolean;
+}
+
+export interface BinanceTickerData {
+  symbol: string;
+  priceChange: string;
+  priceChangePercent: string;
+  weightedAvgPrice: string;
+  prevClosePrice: string;
+  lastPrice: string;
+  lastQty: string;
+  bidPrice: string;
+  bidQty: string;
+  askPrice: string;
+  askQty: string;
+  openPrice: string;
+  highPrice: string;
+  lowPrice: string;
+  volume: string;
+  quoteVolume: string;
+  openTime: number;
+  closeTime: number;
+  firstId: number;
+  lastId: number;
+  count: number;
+}
+
+export interface BinanceDepthData {
+  symbol: string;
+  firstUpdateId: number;
+  finalUpdateId: number;
+  bids: [string, string][];
+  asks: [string, string][];
+}
+
+export interface BinanceTradeData {
+  symbol: string;
+  id: number;
+  price: string;
+  qty: string;
+  quoteQty: string;
+  time: number;
+  isBuyerMaker: boolean;
+  isBestMatch: boolean;
+}
+
+export interface BinanceKlineData {
+  symbol: string;
+  kline: {
+    startTime: number;
+    endTime: number;
+    symbol: string;
+    interval: string;
+    firstTradeId: number;
+    lastTradeId: number;
+    openPrice: string;
+    closePrice: string;
+    highPrice: string;
+    lowPrice: string;
+    volume: string;
+    numberOfTrades: number;
+    isFinal: boolean;
+    quoteVolume: string;
+    activeVolume: string;
+    activeQuoteVolume: string;
+  };
+}
+
+export interface BinanceSubscription {
+  id: string;
+  streams: string[];
+  callback: (data: any) => void;
+  symbols?: string[];
+  streamTypes?: ('ticker' | 'depth' | 'trade' | 'kline')[];
+}
+
+export type BinanceStreamType = 'ticker' | 'depth' | 'trade' | 'kline';
+export type BinanceKlineInterval = '1m' | '3m' | '5m' | '15m' | '30m' | '1h' | '2h' | '4h' | '6h' | '8h' | '12h' | '1d' | '3d' | '1w' | '1M';
+
+/**
+ * Binance WebSocket Manager
+ * Handles real-time data streaming from Binance WebSocket API
+ */
+export class BinanceWebSocket {
+  private config: BinanceWebSocketConfig;
+  private ws: WebSocket | null = null;
+  private subscriptions = new Map<string, BinanceSubscription>();
+  private activeStreams = new Set<string>();
+  private isConnected = false;
+  private reconnectAttempts = 0;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private pingTimer: NodeJS.Timeout | null = null;
+  private lastPong = 0;
+  private messageCount = 0;
+  private dataCache = new Map<string, any>();
+
+  constructor(config: BinanceWebSocketConfig = {}) {
+    this.config = {
+      baseUrl: 'wss://stream.binance.com:9443/ws',
+      reconnectInterval: 5000,
+      maxReconnectAttempts: 10,
+      pingInterval: 30000,
+      enableCompression: true,
+      ...config
+    };\n  }\n\n  /**\n   * Initialize the Binance WebSocket connection\n   */\n  async initialize(): Promise<void> {\n    if (this.isConnected || this.ws) {\n      logger.warn('Binance WebSocket already initialized');\n      return;\n    }\n\n    logger.info('🚀 Initializing Binance WebSocket connection');\n    await this.connect();\n  }\n\n  /**\n   * Connect to Binance WebSocket\n   */\n  private async connect(): Promise<void> {\n    try {\n      logger.info(`🔌 Connecting to Binance WebSocket: ${this.config.baseUrl}`);\n      \n      this.ws = new WebSocket(this.config.baseUrl!);\n      \n      this.ws.onopen = () => this.handleOpen();\n      this.ws.onmessage = (event) => this.handleMessage(event);\n      this.ws.onclose = (event) => this.handleClose(event);\n      this.ws.onerror = (error) => this.handleError(error);\n      \n    } catch (error) {\n      logger.error('❌ Failed to create Binance WebSocket connection:', error);\n      this.scheduleReconnect();\n    }\n  }\n\n  /**\n   * Handle WebSocket connection open\n   */\n  private handleOpen(): void {\n    logger.info('✅ Binance WebSocket connected');\n    \n    this.isConnected = true;\n    this.reconnectAttempts = 0;\n    this.lastPong = Date.now();\n    \n    // Start ping timer\n    this.startPingTimer();\n    \n    // Resubscribe to active streams\n    this.resubscribeToStreams();\n  }\n\n  /**\n   * Handle incoming WebSocket messages\n   */\n  private handleMessage(event: MessageEvent): void {\n    try {\n      this.messageCount++;\n      const data = JSON.parse(event.data);\n      \n      // Handle pong messages\n      if (data.result === null && !data.stream) {\n        this.lastPong = Date.now();\n        return;\n      }\n      \n      // Handle stream data\n      if (data.stream && data.data) {\n        this.processStreamData(data.stream, data.data);\n      }\n      \n    } catch (error) {\n      logger.error('❌ Error processing Binance message:', error);\n    }\n  }\n\n  /**\n   * Handle WebSocket connection close\n   */\n  private handleClose(event: CloseEvent): void {\n    logger.warn(`🔌 Binance WebSocket disconnected: ${event.code} - ${event.reason}`);\n    \n    this.isConnected = false;\n    this.stopPingTimer();\n    \n    if (event.code !== 1000) { // Not normal closure\n      this.scheduleReconnect();\n    }\n  }\n\n  /**\n   * Handle WebSocket errors\n   */\n  private handleError(error: any): void {\n    logger.error('❌ Binance WebSocket error:', error);\n    this.scheduleReconnect();\n  }\n\n  /**\n   * Process stream data and distribute to subscribers\n   */\n  private processStreamData(stream: string, data: any): void {\n    // Cache the data\n    this.dataCache.set(stream, {\n      data,\n      timestamp: Date.now()\n    });\n    \n    // Extract symbol and stream type\n    const { symbol, streamType } = this.parseStreamName(stream);\n    \n    // Process based on stream type\n    let processedData;\n    switch (streamType) {\n      case 'ticker':\n        processedData = this.processTickerData(data as BinanceTickerData);\n        break;\n      case 'depth':\n        processedData = this.processDepthData(data as BinanceDepthData);\n        break;\n      case 'trade':\n        processedData = this.processTradeData(data as BinanceTradeData);\n        break;\n      case 'kline':\n        processedData = this.processKlineData(data as BinanceKlineData);\n        break;\n      default:\n        processedData = data;\n    }\n    \n    // Cache processed data\n    if (processedData && symbol) {\n      priceCache.set(`binance-${symbol}-${streamType}`, processedData, 60000, 'binance');\n    }\n    \n    // Distribute to subscribers\n    this.distributeToSubscribers(stream, processedData || data);\n  }\n\n  /**\n   * Parse stream name to extract symbol and type\n   */\n  private parseStreamName(stream: string): { symbol: string | null; streamType: string } {\n    const parts = stream.split('@');\n    if (parts.length !== 2) return { symbol: null, streamType: 'unknown' };\n    \n    const symbol = parts[0].toUpperCase();\n    const streamType = parts[1].split('_')[0]; // Handle intervals like kline_1m\n    \n    return { symbol, streamType };\n  }\n\n  /**\n   * Process ticker data\n   */\n  private processTickerData(data: BinanceTickerData): any {\n    return {\n      symbol: data.symbol,\n      price: parseFloat(data.lastPrice),\n      change24h: parseFloat(data.priceChangePercent),\n      volume24h: parseFloat(data.volume),\n      high24h: parseFloat(data.highPrice),\n      low24h: parseFloat(data.lowPrice),\n      bid: parseFloat(data.bidPrice),\n      ask: parseFloat(data.askPrice),\n      timestamp: data.closeTime,\n      source: 'binance'\n    };\n  }\n\n  /**\n   * Process depth/orderbook data\n   */\n  private processDepthData(data: BinanceDepthData): any {\n    return {\n      symbol: data.symbol,\n      bids: data.bids.map(([price, qty]) => [parseFloat(price), parseFloat(qty)]),\n      asks: data.asks.map(([price, qty]) => [parseFloat(price), parseFloat(qty)]),\n      timestamp: Date.now(),\n      source: 'binance'\n    };\n  }\n\n  /**\n   * Process trade data\n   */\n  private processTradeData(data: BinanceTradeData): any {\n    return {\n      symbol: data.symbol,\n      price: parseFloat(data.price),\n      quantity: parseFloat(data.qty),\n      side: data.isBuyerMaker ? 'sell' : 'buy',\n      timestamp: data.time,\n      source: 'binance'\n    };\n  }\n\n  /**\n   * Process kline/candlestick data\n   */\n  private processKlineData(data: BinanceKlineData): any {\n    const kline = data.kline;\n    return {\n      symbol: kline.symbol,\n      interval: kline.interval,\n      openTime: kline.startTime,\n      closeTime: kline.endTime,\n      open: parseFloat(kline.openPrice),\n      high: parseFloat(kline.highPrice),\n      low: parseFloat(kline.lowPrice),\n      close: parseFloat(kline.closePrice),\n      volume: parseFloat(kline.volume),\n      trades: kline.numberOfTrades,\n      isFinal: kline.isFinal,\n      timestamp: kline.endTime,\n      source: 'binance'\n    };\n  }\n\n  /**\n   * Distribute data to relevant subscribers\n   */\n  private distributeToSubscribers(stream: string, data: any): void {\n    this.subscriptions.forEach(subscription => {\n      if (subscription.streams.includes(stream)) {\n        try {\n          subscription.callback(data);\n        } catch (error) {\n          logger.error(`Error in Binance subscription callback ${subscription.id}:`, error);\n        }\n      }\n    });\n  }\n\n  /**\n   * Subscribe to specific streams\n   */\n  subscribe(options: {\n    symbols: string[];\n    streamTypes: BinanceStreamType[];\n    callback: (data: any) => void;\n    klineInterval?: BinanceKlineInterval;\n  }): string {\n    const subscriptionId = `binance_sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;\n    \n    // Generate stream names\n    const streams: string[] = [];\n    options.symbols.forEach(symbol => {\n      const symbolLower = symbol.toLowerCase();\n      options.streamTypes.forEach(streamType => {\n        switch (streamType) {\n          case 'ticker':\n            streams.push(`${symbolLower}@ticker`);\n            break;\n          case 'depth':\n            streams.push(`${symbolLower}@depth20@1000ms`);\n            break;\n          case 'trade':\n            streams.push(`${symbolLower}@trade`);\n            break;\n          case 'kline':\n            const interval = options.klineInterval || '1m';\n            streams.push(`${symbolLower}@kline_${interval}`);\n            break;\n        }\n      });\n    });\n    \n    const subscription: BinanceSubscription = {\n      id: subscriptionId,\n      streams,\n      callback: options.callback,\n      symbols: options.symbols,\n      streamTypes: options.streamTypes\n    };\n    \n    this.subscriptions.set(subscriptionId, subscription);\n    \n    // Subscribe to streams\n    this.subscribeToStreams(streams);\n    \n    logger.info(`📈 Subscribed to Binance streams: ${streams.join(', ')} (ID: ${subscriptionId})`);\n    \n    // Send cached data if available\n    this.sendCachedDataToSubscriber(subscription);\n    \n    return subscriptionId;\n  }\n\n  /**\n   * Unsubscribe from streams\n   */\n  unsubscribe(subscriptionId: string): void {\n    const subscription = this.subscriptions.get(subscriptionId);\n    if (!subscription) return;\n    \n    // Check if any other subscriptions use these streams\n    const streamsToUnsubscribe = subscription.streams.filter(stream => {\n      return !Array.from(this.subscriptions.values())\n        .some(sub => sub.id !== subscriptionId && sub.streams.includes(stream));\n    });\n    \n    // Unsubscribe from streams\n    if (streamsToUnsubscribe.length > 0) {\n      this.unsubscribeFromStreams(streamsToUnsubscribe);\n    }\n    \n    this.subscriptions.delete(subscriptionId);\n    logger.info(`📉 Unsubscribed from Binance streams: ${subscriptionId}`);\n  }\n\n  /**\n   * Subscribe to WebSocket streams\n   */\n  private subscribeToStreams(streams: string[]): void {\n    if (!this.isConnected || !this.ws) {\n      // Queue for later when connected\n      streams.forEach(stream => this.activeStreams.add(stream));\n      return;\n    }\n    \n    const subscribeMessage = {\n      method: 'SUBSCRIBE',\n      params: streams,\n      id: Date.now()\n    };\n    \n    try {\n      this.ws.send(JSON.stringify(subscribeMessage));\n      streams.forEach(stream => this.activeStreams.add(stream));\n      logger.debug(`📡 Subscribed to Binance streams: ${streams.join(', ')}`);\n    } catch (error) {\n      logger.error('❌ Failed to subscribe to Binance streams:', error);\n    }\n  }\n\n  /**\n   * Unsubscribe from WebSocket streams\n   */\n  private unsubscribeFromStreams(streams: string[]): void {\n    if (!this.isConnected || !this.ws) return;\n    \n    const unsubscribeMessage = {\n      method: 'UNSUBSCRIBE',\n      params: streams,\n      id: Date.now()\n    };\n    \n    try {\n      this.ws.send(JSON.stringify(unsubscribeMessage));\n      streams.forEach(stream => this.activeStreams.delete(stream));\n      logger.debug(`📡 Unsubscribed from Binance streams: ${streams.join(', ')}`);\n    } catch (error) {\n      logger.error('❌ Failed to unsubscribe from Binance streams:', error);\n    }\n  }\n\n  /**\n   * Resubscribe to all active streams after reconnection\n   */\n  private resubscribeToStreams(): void {\n    if (this.activeStreams.size === 0) return;\n    \n    const streams = Array.from(this.activeStreams);\n    this.subscribeToStreams(streams);\n    logger.info(`🔄 Resubscribed to ${streams.length} Binance streams`);\n  }\n\n  /**\n   * Send cached data to new subscriber\n   */\n  private sendCachedDataToSubscriber(subscription: BinanceSubscription): void {\n    subscription.streams.forEach(stream => {\n      const cached = this.dataCache.get(stream);\n      if (cached && Date.now() - cached.timestamp < 60000) { // 1 minute cache\n        try {\n          subscription.callback(cached.data);\n        } catch (error) {\n          logger.error(`Error sending cached Binance data to ${subscription.id}:`, error);\n        }\n      }\n    });\n  }\n\n  /**\n   * Start ping timer for connection health\n   */\n  private startPingTimer(): void {\n    this.pingTimer = setInterval(() => {\n      if (this.isConnected && this.ws) {\n        try {\n          this.ws.send('ping');\n          \n          // Check if we received pong recently\n          const timeSincePong = Date.now() - this.lastPong;\n          if (timeSincePong > this.config.pingInterval! * 2) {\n            logger.warn('⚠️ Binance WebSocket ping timeout, reconnecting');\n            this.reconnect();\n          }\n        } catch (error) {\n          logger.error('❌ Failed to send Binance ping:', error);\n          this.reconnect();\n        }\n      }\n    }, this.config.pingInterval);\n  }\n\n  /**\n   * Stop ping timer\n   */\n  private stopPingTimer(): void {\n    if (this.pingTimer) {\n      clearInterval(this.pingTimer);\n      this.pingTimer = null;\n    }\n  }\n\n  /**\n   * Schedule reconnection attempt\n   */\n  private scheduleReconnect(): void {\n    if (this.reconnectAttempts >= this.config.maxReconnectAttempts!) {\n      logger.error('🚨 Max Binance reconnection attempts reached');\n      return;\n    }\n    \n    this.reconnectAttempts++;\n    const delay = Math.min(\n      this.config.reconnectInterval! * Math.pow(2, this.reconnectAttempts - 1),\n      30000\n    );\n    \n    logger.info(`⏰ Scheduling Binance reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);\n    \n    this.reconnectTimer = setTimeout(() => {\n      this.reconnect();\n    }, delay);\n  }\n\n  /**\n   * Reconnect to WebSocket\n   */\n  private reconnect(): void {\n    logger.info('🔄 Reconnecting to Binance WebSocket');\n    \n    this.cleanup();\n    this.connect();\n  }\n\n  /**\n   * Cleanup WebSocket connection\n   */\n  private cleanup(): void {\n    this.isConnected = false;\n    \n    if (this.ws) {\n      this.ws.close();\n      this.ws = null;\n    }\n    \n    this.stopPingTimer();\n    \n    if (this.reconnectTimer) {\n      clearTimeout(this.reconnectTimer);\n      this.reconnectTimer = null;\n    }\n  }\n\n  /**\n   * Get current statistics\n   */\n  getStats(): {\n    isConnected: boolean;\n    activeSubscriptions: number;\n    activeStreams: number;\n    messageCount: number;\n    reconnectAttempts: number;\n    cachedDataPoints: number;\n  } {\n    return {\n      isConnected: this.isConnected,\n      activeSubscriptions: this.subscriptions.size,\n      activeStreams: this.activeStreams.size,\n      messageCount: this.messageCount,\n      reconnectAttempts: this.reconnectAttempts,\n      cachedDataPoints: this.dataCache.size\n    };\n  }\n\n  /**\n   * Get cached data for a stream\n   */\n  getCachedData(stream: string): any {\n    const cached = this.dataCache.get(stream);\n    return cached ? cached.data : null;\n  }\n\n  /**\n   * Force reconnection\n   */\n  forceReconnect(): void {\n    logger.info('🔄 Forcing Binance WebSocket reconnection');\n    this.reconnectAttempts = 0;\n    this.reconnect();\n  }\n\n  /**\n   * Stop and cleanup\n   */\n  stop(): void {\n    logger.info('🛑 Stopping Binance WebSocket');\n    \n    this.cleanup();\n    this.subscriptions.clear();\n    this.activeStreams.clear();\n    this.dataCache.clear();\n    this.messageCount = 0;\n    this.reconnectAttempts = 0;\n    \n    logger.info('✅ Binance WebSocket stopped');\n  }\n}\n\n// Export singleton instance\nexport const binanceWebSocket = new BinanceWebSocket();\nexport default binanceWebSocket;"}
