@@ -62,7 +62,7 @@ export class CoinbaseConnector extends ExchangeConnector {
       this.webSocket = this.createWebSocket(this.wsURL);
       
     } catch (error) {
-      logger.error('Failed to connect to Coinbase Pro:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to Coinbase Pro:');
       throw error;
     }
   }
@@ -89,7 +89,7 @@ export class CoinbaseConnector extends ExchangeConnector {
       this.emit('disconnected');
       
     } catch (error) {
-      logger.error('Error disconnecting from Coinbase Pro:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error disconnecting from Coinbase Pro:');
     }
   }
 
@@ -124,7 +124,7 @@ export class CoinbaseConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Error handling Coinbase WebSocket message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Coinbase WebSocket message:');
     }
   }
 
@@ -434,7 +434,7 @@ export class CoinbaseConnector extends ExchangeConnector {
       logger.debug(`Loaded info for ${products.length} Coinbase products`);
       
     } catch (error) {
-      logger.error('Failed to load Coinbase product info:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load Coinbase product info:');
       throw error;
     }
   }

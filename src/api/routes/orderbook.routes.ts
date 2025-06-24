@@ -10,7 +10,6 @@ import { validateRequest } from '@/api/middleware/validation';
 import { rateLimit } from '@/api/middleware/rateLimit';
 
 const router = Router();
-const logger = new EnhancedLogger();
 
 // Get orderbook service
 const getOrderBookService = () => systemIntegrator.getService('orderbook');
@@ -48,7 +47,7 @@ router.post('/order', tradingRateLimit, validateRequest(['symbol', 'side', 'type
     });
 
   } catch (error) {
-    logger.error('Order placement failed:', error);
+    EnhancedLogger.error('Order placement failed:', error);
     res.status(500).json({
       success: false,
       error: 'Order placement failed'
@@ -85,7 +84,7 @@ router.delete('/order/:orderId', tradingRateLimit, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Order cancellation failed:', error);
+    EnhancedLogger.error('Order cancellation failed:', error);
     res.status(500).json({
       success: false,
       error: 'Order cancellation failed'
@@ -126,7 +125,7 @@ router.get('/:symbol', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get order book:', error);
+    EnhancedLogger.error('Failed to get order book:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve order book'
@@ -164,7 +163,7 @@ router.get('/orders/:userId', tradingRateLimit, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get user orders:', error);
+    EnhancedLogger.error('Failed to get user orders:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve orders'
@@ -199,7 +198,7 @@ router.get('/trades/:symbol', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get trades:', error);
+    EnhancedLogger.error('Failed to get trades:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve trades'
@@ -232,7 +231,7 @@ router.get('/stats/:symbol', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get trading stats:', error);
+    EnhancedLogger.error('Failed to get trading stats:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve statistics'
@@ -271,7 +270,7 @@ router.put('/order/:orderId', tradingRateLimit, validateRequest(['quantity']), a
     });
 
   } catch (error) {
-    logger.error('Order modification failed:', error);
+    EnhancedLogger.error('Order modification failed:', error);
     res.status(500).json({
       success: false,
       error: 'Order modification failed'

@@ -33,7 +33,7 @@ export class GlobalErrorBoundary extends React.Component<
   GlobalErrorBoundaryProps,
   GlobalErrorBoundaryState
 > {
-  private retryTimeoutId: NodeJS.Timeout | null = null
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   constructor(props: GlobalErrorBoundaryProps) {
     super(props)

@@ -450,7 +450,7 @@ export function PortfolioRefined() {
 
   // Refs
   const abortControllerRef = useRef<AbortController>();
-  const refreshIntervalRef = useRef<NodeJS.Timeout>();
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   // Load portfolio data
   useEffect(() => {

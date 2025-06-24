@@ -151,6 +151,26 @@ export class WalletIntegrationService {
       const xverse = this.integrations.get('xverse')!;
       xverse.isInstalled = true;
       xverse.provider = window.XverseProviders.BitcoinProvider;
+      
+      // Apply patch to ensure getAddresses method exists
+      if (!xverse.provider.getAddresses) {
+        xverse.provider.getAddresses = async function() {
+          try {
+            const response = await this.request('getAccounts', {
+              purposes: ['ordinals', 'payment'],
+              message: 'CYPHER ORDi Future V3 would like to connect to your wallet.',
+            });
+            
+            if (response?.result?.addresses) {
+              return { addresses: response.result.addresses };
+            }
+            return { addresses: [] };
+          } catch (error) {
+            console.error('Error in patched getAddresses:', error);
+            return { addresses: [] };
+          }
+        }.bind(xverse.provider);
+      }
     }
 
     // Detect Unisat
@@ -165,6 +185,21 @@ export class WalletIntegrationService {
       const oyl = this.integrations.get('oyl')!;
       oyl.isInstalled = true;
       oyl.provider = window.oyl;
+    }
+
+    // Re-detect after a delay in case wallets load asynchronously
+    setTimeout(() => this.detectWalletsAgain(), 1000);
+  }
+
+  /**
+   * Re-detect wallets after initial load
+   */
+  private detectWalletsAgain(): void {
+    if (typeof window === 'undefined') return;
+
+    // Re-check Xverse
+    if (!this.integrations.get('xverse')?.isInstalled && window.XverseProviders?.BitcoinProvider) {
+      this.detectWallets();
     }
   }
 
@@ -193,6 +228,9 @@ export class WalletIntegrationService {
    * Connect to a specific wallet
    */
   public async connectWallet(walletType: WalletType): Promise<UniversalWalletAccount> {
+    // Re-detect wallets in case they were loaded after initialization
+    this.detectWallets();
+    
     const integration = this.integrations.get(walletType);
     if (!integration) {
       throw new WalletError(`Wallet type ${walletType} not supported`, 'WALLET_NOT_SUPPORTED');
@@ -251,11 +289,60 @@ export class WalletIntegrationService {
     const provider = integration.provider;
     
     try {
-      const addresses = await provider.getAddresses();
-      const accounts = addresses.addresses;
+      // First check if provider exists and has the required methods
+      if (!provider) {
+        throw new WalletError('Xverse provider not found', 'PROVIDER_NOT_FOUND');
+      }
+
+      let accounts: any[] = [];
+
+      // Try multiple methods to get accounts
+      try {
+        // Method 1: Try getAddresses if available
+        if (typeof provider.getAddresses === 'function') {
+          const addresses = await provider.getAddresses();
+          accounts = addresses?.addresses || addresses || [];
+        }
+      } catch (e) {
+        console.log('getAddresses failed, trying alternative methods');
+      }
+
+      // Method 2: Try direct request method
+      if (accounts.length === 0 && provider.request) {
+        try {
+          const response = await provider.request('getAccounts', {
+            purposes: ['ordinals', 'payment'],
+            message: 'CYPHER ORDi Future V3 would like to connect to your wallet.',
+          });
+          
+          if (response?.result?.addresses) {
+            accounts = response.result.addresses;
+          }
+        } catch (e) {
+          console.log('getAccounts request failed:', e);
+        }
+      }
+
+      // Method 3: Check if accounts are already available
+      if (accounts.length === 0 && provider.accounts) {
+        accounts = provider.accounts;
+      }
+
+      // Method 4: Try LaserEyes compatibility
+      if (accounts.length === 0) {
+        // Try to trigger connection first
+        if (typeof provider.connect === 'function') {
+          await provider.connect();
+          // Retry getting addresses
+          if (typeof provider.getAddresses === 'function') {
+            const addresses = await provider.getAddresses();
+            accounts = addresses?.addresses || addresses || [];
+          }
+        }
+      }
       
       if (!accounts || accounts.length === 0) {
-        throw new WalletError('No accounts found in Xverse wallet', 'NO_ACCOUNTS');
+        throw new WalletError('No accounts found in Xverse wallet. Please ensure Xverse is unlocked and has accounts.', 'NO_ACCOUNTS');
       }
 
       const primaryAccount = accounts[0];
@@ -267,15 +354,19 @@ export class WalletIntegrationService {
 
       return {
         address: paymentsAccount.address,
-        publicKey: paymentsAccount.publicKey,
-        purpose: paymentsAccount.purpose,
-        addressType: paymentsAccount.addressType as any,
+        publicKey: paymentsAccount.publicKey || '',
+        purpose: paymentsAccount.purpose || 'payment',
+        addressType: paymentsAccount.addressType as any || 'p2wpkh',
         walletType: 'xverse',
         balance,
         ordinalsAddress: ordinalsAccount.address,
         paymentsAddress: paymentsAccount.address
       };
     } catch (error) {
+      console.error('Xverse connection error:', error);
+      if (error instanceof WalletError) {
+        throw error;
+      }
       throw new WalletError(`Failed to connect to Xverse: ${error}`, 'XVERSE_CONNECTION_FAILED');
     }
   }

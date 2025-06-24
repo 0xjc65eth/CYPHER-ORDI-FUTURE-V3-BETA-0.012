@@ -193,3 +193,5 @@ export function MarketCapRanking() {
     </Card>
   );
 }
+
+export default MarketCapRanking;

@@ -224,7 +224,7 @@ export class HyperliquidBot extends EventEmitter {
       this.emit('started');
 
     } catch (error) {
-      this.logger.error('Failed to start trading bot:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start trading bot:');
       this.isRunning = false;
       throw error;
     }
@@ -258,7 +258,7 @@ export class HyperliquidBot extends EventEmitter {
       this.emit('stopped');
 
     } catch (error) {
-      this.logger.error('Error stopping trading bot:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error stopping trading bot:');
       throw error;
     }
   }
@@ -282,7 +282,7 @@ export class HyperliquidBot extends EventEmitter {
       this.emit('emergencyStop', { reason, timestamp: Date.now() });
 
     } catch (error) {
-      this.logger.error('Error during emergency stop:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error during emergency stop:');
     }
   }
 
@@ -349,7 +349,7 @@ export class HyperliquidBot extends EventEmitter {
       return order;
 
     } catch (error) {
-      this.logger.error('Failed to execute trade:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to execute trade:');
       throw error;
     }
   }
@@ -411,7 +411,7 @@ export class HyperliquidBot extends EventEmitter {
       };
 
       this.ws.onerror = (error) => {
-        this.logger.error('WebSocket error:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'WebSocket error:');
         reject(error);
       };
 
@@ -477,7 +477,7 @@ export class HyperliquidBot extends EventEmitter {
       await this.updatePerformanceMetrics();
 
     } catch (error) {
-      this.logger.error('Failed to load account state:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load account state:');
       throw error;
     }
   }
@@ -547,7 +547,7 @@ export class HyperliquidBot extends EventEmitter {
         }
 
       } catch (error) {
-        this.logger.error('Error updating market data:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error updating market data:');
       }
     }, 1000);
   }
@@ -672,7 +672,7 @@ export class HyperliquidBot extends EventEmitter {
       });
 
     } catch (error) {
-      this.logger.error('Failed to open position:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to open position:');
     }
   }
 
@@ -720,7 +720,7 @@ export class HyperliquidBot extends EventEmitter {
         }
 
       } catch (error) {
-        this.logger.error('Risk monitoring error:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Risk monitoring error:');
       }
     }, 10000);
   }
@@ -928,7 +928,7 @@ export class HyperliquidBot extends EventEmitter {
           this.logger.debug('Unknown message type:', message.type);
       }
     } catch (error) {
-      this.logger.error('Error handling WebSocket message:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling WebSocket message:');
     }
   }
 

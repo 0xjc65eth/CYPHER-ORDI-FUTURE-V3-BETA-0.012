@@ -174,7 +174,7 @@ export function useRunesTradingActivity(
       setLoading(false);
 
     } catch (error) {
-      logger.error('Error fetching trading activity:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error fetching trading activity:');
       setError(error instanceof Error ? error.message : 'Failed to fetch trading activity');
       setLoading(false);
     }

@@ -50,7 +50,7 @@ export class KrakenConnector extends ExchangeConnector {
       this.webSocket = this.createWebSocket(this.wsURL);
       
     } catch (error) {
-      logger.error('Failed to connect to Kraken:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to Kraken:');
       throw error;
     }
   }
@@ -82,7 +82,7 @@ export class KrakenConnector extends ExchangeConnector {
       this.emit('disconnected');
       
     } catch (error) {
-      logger.error('Error disconnecting from Kraken:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error disconnecting from Kraken:');
     }
   }
 
@@ -99,7 +99,7 @@ export class KrakenConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Error handling Kraken WebSocket message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Kraken WebSocket message:');
     }
   }
 
@@ -161,7 +161,7 @@ export class KrakenConnector extends ExchangeConnector {
       this.emit('priceUpdate', priceData);
       
     } catch (error) {
-      logger.error('Error handling Kraken ticker update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Kraken ticker update:');
     }
   }
 
@@ -186,7 +186,7 @@ export class KrakenConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Error handling Kraken book update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Kraken book update:');
     }
   }
 
@@ -207,7 +207,7 @@ export class KrakenConnector extends ExchangeConnector {
       });
       
     } catch (error) {
-      logger.error('Error handling Kraken trade update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Kraken trade update:');
     }
   }
 
@@ -498,7 +498,7 @@ export class KrakenConnector extends ExchangeConnector {
       logger.debug(`Loaded info for ${Object.keys(response.result).length} Kraken asset pairs`);
       
     } catch (error) {
-      logger.error('Failed to load Kraken asset pairs:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load Kraken asset pairs:');
       throw error;
     }
   }

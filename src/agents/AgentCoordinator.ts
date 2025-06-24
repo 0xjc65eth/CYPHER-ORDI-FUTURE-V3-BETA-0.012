@@ -248,7 +248,7 @@ export class AgentCoordinator extends EventEmitter {
   private messageQueue: IAgentMessage[] = [];
   private isRunning: boolean = false;
   private readonly logger = logger;
-  private monitoringInterval: NodeJS.Timeout | null = null;
+  private monitoringInterval: ReturnType<typeof setInterval> | null = null;
   
   constructor(private readonly config: {
     monitoringIntervalMs?: number;

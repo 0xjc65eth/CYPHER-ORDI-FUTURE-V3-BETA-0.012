@@ -223,8 +223,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isAutoReconnectEnabled, setIsAutoReconnectEnabled] = useState(true)
   
   // Refs for cleanup and timers
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null)
-  const heartbeatTimer = useRef<NodeJS.Timeout | null>(null)
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const heartbeatTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const sessionRef = useRef<string | null>(null)
 
   // Enhanced connect function with security integration

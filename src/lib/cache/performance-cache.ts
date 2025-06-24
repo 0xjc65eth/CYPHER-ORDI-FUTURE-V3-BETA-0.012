@@ -38,7 +38,7 @@ interface CacheMetrics {
 class PerformanceCache<T = any> {
   private cache: LRUCache<string, CacheEntry<T>>;
   private metrics: CacheMetrics;
-  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupTimer?: ReturnType<typeof setInterval>;
   private tagMap: Map<string, Set<string>> = new Map();
   private dependencyMap: Map<string, Set<string>> = new Map();
   private options: Required<CacheOptions>;

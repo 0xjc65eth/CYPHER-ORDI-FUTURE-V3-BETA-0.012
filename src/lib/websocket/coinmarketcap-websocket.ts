@@ -97,7 +97,7 @@ export class CoinMarketCapWebSocket {
       logger.info('✅ CoinMarketCap WebSocket initialized successfully');
       
     } catch (error) {
-      logger.error('❌ Failed to initialize CoinMarketCap WebSocket:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Failed to initialize CoinMarketCap WebSocket:');
       
       if (this.config.enableFallback) {
         logger.info('🔄 Starting in fallback mode with simulated data');
@@ -133,7 +133,7 @@ export class CoinMarketCapWebSocket {
       });
       
     } catch (error) {
-      logger.error('❌ CoinMarketCap API connectivity test failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ CoinMarketCap API connectivity test failed:');
       throw new Error('CoinMarketCap API not accessible');
     }
   }
@@ -314,7 +314,7 @@ export class CoinMarketCapWebSocket {
       };
 
     } catch (error) {
-      logger.error('Failed to update global market data:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to update global market data:');
     }
   }
 

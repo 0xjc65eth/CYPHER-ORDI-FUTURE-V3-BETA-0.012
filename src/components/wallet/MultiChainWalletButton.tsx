@@ -99,7 +99,7 @@ export const MultiChainWalletButton: React.FC<MultiChainWalletButtonProps> = ({
   const [refreshing, setRefreshing] = useState(false)
   
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const refreshIntervalRef = useRef<NodeJS.Timeout>()
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval>>()
 
   // Get current chain information
   const getCurrentChain = () => {

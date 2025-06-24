@@ -52,7 +52,7 @@ class WebSocketManager {
   private lastHeartbeat: number = 0;
   private url: string = '';
   private isDestroyed: boolean = false;
-  private mockIntervals: NodeJS.Timeout[] = [];
+  private mockIntervals: ReturnType<typeof setInterval>[] = [];
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
   constructor() {

@@ -38,7 +38,7 @@ export class HiroAPIBase {
         return config
       },
       (error) => {
-        logger.error('Hiro API Request Error:', error)
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Hiro API Request Error')
         return Promise.reject(error)
       }
     )

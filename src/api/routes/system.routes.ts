@@ -9,7 +9,6 @@ import { EnhancedLogger } from '@/lib/enhanced-logger';
 import { adminAuth } from '@/api/middleware/adminAuth';
 
 const router = Router();
-const logger = new EnhancedLogger();
 
 // All system routes require admin authentication
 router.use(adminAuth);
@@ -41,7 +40,7 @@ router.get('/status', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('System status check failed:', error);
+    EnhancedLogger.error('System status check failed:', error);
     res.status(500).json({
       success: false,
       error: 'System status unavailable'
@@ -66,7 +65,7 @@ router.post('/initialize', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('System initialization failed:', error);
+    EnhancedLogger.error('System initialization failed:', error);
     res.status(500).json({
       success: false,
       error: 'System initialization failed'
@@ -96,7 +95,7 @@ router.post('/shutdown', async (req, res) => {
     }, 1000);
 
   } catch (error) {
-    logger.error('System shutdown failed:', error);
+    EnhancedLogger.error('System shutdown failed:', error);
     res.status(500).json({
       success: false,
       error: 'System shutdown failed'
@@ -130,7 +129,7 @@ router.get('/services', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('Failed to get services info:', error);
+    EnhancedLogger.error('Failed to get services info:', error);
     res.status(500).json({
       success: false,
       error: 'Services information unavailable'
@@ -147,7 +146,7 @@ router.post('/service/:serviceId/restart', async (req, res) => {
     const { serviceId } = req.params;
     
     // This would require implementing service restart logic
-    logger.info(`Restarting service: ${serviceId}`);
+    EnhancedLogger.info(`Restarting service: ${serviceId}`);
     
     res.json({
       success: true,
@@ -159,7 +158,7 @@ router.post('/service/:serviceId/restart', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error(`Service restart failed for ${req.params.serviceId}:`, error);
+    EnhancedLogger.error(`Service restart failed for ${req.params.serviceId}:`, error);
     res.status(500).json({
       success: false,
       error: 'Service restart failed'
@@ -197,7 +196,7 @@ router.get('/config', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('Failed to get config:', error);
+    EnhancedLogger.error('Failed to get config:', error);
     res.status(500).json({
       success: false,
       error: 'Configuration unavailable'
@@ -235,7 +234,7 @@ router.get('/logs', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('Failed to get logs:', error);
+    EnhancedLogger.error('Failed to get logs:', error);
     res.status(500).json({
       success: false,
       error: 'Logs unavailable'
@@ -251,7 +250,7 @@ router.delete('/cache', async (req, res) => {
   try {
     const { type = 'all' } = req.query;
     
-    logger.info(`Clearing cache: ${type}`);
+    EnhancedLogger.info(`Clearing cache: ${type}`);
     
     res.json({
       success: true,
@@ -262,7 +261,7 @@ router.delete('/cache', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('Cache clear failed:', error);
+    EnhancedLogger.error('Cache clear failed:', error);
     res.status(500).json({
       success: false,
       error: 'Cache clear failed'

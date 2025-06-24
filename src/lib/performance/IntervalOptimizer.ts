@@ -26,7 +26,7 @@ export interface IntervalTask {
 export class IntervalOptimizer {
   private static instance: IntervalOptimizer;
   private tasks: Map<string, IntervalTask> = new Map();
-  private intervals: Map<string, NodeJS.Timeout> = new Map();
+  private intervals: Map<string, ReturnType<typeof setInterval>> = new Map();
 
   static getInstance(): IntervalOptimizer {
     if (!IntervalOptimizer.instance) {

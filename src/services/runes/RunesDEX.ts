@@ -227,12 +227,12 @@ export class RunesDEX extends EventEmitter {
       };
 
       this.ws.onerror = (error) => {
-        this.logger.error('RunesDEX WebSocket error:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'RunesDEX WebSocket error:');
         this.emit('error', error);
       };
 
     } catch (error) {
-      this.logger.error('Failed to connect to RunesDEX:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to RunesDEX:');
       throw error;
     }
   }
@@ -272,7 +272,7 @@ export class RunesDEX extends EventEmitter {
       return pools;
 
     } catch (error) {
-      this.logger.error('Failed to get RunesDEX pools:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get RunesDEX pools:');
       throw error;
     }
   }
@@ -318,7 +318,7 @@ export class RunesDEX extends EventEmitter {
       return quote;
 
     } catch (error) {
-      this.logger.error('Failed to get swap quote:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get swap quote:');
       throw error;
     }
   }
@@ -392,7 +392,7 @@ export class RunesDEX extends EventEmitter {
       return transaction;
 
     } catch (error) {
-      this.logger.error('Failed to execute swap:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to execute swap:');
       throw error;
     }
   }
@@ -447,7 +447,7 @@ export class RunesDEX extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to add liquidity:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to add liquidity:');
       throw error;
     }
   }
@@ -498,7 +498,7 @@ export class RunesDEX extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to remove liquidity:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to remove liquidity:');
       throw error;
     }
   }
@@ -529,7 +529,7 @@ export class RunesDEX extends EventEmitter {
       return positions;
 
     } catch (error) {
-      this.logger.error('Failed to get user positions:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get user positions:');
       throw error;
     }
   }
@@ -554,7 +554,7 @@ export class RunesDEX extends EventEmitter {
       return farms;
 
     } catch (error) {
-      this.logger.error('Failed to get yield farms:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get yield farms:');
       throw error;
     }
   }
@@ -597,7 +597,7 @@ export class RunesDEX extends EventEmitter {
       return fullStrategy;
 
     } catch (error) {
-      this.logger.error('Failed to start market making strategy:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start market making strategy:');
       throw error;
     }
   }
@@ -637,7 +637,7 @@ export class RunesDEX extends EventEmitter {
       return analytics;
 
     } catch (error) {
-      this.logger.error('Failed to get market analytics:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get market analytics:');
       throw error;
     }
   }
@@ -664,7 +664,7 @@ export class RunesDEX extends EventEmitter {
       }));
 
     } catch (error) {
-      this.logger.error('Failed to find arbitrage opportunities:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to find arbitrage opportunities:');
       throw error;
     }
   }
@@ -698,7 +698,7 @@ export class RunesDEX extends EventEmitter {
       return response.data;
 
     } catch (error) {
-      this.logger.error('Failed to get historical prices:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get historical prices:');
       throw error;
     }
   }
@@ -786,7 +786,7 @@ export class RunesDEX extends EventEmitter {
           this.logger.debug('Unknown WebSocket message type:', message.type);
       }
     } catch (error) {
-      this.logger.error('Error handling WebSocket message:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling WebSocket message:');
     }
   }
 

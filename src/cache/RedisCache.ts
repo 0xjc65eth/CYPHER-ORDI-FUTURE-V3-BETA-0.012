@@ -6,7 +6,6 @@
 import { EventEmitter } from 'events';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 
-const logger = new EnhancedLogger();
 
 interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -53,7 +52,7 @@ export class RedisCache extends EventEmitter {
   
   // Fallback in-memory cache when Redis is unavailable
   private memoryCache = new Map<string, CacheEntry>();
-  private memoryTtlTimeouts = new Map<string, NodeJS.Timeout>();
+  private memoryTtlTimeouts = new Map<string, ReturnType<typeof setInterval>>();
   private usingFallback = false;
 
   constructor(config: Partial<RedisCache['config']> = {}) {
@@ -99,7 +98,7 @@ export class RedisCache extends EventEmitter {
       this.isConnected = true;
       this.usingFallback = false;
       
-      logger.info('Redis cache initialized', {
+      EnhancedLogger.info('Redis cache initialized', {
         host: this.config.host,
         port: this.config.port,
         db: this.config.db
@@ -107,7 +106,7 @@ export class RedisCache extends EventEmitter {
 
       this.emit('connected');
     } catch (error) {
-      logger.warn('Redis connection failed, using memory fallback', error);
+      EnhancedLogger.warn('Redis connection failed, using memory fallback', error);
       this.usingFallback = true;
       this.emit('fallback');
     }
@@ -125,10 +124,10 @@ export class RedisCache extends EventEmitter {
       this.isConnected = false;
       this.clearMemoryCache();
       
-      logger.info('Redis cache disconnected');
+      EnhancedLogger.info('Redis cache disconnected');
       this.emit('disconnected');
     } catch (error) {
-      logger.error('Error disconnecting from Redis:', error);
+      EnhancedLogger.error('Error disconnecting from Redis:', error);
     }
   }
 
@@ -154,11 +153,11 @@ export class RedisCache extends EventEmitter {
       this.stats.hits++;
       const parsed = options.serialize !== false ? JSON.parse(value) : value;
       
-      logger.debug('Cache hit', { key: fullKey });
+      EnhancedLogger.debug('Cache hit', { key: fullKey });
       return parsed;
 
     } catch (error) {
-      logger.error('Cache get error:', { key, error });
+      EnhancedLogger.error('Cache get error:', { key, error });
       this.stats.misses++;
       return null;
     }
@@ -185,11 +184,11 @@ export class RedisCache extends EventEmitter {
         await this.client.set(fullKey, serialized);
       }
 
-      logger.debug('Cache set', { key: fullKey, ttl });
+      EnhancedLogger.debug('Cache set', { key: fullKey, ttl });
       return true;
 
     } catch (error) {
-      logger.error('Cache set error:', { key, error });
+      EnhancedLogger.error('Cache set error:', { key, error });
       return false;
     }
   }
@@ -208,11 +207,11 @@ export class RedisCache extends EventEmitter {
 
       const result = await this.client.del(fullKey);
       
-      logger.debug('Cache delete', { key: fullKey, deleted: result > 0 });
+      EnhancedLogger.debug('Cache delete', { key: fullKey, deleted: result > 0 });
       return result > 0;
 
     } catch (error) {
-      logger.error('Cache delete error:', { key, error });
+      EnhancedLogger.error('Cache delete error:', { key, error });
       return false;
     }
   }
@@ -232,7 +231,7 @@ export class RedisCache extends EventEmitter {
       return result === 1;
 
     } catch (error) {
-      logger.error('Cache exists error:', { key, error });
+      EnhancedLogger.error('Cache exists error:', { key, error });
       return false;
     }
   }
@@ -268,7 +267,7 @@ export class RedisCache extends EventEmitter {
       });
 
     } catch (error) {
-      logger.error('Cache mget error:', { keys, error });
+      EnhancedLogger.error('Cache mget error:', { keys, error });
       return keys.map(() => null);
     }
   }
@@ -308,7 +307,7 @@ export class RedisCache extends EventEmitter {
       return true;
 
     } catch (error) {
-      logger.error('Cache mset error:', { entries: Object.keys(entries), error });
+      EnhancedLogger.error('Cache mset error:', { entries: Object.keys(entries), error });
       return false;
     }
   }
@@ -338,7 +337,7 @@ export class RedisCache extends EventEmitter {
       return result;
 
     } catch (error) {
-      logger.error('Cache incr error:', { key, by, error });
+      EnhancedLogger.error('Cache incr error:', { key, by, error });
       return 0;
     }
   }
@@ -371,11 +370,11 @@ export class RedisCache extends EventEmitter {
         await this.client.del(keys);
       }
 
-      logger.info('Cache flushed', { pattern: searchPattern, deleted: keys.length });
+      EnhancedLogger.info('Cache flushed', { pattern: searchPattern, deleted: keys.length });
       return true;
 
     } catch (error) {
-      logger.error('Cache flush error:', { pattern, error });
+      EnhancedLogger.error('Cache flush error:', { pattern, error });
       return false;
     }
   }
@@ -491,7 +490,7 @@ export class RedisCache extends EventEmitter {
 
       return true;
     } catch (error) {
-      logger.error('Memory cache set error:', { key, error });
+      EnhancedLogger.error('Memory cache set error:', { key, error });
       return false;
     }
   }
@@ -538,7 +537,7 @@ export class RedisCache extends EventEmitter {
       }
 
       if (expiredKeys.length > 0) {
-        logger.debug('Memory cache cleanup', { expired: expiredKeys.length });
+        EnhancedLogger.debug('Memory cache cleanup', { expired: expiredKeys.length });
       }
     }, 60000); // Every minute
   }

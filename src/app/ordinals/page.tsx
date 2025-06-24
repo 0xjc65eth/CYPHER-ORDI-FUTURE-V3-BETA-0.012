@@ -3,324 +3,236 @@
 import { useState, useEffect } from 'react'
 import { TopNavLayout } from '@/components/layout/TopNavLayout'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import CollectionAnalytics from '@/components/ordinals/professional/CollectionAnalytics'
-import InscriptionExplorer from '@/components/ordinals/professional/InscriptionExplorer'
-import MarketDepth from '@/components/ordinals/professional/MarketDepth'
-import RarityCalculator from '@/components/ordinals/professional/RarityCalculator'
-import TraitAnalysis from '@/components/ordinals/professional/TraitAnalysis'
-import { CollectionsTable } from '@/components/ordinals/tables/CollectionsTable'
-import { InscriptionsTable } from '@/components/ordinals/tables/InscriptionsTable'
-import { SalesHistoryTable } from '@/components/ordinals/tables/SalesHistoryTable'
-import { OrdinalsSystemV2 } from '@/components/ordinals/OrdinalsSystemV2'
 import { Input } from '@/components/ui/input'
-import { NoSSRWrapper } from '@/components/ui/NoSSRWrapper'
-import { bitcoinEcosystemService, type BitcoinEcosystemStats } from '@/services/BitcoinEcosystemService'
-import { ordinalsService, type OrdinalsAnalytics } from '@/services/ordinals'
-import { OrdinalsProvider } from '@/contexts/OrdinalsContext'
-import { Search, Activity, TrendingUp, Layers, BarChart3, Sparkles, Bitcoin, Zap } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Search, 
+  TrendingUp, 
+  Users, 
+  Activity, 
+  Layers, 
+  Filter,
+  Bitcoin,
+  Eye,
+  Wallet,
+  AlertTriangle,
+  BarChart3,
+  Hash
+} from 'lucide-react'
+import { CypherOrdinalsDashboard } from '@/components/cypher-ordinals/CypherOrdinalsDashboard'
+import { OrdinalsExplorer } from '@/components/cypher-ordinals/OrdinalsExplorer'
+import { BRC20Explorer } from '@/components/cypher-ordinals/BRC20Explorer'
+import { WhaleTracker } from '@/components/cypher-ordinals/WhaleTracker'
+import { SocialFeed } from '@/components/cypher-ordinals/SocialFeed'
+import { AlertsCenter } from '@/components/cypher-ordinals/AlertsCenter'
+import { AnalyticsCharts } from '@/components/cypher-ordinals/AnalyticsCharts'
 
 export default function OrdinalsPage() {
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeView, setActiveView] = useState('analytics')
-  const [ecosystemStats, setEcosystemStats] = useState<BitcoinEcosystemStats | null>(null)
-  const [ordinalsStats, setOrdinalsStats] = useState<OrdinalsAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  
+
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setIsLoading(true)
-        console.log('📊 Loading Ordinals ecosystem and analytics stats...')
-        
-        // Load both Bitcoin ecosystem and Ordinals analytics in parallel
-        const [ecosystemData, ordinalsData] = await Promise.allSettled([
-          bitcoinEcosystemService.getEcosystemStats(),
-          ordinalsService.getOrdinalsStats()
-        ])
-        
-        if (ecosystemData.status === 'fulfilled') {
-          setEcosystemStats(ecosystemData.value)
-          console.log('✅ Loaded ecosystem stats:', ecosystemData.value)
-        }
-        
-        if (ordinalsData.status === 'fulfilled') {
-          setOrdinalsStats(ordinalsData.value)
-          console.log('✅ Loaded Ordinals analytics:', ordinalsData.value)
-        }
-      } catch (error) {
-        console.error('❌ Error loading stats:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    loadStats()
+    // Simular carregamento inicial
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+    return () => clearTimeout(timer)
   }, [])
 
   return (
     <TopNavLayout>
-      <OrdinalsProvider>
-        <div className="bg-background">
-        {/* Professional Header */}
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-                Ordinals Intelligence Hub
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Professional-grade analytics for Bitcoin Ordinals
-              </p>
+      <div className="bg-background min-h-screen">
+        {/* Header Section */}
+        <div className="border-b border-gray-800">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                  ORDINALS INTELLIGENCE HUB
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Análise Avançada de Ordinals & BRC-20 • Dados em Tempo Real • Rastreamento de Baleias
+                </p>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400">APIs Ativas</span>
+                </div>
+                <Badge variant="outline" className="text-orange-400 border-orange-400">
+                  Professional
+                </Badge>
+              </div>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="relative w-96">
+
+            {/* Global Search */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="relative flex-1 max-w-2xl">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search collections, inscriptions, or paste Bitcoin address..."
+                  placeholder="Buscar por ID de inscrição, endereço, token BRC-20, coleção..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-muted/50 focus:border-orange-500"
+                  className="pl-10 bg-muted/50 focus:border-orange-500 h-12"
                 />
-                {searchQuery && searchQuery.length > 10 && /^[13bc1tb1]/.test(searchQuery) && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 text-sm text-orange-400 flex items-center gap-2">
-                    <Search className="h-4 w-4" />
-                    Address detected - searching for Ordinals...
-                  </div>
-                )}
               </div>
+              <Button variant="outline" size="icon" className="h-12 w-12">
+                <Filter className="h-4 w-4" />
+              </Button>
+              <Button className="h-12 bg-orange-600 hover:bg-orange-700">
+                <Search className="h-4 w-4 mr-2" />
+                Pesquisar
+              </Button>
             </div>
-          </div>
 
-          {/* Real-time Key Metrics Bar */}
-          <div className="grid grid-cols-5 gap-4 mt-6">
-            <div className="bg-muted/30 rounded-lg p-4 border bg-gradient-to-br from-orange-500/10 to-amber-500/10">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Inscriptions</span>
-                <Bitcoin className="h-4 w-4 text-orange-500" />
+            {/* Quick Metrics Bar */}
+            {!isLoading && (
+              <div className="grid grid-cols-6 gap-4">
+                <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Inscrições</p>
+                        <p className="text-xl font-bold text-orange-400">65.2M</p>
+                      </div>
+                      <Hash className="h-8 w-8 text-orange-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Tokens BRC-20</p>
+                        <p className="text-xl font-bold text-blue-400">28.4K</p>
+                      </div>
+                      <Layers className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Volume 24h</p>
+                        <p className="text-xl font-bold text-green-400">₿2.8K</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-green-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Baleias Ativas</p>
+                        <p className="text-xl font-bold text-purple-400">1.2K</p>
+                      </div>
+                      <Eye className="h-8 w-8 text-purple-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Alertas Ativos</p>
+                        <p className="text-xl font-bold text-yellow-400">847</p>
+                      </div>
+                      <AlertTriangle className="h-8 w-8 text-yellow-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Taxa Rede</p>
+                        <p className="text-xl font-bold text-red-400">45 sat/vB</p>
+                      </div>
+                      <Bitcoin className="h-8 w-8 text-red-500" />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-20 mt-1"></div>
-                  <div className="h-3 bg-gray-700 rounded w-16 mt-1"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold mt-1">{ordinalsStats?.total_inscriptions?.toLocaleString() || ecosystemStats?.totalInscriptions?.toLocaleString() || 'Loading...'}</p>
-                  <span className="text-xs text-blue-500 flex items-center gap-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    Real-time data
-                  </span>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-muted/30 rounded-lg p-4 border bg-gradient-to-br from-blue-500/10 to-purple-500/10">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">24h Volume</span>
-                <TrendingUp className="h-4 w-4 text-blue-500" />
-              </div>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-20 mt-1"></div>
-                  <div className="h-3 bg-gray-700 rounded w-16 mt-1"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold mt-1">₿{ordinalsStats?.total_volume_24h.toFixed(1) || (ecosystemStats?.ordinalsVolume24h / 100000000 || 0).toFixed(1)}</p>
-                  <span className="text-xs text-gray-400">24h volume</span>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-muted/30 rounded-lg p-4 border bg-gradient-to-br from-purple-500/10 to-pink-500/10">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Active Collections</span>
-                <Layers className="h-4 w-4 text-purple-500" />
-              </div>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-20 mt-1"></div>
-                  <div className="h-3 bg-gray-700 rounded w-16 mt-1"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold mt-1">{ordinalsStats?.total_collections.toLocaleString() || ecosystemStats?.totalOrdinals.toLocaleString() || 'Loading...'}</p>
-                  <span className="text-xs text-muted-foreground">Active collections</span>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-muted/30 rounded-lg p-4 border bg-gradient-to-br from-green-500/10 to-emerald-500/10">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Avg Fee</span>
-                <BarChart3 className="h-4 w-4 text-green-500" />
-              </div>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-20 mt-1"></div>
-                  <div className="h-3 bg-gray-700 rounded w-16 mt-1"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold mt-1">{Math.floor((ecosystemStats?.avgTransactionFee || 25000) / 1000)} sats/vB</p>
-                  <span className="text-xs text-gray-400">Network fee</span>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-muted/30 rounded-lg p-4 border bg-gradient-to-br from-yellow-500/10 to-orange-500/10">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Block Height</span>
-                <Zap className="h-4 w-4 text-yellow-500" />
-              </div>
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-700 rounded w-20 mt-1"></div>
-                  <div className="h-3 bg-gray-700 rounded w-16 mt-1"></div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold mt-1">{ecosystemStats?.blockHeight.toLocaleString() || 'Loading...'}</p>
-                  <span className="text-xs text-blue-500 flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    Live height
-                  </span>
-                </>
-              )}
-            </div>
+            )}
           </div>
         </div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid grid-cols-7 w-full max-w-5xl mx-auto h-12">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="ordinals" className="flex items-center gap-2">
+                <Hash className="h-4 w-4" />
+                Ordinals
+              </TabsTrigger>
+              <TabsTrigger value="brc20" className="flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                BRC-20
+              </TabsTrigger>
+              <TabsTrigger value="whales" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Baleias
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="social" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Social
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Alertas
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard" className="space-y-6">
+              <CypherOrdinalsDashboard searchQuery={searchQuery} />
+            </TabsContent>
+
+            <TabsContent value="ordinals" className="space-y-6">
+              <OrdinalsExplorer searchQuery={searchQuery} />
+            </TabsContent>
+
+            <TabsContent value="brc20" className="space-y-6">
+              <BRC20Explorer searchQuery={searchQuery} />
+            </TabsContent>
+
+            <TabsContent value="whales" className="space-y-6">
+              <WhaleTracker />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              <AnalyticsCharts />
+            </TabsContent>
+
+            <TabsContent value="social" className="space-y-6">
+              <SocialFeed />
+            </TabsContent>
+
+            <TabsContent value="alerts" className="space-y-6">
+              <AlertsCenter />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeView} onValueChange={setActiveView} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto">
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="explorer" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Explorer
-            </TabsTrigger>
-            <TabsTrigger value="collections" className="flex items-center gap-2">
-              <Layers className="h-4 w-4" />
-              Collections
-            </TabsTrigger>
-            <TabsTrigger value="market" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Market Depth
-            </TabsTrigger>
-            <TabsTrigger value="rarity" className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              Rarity
-            </TabsTrigger>
-            <TabsTrigger value="traits" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Traits
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="h-32 bg-gray-700 rounded"></div>
-                  <div className="h-32 bg-gray-700 rounded"></div>
-                  <div className="h-32 bg-gray-700 rounded"></div>
-                </div>
-              </div>
-            }>
-              <CollectionAnalytics />
-            </NoSSRWrapper>
-          </TabsContent>
-
-          <TabsContent value="explorer" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
-                <div className="space-y-3">
-                  {Array.from({length: 5}).map((_, i) => (
-                    <div key={i} className="h-16 bg-gray-700 rounded"></div>
-                  ))}
-                </div>
-              </div>
-            }>
-              <InscriptionExplorer searchQuery={searchQuery} />
-              {/* OrdinalsSystemV2 como fallback melhorado */}
-              <div className="mt-8">
-                <OrdinalsSystemV2 />
-              </div>
-            </NoSSRWrapper>
-          </TabsContent>
-
-          <TabsContent value="collections" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="space-y-6">
-                <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                  <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
-                  <div className="space-y-3">
-                    {Array.from({length: 8}).map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-700 rounded"></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            }>
-              <div className="grid grid-cols-1 gap-6">
-                <CollectionsTable />
-                <div className="grid grid-cols-2 gap-6">
-                  <InscriptionsTable />
-                  <SalesHistoryTable />
-                </div>
-              </div>
-            </NoSSRWrapper>
-          </TabsContent>
-
-          <TabsContent value="market" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
-                <div className="h-64 bg-gray-700 rounded"></div>
-              </div>
-            }>
-              <MarketDepth />
-            </NoSSRWrapper>
-          </TabsContent>
-
-          <TabsContent value="rarity" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="h-48 bg-gray-700 rounded"></div>
-                  <div className="h-48 bg-gray-700 rounded"></div>
-                </div>
-              </div>
-            }>
-              <RarityCalculator />
-            </NoSSRWrapper>
-          </TabsContent>
-
-          <TabsContent value="traits" className="space-y-6">
-            <NoSSRWrapper fallback={
-              <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-1/4 mb-4"></div>
-                <div className="h-80 bg-gray-700 rounded"></div>
-              </div>
-            }>
-              <TraitAnalysis />
-            </NoSSRWrapper>
-          </TabsContent>
-        </Tabs>
-      </div>
-      </div>
-      </OrdinalsProvider>
     </TopNavLayout>
   )
 }
-

@@ -1,9 +1,15 @@
-// CRITICAL: Import BigInt fix FIRST
+// CRITICAL: Import browser polyfills FIRST
+import '@/lib/browser-polyfills'
+// CRITICAL: Import LaserEyes BigInt fix
+import '@/lib/lasereyes-bigint-fix'
+// CRITICAL: Import BigInt fix
 import '@/lib/bigint-fix'
 // CRITICAL: Import server error handlers to prevent crashes
 import '@/lib/server-error-handlers'
 // CRITICAL: Import wallet conflict resolver EARLY
 import '@/app/wallet-conflict-init'
+// CRITICAL: Import wallet provider patches
+import '@/app/wallet-providers-init'
 
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'

@@ -89,7 +89,7 @@ export const createMemoizedSelectors = <T>(store: UseBoundStore<StoreApi<T>>) =>
 // Batched selectors for multiple state updates
 export const createBatchedSelectors = <T>(store: UseBoundStore<StoreApi<T>>) => {
   let batchedUpdates: (() => void)[] = []
-  let batchTimeout: NodeJS.Timeout | null = null
+  let batchTimeout: ReturnType<typeof setTimeout> | null = null
   
   const flushBatch = () => {
     if (batchedUpdates.length > 0) {
@@ -143,7 +143,7 @@ export const createConditionalSelectors = <T>(store: UseBoundStore<StoreApi<T>>)
       selector: (state: T) => R,
       delay = 300
     ) => {
-      let timeoutId: NodeJS.Timeout | null = null
+      let timeoutId: ReturnType<typeof setTimeout> | null = null
       let lastValue: R
       
       return store((state) => {

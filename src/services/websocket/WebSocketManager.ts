@@ -93,7 +93,6 @@ export interface ConnectionStatus {
 export class WebSocketConnection extends EventEmitter {
   private config: WebSocketConfig;
   private ws: WebSocket | null = null;
-  private logger: EnhancedLogger;
   private reconnectAttempts: number = 0;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private heartbeatTimeout: NodeJS.Timeout | null = null;
@@ -109,7 +108,6 @@ export class WebSocketConnection extends EventEmitter {
   constructor(config: WebSocketConfig) {
     super();
     this.config = config;
-    this.logger = new EnhancedLogger();
     
     this.status = {
       url: config.url,
@@ -135,14 +133,14 @@ export class WebSocketConnection extends EventEmitter {
    */
   async connect(): Promise<void> {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.logger.warn('WebSocket already connected');
+      EnhancedLogger.warn('WebSocket already connected');
       return;
     }
 
     return new Promise((resolve, reject) => {
       try {
         this.status.status = 'connecting';
-        this.logger.info('Connecting to WebSocket', { url: this.config.url });
+        EnhancedLogger.info('Connecting to WebSocket', { url: this.config.url });
 
         this.ws = new WebSocket(this.config.url, this.config.protocols);
 
@@ -158,7 +156,7 @@ export class WebSocketConnection extends EventEmitter {
           this.status.lastConnected = Date.now();
           this.reconnectAttempts = 0;
           
-          this.logger.info('WebSocket connected', { url: this.config.url });
+          EnhancedLogger.info('WebSocket connected', { url: this.config.url });
           
           // Authenticate if required
           if (this.config.authentication) {
@@ -232,7 +230,7 @@ export class WebSocketConnection extends EventEmitter {
       this.sendSubscription(subscription);
     }
 
-    this.logger.info('Subscription added', {
+    EnhancedLogger.info('Subscription added', {
       id: subscription.id,
       channel: subscription.channel,
       symbol: subscription.symbol
@@ -252,7 +250,7 @@ export class WebSocketConnection extends EventEmitter {
         this.sendUnsubscription(subscription);
       }
 
-      this.logger.info('Subscription removed', { id: subscriptionId });
+      EnhancedLogger.info('Subscription removed', { id: subscriptionId });
     }
   }
 
@@ -330,7 +328,7 @@ export class WebSocketConnection extends EventEmitter {
 
         // Set timeout for pong response
         this.heartbeatTimeout = setTimeout(() => {
-          this.logger.warn('Heartbeat timeout, closing connection');
+          EnhancedLogger.warn('Heartbeat timeout, closing connection');
           this.ws?.close();
         }, this.config.heartbeat.timeout);
       }
@@ -363,7 +361,7 @@ export class WebSocketConnection extends EventEmitter {
       this.routeMessage(data);
 
     } catch (error) {
-      this.logger.error('Error parsing WebSocket message:', error);
+      EnhancedLogger.error('Error parsing WebSocket message:', error);
       this.status.errors++;
     }
   }
@@ -378,7 +376,7 @@ export class WebSocketConnection extends EventEmitter {
             subscription.onData(data);
           }
         } catch (error) {
-          this.logger.error(`Error in subscription handler ${subscription.id}:`, error);
+          EnhancedLogger.error(`Error in subscription handler ${subscription.id}:`, error);
           subscription.onError?.(error as Error);
         }
       }
@@ -426,7 +424,7 @@ export class WebSocketConnection extends EventEmitter {
     this.status.status = 'disconnected';
     this.clearHeartbeat();
 
-    this.logger.warn('WebSocket disconnected', {
+    EnhancedLogger.warn('WebSocket disconnected', {
       code: event.code,
       reason: event.reason,
       wasClean: event.wasClean
@@ -443,7 +441,7 @@ export class WebSocketConnection extends EventEmitter {
   private handleError(error: Event): void {
     this.status.status = 'error';
     this.status.errors++;
-    this.logger.error('WebSocket error:', error);
+    EnhancedLogger.error('WebSocket error:', error);
     this.emit('error', error);
   }
 
@@ -454,7 +452,7 @@ export class WebSocketConnection extends EventEmitter {
 
     const delay = this.config.reconnect.delay * Math.pow(this.config.reconnect.backoff, this.reconnectAttempts - 1);
 
-    this.logger.info('Attempting reconnection', {
+    EnhancedLogger.info('Attempting reconnection', {
       attempt: this.reconnectAttempts,
       delay,
       maxAttempts: this.config.reconnect.maxAttempts
@@ -464,12 +462,12 @@ export class WebSocketConnection extends EventEmitter {
       try {
         await this.connect();
       } catch (error) {
-        this.logger.error('Reconnection failed:', error);
+        EnhancedLogger.error('Reconnection failed:', error);
         
         if (this.reconnectAttempts < this.config.reconnect.maxAttempts) {
           this.attemptReconnect();
         } else {
-          this.logger.error('Max reconnection attempts reached');
+          EnhancedLogger.error('Max reconnection attempts reached');
           this.emit('reconnectFailed');
         }
       }
@@ -543,7 +541,6 @@ export class WebSocketConnection extends EventEmitter {
 }
 
 export class WebSocketManager extends EventEmitter {
-  private logger: EnhancedLogger;
   private connections: Map<string, WebSocketConnection> = new Map();
   private aggregatedFeeds: Map<string, MarketDataFeed[]> = new Map();
   private orderBooks: Map<string, OrderBookData> = new Map();
@@ -615,9 +612,8 @@ export class WebSocketManager extends EventEmitter {
 
   constructor() {
     super();
-    this.logger = new EnhancedLogger();
 
-    this.logger.info('WebSocket Manager initialized', {
+    EnhancedLogger.info('WebSocket Manager initialized', {
       component: 'WebSocketManager',
       supportedExchanges: Object.keys(this.EXCHANGE_CONFIGS)
     });
@@ -646,17 +642,17 @@ export class WebSocketManager extends EventEmitter {
 
     // Set up event handlers
     connection.on('connected', () => {
-      this.logger.info(`Connected to ${exchangeId}`);
+      EnhancedLogger.info(`Connected to ${exchangeId}`);
       this.emit('exchangeConnected', exchangeId);
     });
 
     connection.on('disconnected', () => {
-      this.logger.warn(`Disconnected from ${exchangeId}`);
+      EnhancedLogger.warn(`Disconnected from ${exchangeId}`);
       this.emit('exchangeDisconnected', exchangeId);
     });
 
     connection.on('error', (error) => {
-      this.logger.error(`Error from ${exchangeId}:`, error);
+      EnhancedLogger.error(`Error from ${exchangeId}:`, error);
       this.emit('exchangeError', { exchangeId, error });
     });
 
@@ -690,7 +686,7 @@ export class WebSocketManager extends EventEmitter {
           channel: this.getChannelName(exchangeId, dataType),
           symbol,
           onData: (data) => this.handleMarketData(exchangeId, symbol, dataType, data),
-          onError: (error) => this.logger.error(`Subscription error ${subscriptionId}:`, error)
+          onError: (error) => EnhancedLogger.error(`Subscription error ${subscriptionId}:`, error)
         });
       });
     });
@@ -745,7 +741,7 @@ export class WebSocketManager extends EventEmitter {
       // Clean up data
       this.cleanupExchangeData(exchangeId);
       
-      this.logger.info(`Disconnected from ${exchangeId}`);
+      EnhancedLogger.info(`Disconnected from ${exchangeId}`);
     }
   }
 

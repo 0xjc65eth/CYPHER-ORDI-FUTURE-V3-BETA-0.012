@@ -237,7 +237,7 @@ export class SocialTradingPlatform extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Social Trading Platform:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Social Trading Platform:');
       throw error;
     }
   }
@@ -272,7 +272,7 @@ export class SocialTradingPlatform extends EventEmitter {
       return trader;
 
     } catch (error) {
-      this.logger.error('Failed to register trader:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to register trader:');
       throw error;
     }
   }
@@ -375,7 +375,7 @@ export class SocialTradingPlatform extends EventEmitter {
       return copyTrade;
 
     } catch (error) {
-      this.logger.error('Failed to start copy trading:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start copy trading:');
       throw error;
     }
   }
@@ -456,7 +456,7 @@ export class SocialTradingPlatform extends EventEmitter {
       return signal;
 
     } catch (error) {
-      this.logger.error('Failed to publish signal:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to publish signal:');
       throw error;
     }
   }

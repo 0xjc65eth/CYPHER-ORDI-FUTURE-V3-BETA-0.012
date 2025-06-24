@@ -30,7 +30,7 @@ function useSystemStatus() {
   });
 
   React.useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     const checkStatus = async () => {
       try {

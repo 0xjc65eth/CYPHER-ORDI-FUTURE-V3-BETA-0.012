@@ -188,7 +188,7 @@ export class RunesDXService {
           const data = JSON.parse(event.data);
           this.handleWebSocketMessage(data);
         } catch (error) {
-          logger.error('Failed to parse WebSocket message:', error);
+          logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to parse WebSocket message');
         }
       };
 
@@ -199,10 +199,10 @@ export class RunesDXService {
       };
 
       this.websocket.onerror = (error) => {
-        logger.error('RunesDX WebSocket error:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'RunesDX WebSocket error');
       };
     } catch (error) {
-      logger.error('Failed to initialize WebSocket:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize WebSocket');
     }
   }
 
@@ -367,7 +367,7 @@ export class RunesDXService {
       logger.info('Order placement response:', response);
       return response;
     } catch (error) {
-      logger.error('Failed to place order:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to place order');
       return {
         success: false,
         error: {
@@ -430,7 +430,7 @@ export class RunesDXService {
       const response = await this.makeRequest<{ order: RunesDXOrder }>(`/orders/${orderId}`);
       return response.order;
     } catch (error) {
-      logger.error('Failed to get order status:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get order status');
       return null;
     }
   }
@@ -447,7 +447,7 @@ export class RunesDXService {
 
       return { success: response.success };
     } catch (error) {
-      logger.error('Failed to cancel order:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to cancel order');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -479,7 +479,7 @@ export class RunesDXService {
       const response = await this.makeRequest<{ orders: RunesDXOrder[] }>(`/orders?${params}`);
       return response.orders;
     } catch (error) {
-      logger.error('Failed to get order history:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get order history');
       return [];
     }
   }
@@ -500,7 +500,7 @@ export class RunesDXService {
       this.setCachedData(cacheKey, response, 30000); // Cache for 30 seconds
       return response;
     } catch (error) {
-      logger.error('Failed to get market data:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get market data');
       return null;
     }
   }
@@ -521,7 +521,7 @@ export class RunesDXService {
       this.setCachedData(cacheKey, response, 5000); // Cache for 5 seconds
       return response;
     } catch (error) {
-      logger.error('Failed to get order book:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get order book');
       return null;
     }
   }
@@ -537,7 +537,7 @@ export class RunesDXService {
       );
       return response.trades;
     } catch (error) {
-      logger.error('Failed to get trade history:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get trade history');
       return [];
     }
   }
@@ -550,7 +550,7 @@ export class RunesDXService {
       const response = await this.makeRequest<RunesDXWalletBalance>(`/wallet/${address}`);
       return response;
     } catch (error) {
-      logger.error('Failed to get wallet balance:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get wallet balance');
       return null;
     }
   }
@@ -577,7 +577,7 @@ export class RunesDXService {
       
       return response.fees;
     } catch (error) {
-      logger.error('Failed to estimate order fees:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to estimate order fees');
       return null;
     }
   }

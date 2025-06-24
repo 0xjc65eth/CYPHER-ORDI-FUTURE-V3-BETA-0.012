@@ -405,7 +405,7 @@ export class TaxComplianceSystem extends EventEmitter {
       return report;
 
     } catch (error) {
-      this.logger.error('Failed to generate tax report:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate tax report:');
       throw error;
     }
   }
@@ -522,7 +522,7 @@ export class TaxComplianceSystem extends EventEmitter {
       });
 
     } catch (error) {
-      this.logger.error('Failed to import transactions:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to import transactions:');
       throw error;
     }
 

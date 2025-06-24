@@ -25,10 +25,16 @@ export class WorkerPool {
   private workerStatus: boolean[] = [];
   
   constructor(private workerCount: number = 50) {
-    this.initializeWorkers();
+    // Only initialize workers in browser environment
+    if (typeof window !== 'undefined' && typeof Worker !== 'undefined') {
+      this.initializeWorkers();
+    }
   }
   
   private initializeWorkers() {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+    
     // Criar worker script inline
     const workerScript = `
       self.onmessage = async function(e) {
@@ -271,14 +277,22 @@ export class WorkerPool {
   }
 }
 
-// Singleton instance
-export const workerPool = new WorkerPool(50);
+// Singleton instance - only create in browser
+export const workerPool = typeof window !== 'undefined' ? new WorkerPool(50) : null;
 
 // Hook para usar o Worker Pool
 export function useWorkerPool() {
-  const [stats, setStats] = React.useState(workerPool.getStats());
+  const [stats, setStats] = React.useState(workerPool?.getStats() || {
+    totalWorkers: 0,
+    activeWorkers: 0,
+    idleWorkers: 0,
+    queueSize: 0,
+    activeJobs: 0
+  });
   
   React.useEffect(() => {
+    if (!workerPool) return;
+    
     const interval = setInterval(() => {
       setStats(workerPool.getStats());
     }, 1000);
@@ -291,6 +305,10 @@ export function useWorkerPool() {
     data: any,
     priority: number = 5
   ) => {
+    if (!workerPool) {
+      throw new Error('Worker pool not available in server environment');
+    }
+    
     const task: WorkerTask = {
       id: `task-${Date.now()}-${Math.random()}`,
       type,

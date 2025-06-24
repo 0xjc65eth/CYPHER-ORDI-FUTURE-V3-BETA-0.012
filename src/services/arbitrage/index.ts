@@ -60,7 +60,7 @@ export class ArbitrageSystem {
       logger.info('CYPHER Arbitrage System initialized successfully');
 
     } catch (error) {
-      logger.error('Failed to initialize arbitrage system:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize arbitrage system:');
       throw error;
     }
   }

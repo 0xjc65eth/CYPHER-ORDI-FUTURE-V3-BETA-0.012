@@ -411,7 +411,18 @@ export function WalletConnectButton() {
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      alert(`Failed to connect wallet. Please make sure your wallet is installed and try again.`);
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('not found') || error.message.includes('not installed')) {
+          alert(`${walletId.charAt(0).toUpperCase() + walletId.slice(1)} wallet is not installed. Please install it and try again.`);
+        } else if (error.message.includes('User rejected') || error.message.includes('cancelled')) {
+          alert('Connection cancelled by user.');
+        } else {
+          alert(`Failed to connect ${walletId}: ${error.message}`);
+        }
+      } else {
+        alert(`Failed to connect wallet. Please make sure your wallet is installed and try again.`);
+      }
     }
   }
 

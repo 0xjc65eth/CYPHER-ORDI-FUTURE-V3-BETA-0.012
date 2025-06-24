@@ -457,7 +457,7 @@ export default function OptimizedBloombergDashboard() {
   useEffect(() => {
     loadRealData();
     
-    let intervalId: NodeJS.Timeout | undefined;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
     
     if (autoRefresh) {
       intervalId = setInterval(loadRealData, 180000); // 3 minutes

@@ -263,7 +263,7 @@ export class OneInchService {
       
       return data as T;
     } catch (error) {
-      logger.error('1inch API request failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '1inch API request failed');
       
       // Try to return cached data if request fails
       const staleData = this.cache.get(cacheKey);

@@ -99,7 +99,7 @@ export class ExchangeFactory {
         connectors.push(this.createExchange('binance', credentials.binance));
         logger.info('Created Binance connector');
       } catch (error) {
-        logger.error('Failed to create Binance connector:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create Binance connector:');
       }
     }
 
@@ -109,7 +109,7 @@ export class ExchangeFactory {
         connectors.push(this.createExchange('coinbase', credentials.coinbase));
         logger.info('Created Coinbase connector');
       } catch (error) {
-        logger.error('Failed to create Coinbase connector:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create Coinbase connector:');
       }
     }
 
@@ -119,7 +119,7 @@ export class ExchangeFactory {
         connectors.push(this.createExchange('kraken', credentials.kraken));
         logger.info('Created Kraken connector');
       } catch (error) {
-        logger.error('Failed to create Kraken connector:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create Kraken connector:');
       }
     }
 
@@ -129,7 +129,7 @@ export class ExchangeFactory {
         connectors.push(this.createExchange('okx', credentials.okx));
         logger.info('Created OKX connector');
       } catch (error) {
-        logger.error('Failed to create OKX connector:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create OKX connector:');
       }
     }
 
@@ -139,7 +139,7 @@ export class ExchangeFactory {
         connectors.push(this.createExchange('coinapi', credentials.coinapi));
         logger.info('Created CoinAPI connector');
       } catch (error) {
-        logger.error('Failed to create CoinAPI connector:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create CoinAPI connector:');
       }
     }
 
@@ -231,7 +231,7 @@ export const exchangeUtils = {
       return Array.from(commonSymbols);
       
     } catch (error) {
-      logger.error('Error getting common trading pairs:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error getting common trading pairs:');
       return [];
     }
   },
@@ -292,7 +292,7 @@ export const exchangeUtils = {
       };
       
     } catch (error) {
-      logger.error('Error getting best prices:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error getting best prices:');
       return { bestBid: null, bestAsk: null };
     }
   },
@@ -371,7 +371,7 @@ export const exchangeUtils = {
       return spreads.sort((a, b) => b.spreadPercentage - a.spreadPercentage);
       
     } catch (error) {
-      logger.error('Error calculating spreads:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error calculating spreads:');
       return [];
     }
   }

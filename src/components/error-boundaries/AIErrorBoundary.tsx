@@ -24,7 +24,7 @@ interface AIErrorBoundaryProps {
 }
 
 export class AIErrorBoundary extends React.Component<AIErrorBoundaryProps, AIErrorBoundaryState> {
-  private recoveryTimeoutId: NodeJS.Timeout | null = null
+  private recoveryTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   constructor(props: AIErrorBoundaryProps) {
     super(props)

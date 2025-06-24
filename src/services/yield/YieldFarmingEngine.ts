@@ -119,7 +119,6 @@ export interface ProtocolConfig {
 }
 
 export class YieldFarmingEngine extends EventEmitter {
-  private logger: EnhancedLogger;
   private pools: Map<string, YieldPool> = new Map();
   private positions: Map<string, YieldPosition> = new Map();
   private userPositions: Map<string, Set<string>> = new Map();
@@ -182,9 +181,7 @@ export class YieldFarmingEngine extends EventEmitter {
 
   constructor() {
     super();
-    this.logger = new EnhancedLogger();
-
-    this.logger.info('Yield Farming Engine initialized', {
+    EnhancedLogger.info('Yield Farming Engine initialized', {
       component: 'YieldFarmingEngine',
       protocols: Object.keys(this.PROTOCOLS).length
     });
@@ -203,11 +200,11 @@ export class YieldFarmingEngine extends EventEmitter {
       this.startOpportunityScanner();
       this.startPositionTracker();
 
-      this.logger.info('Yield Farming Engine initialized successfully');
+      EnhancedLogger.info('Yield Farming Engine initialized successfully');
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Yield Farming Engine:', error);
+      EnhancedLogger.error('Failed to initialize Yield Farming Engine:', error);
       throw error;
     }
   }
@@ -339,7 +336,7 @@ export class YieldFarmingEngine extends EventEmitter {
       // Simulate protocol interaction
       await this.executeDeposit(pool, position, autoCompound);
 
-      this.logger.info('Deposit to yield pool completed', {
+      EnhancedLogger.info('Deposit to yield pool completed', {
         userId,
         poolId,
         amount,
@@ -350,7 +347,7 @@ export class YieldFarmingEngine extends EventEmitter {
       return position;
 
     } catch (error) {
-      this.logger.error('Failed to deposit to pool:', error);
+      EnhancedLogger.error('Failed to deposit to pool:', error);
       throw error;
     }
   }
@@ -403,7 +400,7 @@ export class YieldFarmingEngine extends EventEmitter {
         this.positions.set(positionId, position);
       }
 
-      this.logger.info('Withdrawal from yield pool completed', {
+      EnhancedLogger.info('Withdrawal from yield pool completed', {
         userId,
         positionId,
         percentage,
@@ -422,7 +419,7 @@ export class YieldFarmingEngine extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to withdraw from pool:', error);
+      EnhancedLogger.error('Failed to withdraw from pool:', error);
       throw error;
     }
   }
@@ -477,7 +474,7 @@ export class YieldFarmingEngine extends EventEmitter {
 
       this.positions.set(positionId, position);
 
-      this.logger.info('Position compounded', {
+      EnhancedLogger.info('Position compounded', {
         positionId,
         compoundedAmount: netCompound,
         performanceFee
@@ -491,7 +488,7 @@ export class YieldFarmingEngine extends EventEmitter {
       };
 
     } catch (error) {
-      this.logger.error('Failed to compound position:', error);
+      EnhancedLogger.error('Failed to compound position:', error);
       throw error;
     }
   }
@@ -587,7 +584,7 @@ export class YieldFarmingEngine extends EventEmitter {
       try {
         await this.loadProtocolPools(protocolName, config);
       } catch (error) {
-        this.logger.error(`Failed to load pools for ${protocolName}:`, error);
+        EnhancedLogger.error(`Failed to load pools for ${protocolName}:`, error);
       }
     }
   }
@@ -642,7 +639,7 @@ export class YieldFarmingEngine extends EventEmitter {
       this.pools.set(pool.id, pool);
     }
 
-    this.logger.info(`Loaded pools for ${protocolName}`, { count: mockPools.length });
+    EnhancedLogger.info(`Loaded pools for ${protocolName}`, { count: mockPools.length });
   }
 
   private async analyzeYieldOpportunity(
@@ -708,7 +705,7 @@ export class YieldFarmingEngine extends EventEmitter {
 
   private async executeDeposit(pool: YieldPool, position: YieldPosition, autoCompound: boolean): Promise<void> {
     // Mock protocol interaction
-    this.logger.info('Executing deposit to protocol', {
+    EnhancedLogger.info('Executing deposit to protocol', {
       protocol: pool.protocol,
       positionId: position.id,
       amount: position.depositAmount
@@ -777,7 +774,7 @@ export class YieldFarmingEngine extends EventEmitter {
       try {
         await this.updatePoolData();
       } catch (error) {
-        this.logger.error('Pool update failed:', error);
+        EnhancedLogger.error('Pool update failed:', error);
       }
     }, 5 * 60 * 1000); // Update every 5 minutes
   }
@@ -787,7 +784,7 @@ export class YieldFarmingEngine extends EventEmitter {
       try {
         await this.scanOpportunities();
       } catch (error) {
-        this.logger.error('Opportunity scan failed:', error);
+        EnhancedLogger.error('Opportunity scan failed:', error);
       }
     }, 10 * 60 * 1000); // Scan every 10 minutes
   }
@@ -797,7 +794,7 @@ export class YieldFarmingEngine extends EventEmitter {
       try {
         await this.updatePositions();
       } catch (error) {
-        this.logger.error('Position update failed:', error);
+        EnhancedLogger.error('Position update failed:', error);
       }
     }, 60 * 1000); // Update every minute
   }

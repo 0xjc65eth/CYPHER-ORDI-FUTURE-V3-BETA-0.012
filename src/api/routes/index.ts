@@ -22,7 +22,6 @@ import { gamificationRoutes } from './gamification.routes';
 import { systemRoutes } from './system.routes';
 
 const router = Router();
-const logger = new EnhancedLogger();
 
 // Health check endpoint
 router.get('/health', async (req, res) => {
@@ -36,7 +35,7 @@ router.get('/health', async (req, res) => {
       version: '3.0.0'
     });
   } catch (error) {
-    logger.error('Health check failed:', error);
+    EnhancedLogger.error('Health check failed:', error);
     res.status(500).json({
       status: 'error',
       message: 'Health check unavailable'
@@ -54,7 +53,7 @@ router.get('/metrics', async (req, res) => {
       timestamp: Date.now()
     });
   } catch (error) {
-    logger.error('Metrics collection failed:', error);
+    EnhancedLogger.error('Metrics collection failed:', error);
     res.status(500).json({
       success: false,
       error: 'Metrics unavailable'

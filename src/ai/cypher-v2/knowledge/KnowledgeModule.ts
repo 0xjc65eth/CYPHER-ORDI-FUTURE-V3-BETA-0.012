@@ -12,7 +12,7 @@ export class KnowledgeModule extends EventEmitter {
   private config: CypherAIConfig;
   private marketDataCache: MarketData | null = null;
   private lastUpdate: Date | null = null;
-  private updateInterval: NodeJS.Timeout | null = null;
+  private updateInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: CypherAIConfig) {
     super();

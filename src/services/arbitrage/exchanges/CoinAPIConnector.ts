@@ -65,7 +65,7 @@ export class CoinAPIConnector extends ExchangeConnector {
       this.emit('connected');
       
     } catch (error) {
-      logger.error('Failed to connect to CoinAPI:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to CoinAPI:');
       throw error;
     }
   }
@@ -78,7 +78,7 @@ export class CoinAPIConnector extends ExchangeConnector {
       this.emit('disconnected');
       
     } catch (error) {
-      logger.error('Error disconnecting from CoinAPI:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error disconnecting from CoinAPI:');
     }
   }
 
@@ -105,7 +105,7 @@ export class CoinAPIConnector extends ExchangeConnector {
         await this.fetchPriceUpdate(symbol);
       }
     } catch (error) {
-      logger.error('Error updating prices from CoinAPI:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error updating prices from CoinAPI:');
     }
   }
 
@@ -297,7 +297,7 @@ export class CoinAPIConnector extends ExchangeConnector {
       logger.debug(`Loaded ${this.supportedExchanges.length} exchanges from CoinAPI`);
       
     } catch (error) {
-      logger.error('Failed to load exchanges from CoinAPI:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load exchanges from CoinAPI:');
       // Use default exchanges if loading fails
       this.supportedExchanges = ['BINANCE', 'COINBASE', 'KRAKEN', 'OKX'];
     }
@@ -319,7 +319,7 @@ export class CoinAPIConnector extends ExchangeConnector {
       logger.debug(`Loaded symbols for ${this.exchangeSymbols.size} exchanges from CoinAPI`);
       
     } catch (error) {
-      logger.error('Failed to load symbols from CoinAPI:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load symbols from CoinAPI:');
     }
   }
 

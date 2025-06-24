@@ -95,8 +95,8 @@ export class ComprehensiveWebSocketManager {
   private subscriptions = new Map<string, DataSubscription>();
   private channelSubscribers = new Map<string, Set<string>>();
   private messageQueue = new Map<string, WebSocketMessage[]>();
-  private reconnectTimers = new Map<string, NodeJS.Timeout>();
-  private heartbeatTimers = new Map<string, NodeJS.Timeout>();
+  private reconnectTimers = new Map<string, ReturnType<typeof setInterval>>();
+  private heartbeatTimers = new Map<string, ReturnType<typeof setInterval>>();
   private performanceMetrics: PerformanceMetrics;
   private isInitialized = false;
   private dataAggregator: DataAggregator;
@@ -913,7 +913,7 @@ class OfflineFallback {
       this.lastFallbackUpdate = Date.now();
       logger.info('📱 Fallback data updated');
     } catch (error) {
-      logger.error('Failed to update fallback data:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to update fallback data:');
     }
   }
 

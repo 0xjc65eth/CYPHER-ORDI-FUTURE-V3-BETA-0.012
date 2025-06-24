@@ -250,3 +250,5 @@ export function MintingActivity() {
     </Card>
   );
 }
+
+export default MintingActivity;

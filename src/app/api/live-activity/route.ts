@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    logger.error('Live activity API error:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'Live activity API error');
     
     // Fallback to generated data
     const fallbackData = await generateRealTimeActivity();

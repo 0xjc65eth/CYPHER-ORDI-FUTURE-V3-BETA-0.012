@@ -7,7 +7,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 
-const logger = new EnhancedLogger();
 
 interface AdminUser {
   id: string;
@@ -114,7 +113,7 @@ export const adminAuth = async (req: AuthenticatedRequest, res: Response, next: 
     // Add admin to request
     req.admin = admin;
 
-    logger.info('Admin authenticated', {
+    EnhancedLogger.info('Admin authenticated', {
       adminId: admin.id,
       username: admin.username,
       role: admin.role,
@@ -125,7 +124,7 @@ export const adminAuth = async (req: AuthenticatedRequest, res: Response, next: 
 
     next();
   } catch (error) {
-    logger.error('Admin authentication error:', error);
+    EnhancedLogger.error('Admin authentication error:', error);
     res.status(500).json({
       success: false,
       error: 'Authentication system error',
@@ -166,7 +165,7 @@ export const requirePermission = (permission: string) => {
       });
 
       if (!hasPermission) {
-        logger.warn('Admin permission denied', {
+        EnhancedLogger.warn('Admin permission denied', {
           adminId: admin.id,
           requiredPermission: permission,
           adminPermissions: admin.permissions,
@@ -183,7 +182,7 @@ export const requirePermission = (permission: string) => {
 
       next();
     } catch (error) {
-      logger.error('Permission check error:', error);
+      EnhancedLogger.error('Permission check error:', error);
       res.status(500).json({
         success: false,
         error: 'Authorization system error',
@@ -212,7 +211,7 @@ export const requireRole = (roles: string | string[]) => {
       }
 
       if (!requiredRoles.includes(admin.role)) {
-        logger.warn('Admin role access denied', {
+        EnhancedLogger.warn('Admin role access denied', {
           adminId: admin.id,
           adminRole: admin.role,
           requiredRoles,
@@ -230,7 +229,7 @@ export const requireRole = (roles: string | string[]) => {
 
       next();
     } catch (error) {
-      logger.error('Role check error:', error);
+      EnhancedLogger.error('Role check error:', error);
       res.status(500).json({
         success: false,
         error: 'Authorization system error',
@@ -273,7 +272,7 @@ async function verifyAdminToken(token: string): Promise<any> {
 
     return decoded;
   } catch (error) {
-    logger.error('Token verification failed:', error);
+    EnhancedLogger.error('Token verification failed:', error);
     return null;
   }
 }
@@ -331,7 +330,7 @@ export const adminLogin = async (req: Request, res: Response) => {
       .find(a => a.username === username);
 
     if (!admin) {
-      logger.warn('Admin login failed - user not found', { username });
+      EnhancedLogger.warn('Admin login failed - user not found', { username });
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
@@ -342,7 +341,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     // Verify password (would use proper password hashing in production)
     const validPassword = await verifyAdminPassword(username, password);
     if (!validPassword) {
-      logger.warn('Admin login failed - invalid password', { username });
+      EnhancedLogger.warn('Admin login failed - invalid password', { username });
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials',
@@ -352,7 +351,7 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     // Verify MFA if required (mock implementation)
     if (mfaCode && !await verifyMFA(admin.id, mfaCode)) {
-      logger.warn('Admin login failed - invalid MFA', { username });
+      EnhancedLogger.warn('Admin login failed - invalid MFA', { username });
       return res.status(401).json({
         success: false,
         error: 'Invalid MFA code',
@@ -374,7 +373,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     admin.lastLogin = Date.now();
     adminUsers.set(admin.id, admin);
 
-    logger.info('Admin login successful', {
+    EnhancedLogger.info('Admin login successful', {
       adminId: admin.id,
       username: admin.username,
       role: admin.role,
@@ -399,7 +398,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    logger.error('Admin login error:', error);
+    EnhancedLogger.error('Admin login error:', error);
     res.status(500).json({
       success: false,
       error: 'Login system error',

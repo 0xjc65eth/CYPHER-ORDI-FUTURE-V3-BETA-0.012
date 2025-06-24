@@ -275,7 +275,7 @@ export class WalletSecurityManager {
   private suspiciousActivities: Map<string, number>;
   private whitelistedAddresses: Set<string>;
   private transactionHistory: Map<string, any[]>;
-  private heartbeatTimers: Map<string, NodeJS.Timeout>;
+  private heartbeatTimers: Map<string, ReturnType<typeof setInterval>>;
 
   constructor(config?: Partial<SecurityConfig>) {
     this.config = { ...DEFAULT_SECURITY_CONFIG, ...config };

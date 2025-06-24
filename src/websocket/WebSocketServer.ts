@@ -10,8 +10,6 @@ import jwt from 'jsonwebtoken';
 import { systemIntegrator } from '@/core/SystemIntegrator';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 
-const logger = new EnhancedLogger();
-
 interface WebSocketClient {
   id: string;
   ws: any;
@@ -82,11 +80,11 @@ export class WebSocketServer extends EventEmitter {
       });
 
       this.isRunning = true;
-      logger.info(`WebSocket server started on port ${this.port}`);
+      EnhancedLogger.info(`WebSocket server started on port ${this.port}`);
       this.emit('serverStarted', { port: this.port });
 
     } catch (error) {
-      logger.error('Failed to start WebSocket server:', error);
+      EnhancedLogger.error('Failed to start WebSocket server:', error);
       throw error;
     }
   }
@@ -122,11 +120,11 @@ export class WebSocketServer extends EventEmitter {
       this.channels.clear();
       this.messageQueue.clear();
 
-      logger.info('WebSocket server stopped');
+      EnhancedLogger.info('WebSocket server stopped');
       this.emit('serverStopped');
 
     } catch (error) {
-      logger.error('Error stopping WebSocket server:', error);
+      EnhancedLogger.error('Error stopping WebSocket server:', error);
       throw error;
     }
   }
@@ -153,7 +151,7 @@ export class WebSocketServer extends EventEmitter {
       };
 
       this.clients.set(clientId, client);
-      logger.info('WebSocket client connected', { clientId, ip: client.metadata.ip });
+      EnhancedLogger.info('WebSocket client connected', { clientId, ip: client.metadata.ip });
 
       // Handle authentication with token from query
       const url = new URL(request.url || '', `http://${request.headers.host}`);
@@ -179,7 +177,7 @@ export class WebSocketServer extends EventEmitter {
 
       // Error handler
       ws.on('error', (error: Error) => {
-        logger.error('WebSocket client error:', { clientId, error: error.message });
+        EnhancedLogger.error('WebSocket client error:', { clientId, error: error.message });
         this.handleClientDisconnect(client, 1011, 'Client error');
       });
 
@@ -198,7 +196,7 @@ export class WebSocketServer extends EventEmitter {
     });
 
     this.wss.on('error', (error) => {
-      logger.error('WebSocket server error:', error);
+      EnhancedLogger.error('WebSocket server error:', error);
       this.emit('serverError', error);
     });
   }
@@ -233,11 +231,11 @@ export class WebSocketServer extends EventEmitter {
           break;
 
         default:
-          logger.warn('Unknown message type', { clientId: client.id, type: message.type });
+          EnhancedLogger.warn('Unknown message type', { clientId: client.id, type: message.type });
       }
 
     } catch (error) {
-      logger.error('Error handling client message:', { clientId: client.id, error });
+      EnhancedLogger.error('Error handling client message:', { clientId: client.id, error });
       this.sendToClient(client, {
         type: 'error',
         data: { message: 'Invalid message format' },
@@ -257,7 +255,7 @@ export class WebSocketServer extends EventEmitter {
       client.userId = decoded.userId;
       client.authenticated = true;
       
-      logger.info('Client authenticated', { clientId: client.id, userId: client.userId });
+      EnhancedLogger.info('Client authenticated', { clientId: client.id, userId: client.userId });
       
       this.sendToClient(client, {
         type: 'auth_success',
@@ -271,7 +269,7 @@ export class WebSocketServer extends EventEmitter {
       this.emit('clientAuthenticated', { clientId: client.id, userId: client.userId });
 
     } catch (error) {
-      logger.warn('Client authentication failed', { clientId: client.id, error: error.message });
+      EnhancedLogger.warn('Client authentication failed', { clientId: client.id, error: error.message });
       
       this.sendToClient(client, {
         type: 'auth_error',
@@ -331,7 +329,7 @@ export class WebSocketServer extends EventEmitter {
     }
     this.channels.get(channel)!.add(client.id);
 
-    logger.info('Client subscribed to channel', { 
+    EnhancedLogger.info('Client subscribed to channel', { 
       clientId: client.id, 
       channel,
       totalSubscribers: this.channels.get(channel)!.size
@@ -354,7 +352,7 @@ export class WebSocketServer extends EventEmitter {
       }
     }
 
-    logger.info('Client unsubscribed from channel', { clientId: client.id, channel });
+    EnhancedLogger.info('Client unsubscribed from channel', { clientId: client.id, channel });
     this.emit('clientUnsubscribed', { clientId: client.id, channel });
   }
 
@@ -415,7 +413,7 @@ export class WebSocketServer extends EventEmitter {
     this.clients.delete(client.id);
     this.messageQueue.delete(client.id);
 
-    logger.info('Client disconnected', { 
+    EnhancedLogger.info('Client disconnected', { 
       clientId: client.id, 
       userId: client.userId,
       code, 
@@ -468,7 +466,7 @@ export class WebSocketServer extends EventEmitter {
         return false;
       }
     } catch (error) {
-      logger.error('Error sending message to client:', { clientId: client.id, error });
+      EnhancedLogger.error('Error sending message to client:', { clientId: client.id, error });
       return false;
     }
   }

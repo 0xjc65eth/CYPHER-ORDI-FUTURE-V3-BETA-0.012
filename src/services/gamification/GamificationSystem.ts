@@ -393,7 +393,7 @@ export class GamificationSystem extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Gamification System:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Gamification System:');
       throw error;
     }
   }
@@ -441,7 +441,7 @@ export class GamificationSystem extends EventEmitter {
       this.emit('xpAwarded', { userId, action, xp: xpToAward, user });
 
     } catch (error) {
-      this.logger.error('Failed to award XP:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to award XP:');
       throw error;
     }
   }
@@ -485,7 +485,7 @@ export class GamificationSystem extends EventEmitter {
       this.emit('achievementUnlocked', { userId, achievement: userAchievement });
 
     } catch (error) {
-      this.logger.error('Failed to unlock achievement:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to unlock achievement:');
       throw error;
     }
   }
@@ -522,7 +522,7 @@ export class GamificationSystem extends EventEmitter {
       return nft;
 
     } catch (error) {
-      this.logger.error('Failed to mint NFT:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to mint NFT:');
       throw error;
     }
   }
@@ -569,7 +569,7 @@ export class GamificationSystem extends EventEmitter {
       return progress;
 
     } catch (error) {
-      this.logger.error('Failed to start quest:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start quest:');
       throw error;
     }
   }
@@ -621,7 +621,7 @@ export class GamificationSystem extends EventEmitter {
       userProgressMap.set(questId, progress);
 
     } catch (error) {
-      this.logger.error('Failed to update quest progress:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to update quest progress:');
     }
   }
 

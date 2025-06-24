@@ -75,9 +75,10 @@ const navigationItems: NavItem[] = [
     label: 'Ordinals',
     href: '/ordinals',
     icon: NavigationIcons['/ordinals'].icon,
-    description: '🟠 Professional Collection Analytics',
+    description: '🚀 Advanced Ordinals & BRC-20 Analysis',
     badge: 'PRO',
-    badgeType: 'info'
+    badgeType: 'info',
+    isPro: true
   },
   {
     id: 'runes',

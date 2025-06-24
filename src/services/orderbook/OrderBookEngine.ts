@@ -123,7 +123,6 @@ export interface OrderBookMetrics {
 }
 
 export class OrderBookEngine extends EventEmitter {
-  private logger: EnhancedLogger;
   private orderBooks: Map<string, OrderBook> = new Map();
   private orders: Map<string, Order> = new Map();
   private userOrders: Map<string, Set<string>> = new Map();
@@ -150,9 +149,7 @@ export class OrderBookEngine extends EventEmitter {
 
   constructor() {
     super();
-    this.logger = new EnhancedLogger();
-
-    this.logger.info('OrderBook Engine initialized', {
+    EnhancedLogger.info('OrderBook Engine initialized', {
       component: 'OrderBookEngine',
       pricePrecision: this.PRICE_PRECISION,
       quantityPrecision: this.QUANTITY_PRECISION
@@ -164,7 +161,7 @@ export class OrderBookEngine extends EventEmitter {
    */
   initializeOrderBook(symbol: string): void {
     if (this.orderBooks.has(symbol)) {
-      this.logger.warn('OrderBook already exists', { symbol });
+      EnhancedLogger.warn('OrderBook already exists', { symbol });
       return;
     }
 
@@ -185,7 +182,7 @@ export class OrderBookEngine extends EventEmitter {
     this.trades.set(symbol, []);
     this.priceTimeSeries.set(symbol, []);
 
-    this.logger.info('OrderBook initialized', { symbol });
+    EnhancedLogger.info('OrderBook initialized', { symbol });
     this.emit('orderBookInitialized', { symbol, orderBook });
   }
 
@@ -221,7 +218,7 @@ export class OrderBookEngine extends EventEmitter {
       // Process order
       const matchResult = await this.processOrder(order);
 
-      this.logger.info('Order placed', {
+      EnhancedLogger.info('Order placed', {
         orderId: order.id,
         symbol: order.symbol,
         side: order.side,
@@ -235,7 +232,7 @@ export class OrderBookEngine extends EventEmitter {
       return matchResult;
 
     } catch (error) {
-      this.logger.error('Failed to place order:', error);
+      EnhancedLogger.error('Failed to place order:', error);
       throw error;
     }
   }
@@ -265,7 +262,7 @@ export class OrderBookEngine extends EventEmitter {
     order.status = 'cancelled';
     this.orders.set(orderId, order);
 
-    this.logger.info('Order cancelled', {
+    EnhancedLogger.info('Order cancelled', {
       orderId,
       userId,
       symbol: order.symbol,

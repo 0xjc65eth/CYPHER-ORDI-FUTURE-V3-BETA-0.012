@@ -318,7 +318,7 @@ export class JupiterService {
       
       return data as T;
     } catch (error) {
-      logger.error('Jupiter API request failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Jupiter API request failed');
       
       // Try to return cached data if request fails (only for GET)
       if (method === 'GET') {

@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ComposedChart } from 'recharts'
 import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Layers, AlertCircle, Clock, Target, Zap, Shield } from 'lucide-react'
 import { useMarketMetrics } from '@/hooks/ordinals/useMarketMetrics'
-import { ordinalsAnalytics } from '@/services/ordinals/OrdinalsAnalytics'
-import { ordinalsDataAggregator } from '@/services/ordinals/DataAggregator'
+// Lazy imports to prevent SSR issues
+const getOrdinalsAnalytics = () => import('@/services/ordinals/OrdinalsAnalytics').then(m => m.ordinalsAnalytics)
+const getOrdinalsDataAggregator = () => import('@/services/ordinals/DataAggregator').then(m => m.ordinalsDataAggregator)
 import { useQuery } from '@tanstack/react-query'
 
 export default function MarketDepth() {
@@ -21,23 +22,35 @@ export default function MarketDepth() {
   // Enhanced data fetching with new analytics
   const { data: aggregatedData, isLoading: isLoadingAggregated } = useQuery({
     queryKey: ['aggregated-collection', selectedCollection],
-    queryFn: () => ordinalsDataAggregator.getAggregatedCollection(selectedCollection),
+    queryFn: async () => {
+      const aggregator = await getOrdinalsDataAggregator()
+      return aggregator.getAggregatedCollection(selectedCollection)
+    },
     refetchInterval: 30000,
-    staleTime: 15000
+    staleTime: 15000,
+    enabled: typeof window !== 'undefined'
   })
 
   const { data: marketDepthData, isLoading: isLoadingDepth } = useQuery({
     queryKey: ['market-depth', selectedCollection],
-    queryFn: () => ordinalsAnalytics.analyzeMarketDepth(selectedCollection),
+    queryFn: async () => {
+      const analytics = await getOrdinalsAnalytics()
+      return analytics.analyzeMarketDepth(selectedCollection)
+    },
     refetchInterval: 10000,
-    staleTime: 5000
+    staleTime: 5000,
+    enabled: typeof window !== 'undefined'
   })
 
   const { data: arbitrageOpportunities } = useQuery({
     queryKey: ['arbitrage-opportunities', selectedCollection],
-    queryFn: () => ordinalsDataAggregator.findArbitrageOpportunities([selectedCollection]),
+    queryFn: async () => {
+      const aggregator = await getOrdinalsDataAggregator()
+      return aggregator.findArbitrageOpportunities([selectedCollection])
+    },
     refetchInterval: 15000,
-    staleTime: 10000
+    staleTime: 10000,
+    enabled: typeof window !== 'undefined'
   })
 
   const loading = isLoading || isLoadingAggregated || isLoadingDepth

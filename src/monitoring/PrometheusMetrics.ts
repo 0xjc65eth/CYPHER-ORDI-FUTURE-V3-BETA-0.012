@@ -7,7 +7,6 @@ import { EventEmitter } from 'events';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 import { systemIntegrator } from '@/core/SystemIntegrator';
 
-const logger = new EnhancedLogger();
 
 interface MetricConfig {
   name: string;
@@ -228,7 +227,7 @@ export class PrometheusMetrics extends EventEmitter {
   incrementCounter(name: string, labels: Record<string, string> = {}, value: number = 1): void {
     const metric = this.metrics.get(name);
     if (!metric || metric.type !== 'counter') {
-      logger.warn('Counter metric not found:', name);
+      EnhancedLogger.warn('Counter metric not found:', name);
       return;
     }
 
@@ -252,7 +251,7 @@ export class PrometheusMetrics extends EventEmitter {
   setGauge(name: string, value: number, labels: Record<string, string> = {}): void {
     const metric = this.metrics.get(name);
     if (!metric || metric.type !== 'gauge') {
-      logger.warn('Gauge metric not found:', name);
+      EnhancedLogger.warn('Gauge metric not found:', name);
       return;
     }
 
@@ -270,7 +269,7 @@ export class PrometheusMetrics extends EventEmitter {
   observeHistogram(name: string, value: number, labels: Record<string, string> = {}): void {
     const metric = this.metrics.get(name);
     if (!metric || metric.type !== 'histogram') {
-      logger.warn('Histogram metric not found:', name);
+      EnhancedLogger.warn('Histogram metric not found:', name);
       return;
     }
 
@@ -307,7 +306,7 @@ export class PrometheusMetrics extends EventEmitter {
    */
   startCollection(intervalMs: number = 15000): void {
     if (this.isCollecting) {
-      logger.warn('Metrics collection already started');
+      EnhancedLogger.warn('Metrics collection already started');
       return;
     }
 
@@ -318,7 +317,7 @@ export class PrometheusMetrics extends EventEmitter {
       this.emit('metricsCollected', this.getAllMetrics());
     }, intervalMs);
 
-    logger.info('Metrics collection started', { intervalMs });
+    EnhancedLogger.info('Metrics collection started', { intervalMs });
   }
 
   /**
@@ -330,7 +329,7 @@ export class PrometheusMetrics extends EventEmitter {
       this.collectionInterval = null;
     }
     this.isCollecting = false;
-    logger.info('Metrics collection stopped');
+    EnhancedLogger.info('Metrics collection stopped');
   }
 
   /**
@@ -345,10 +344,10 @@ export class PrometheusMetrics extends EventEmitter {
         getMetrics: () => this.renderPrometheusFormat()
       };
 
-      logger.info(`Metrics HTTP server started on port ${port}`);
+      EnhancedLogger.info(`Metrics HTTP server started on port ${port}`);
       this.emit('httpServerStarted', { port });
     } catch (error) {
-      logger.error('Failed to start metrics HTTP server:', error);
+      EnhancedLogger.error('Failed to start metrics HTTP server:', error);
       throw error;
     }
   }
@@ -360,7 +359,7 @@ export class PrometheusMetrics extends EventEmitter {
     if (this.httpServer) {
       this.httpServer.isRunning = false;
       this.httpServer = null;
-      logger.info('Metrics HTTP server stopped');
+      EnhancedLogger.info('Metrics HTTP server stopped');
       this.emit('httpServerStopped');
     }
   }
@@ -409,7 +408,7 @@ export class PrometheusMetrics extends EventEmitter {
       this.observeHistogram('cypher_trade_volume_usd', 50000, { symbol: 'BTC' });
 
     } catch (error) {
-      logger.error('Error collecting service metrics:', error);
+      EnhancedLogger.error('Error collecting service metrics:', error);
     }
   }
 

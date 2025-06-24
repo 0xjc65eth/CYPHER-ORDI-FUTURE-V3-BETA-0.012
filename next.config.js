@@ -29,8 +29,8 @@ const nextConfig = {
   },
   // Next.js 15: serverComponentsExternalPackages moved to top level
   serverExternalPackages: ['axios', '@supabase/supabase-js', 'ws', 'ioredis'],
-  // Next.js 15: Enhanced output configuration
-  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  // Vercel deployment - remove standalone output
+  // output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
   // Temporarily disable type checking to allow server to run
   typescript: {
     ignoreBuildErrors: true,
@@ -139,7 +139,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: 'http://localhost:4444',
+            value: '*',
           },
           {
             key: 'Access-Control-Allow-Methods',

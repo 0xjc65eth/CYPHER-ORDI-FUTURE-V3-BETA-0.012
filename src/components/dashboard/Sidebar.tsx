@@ -11,13 +11,20 @@ import {
   LogOut,
   TrendingUp,
   BarChart3,
-  Bot
+  Bot,
+  Building2,
+  Brain,
+  Target,
+  Crown
 } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/portfolio', label: 'Portfolio', icon: Wallet },
+  { href: '/runes', label: 'Runes Terminal', icon: Target },
+  { href: '/trading-floor', label: 'Trading Floor', icon: Building2 },
+  { href: '/order-book', label: 'Order Book', icon: Brain },
   { href: '/trading', label: 'Trading', icon: TrendingUp },
   { href: '/cypher-ai', label: 'CYPHER AI', icon: Bot },
   { href: '/transactions', label: 'Transactions', icon: ArrowUpDown },
@@ -32,8 +39,13 @@ export function Sidebar() {
     <div className="w-64 bg-gray-900 text-white flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
-        <h1 className="text-2xl font-bold text-orange-500">CYPHER</h1>
-        <p className="text-xs text-gray-400 mt-1">Bitcoin Analytics</p>
+        <div className="flex items-center gap-2">
+          <Crown className="h-8 w-8 text-yellow-500" />
+          <div>
+            <h1 className="text-2xl font-bold text-orange-500">CYPHER</h1>
+            <p className="text-xs text-gray-400 mt-1">Wall Street Terminal</p>
+          </div>
+        </div>
       </div>
       
       {/* Navigation */}

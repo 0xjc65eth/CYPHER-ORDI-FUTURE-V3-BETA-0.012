@@ -10,6 +10,7 @@ import { walletConnector, WalletInfo, PortfolioAsset, WalletPerformance } from '
 import { pnlCalculator, PortfolioPnL, CostBasisMethod } from '@/services/pnl-calculator';
 import { portfolioAnalytics, RiskMetrics, PortfolioHealthScore, StressTestResult } from '@/services/portfolio-analytics';
 import { WalletType } from '@/types/wallet';
+import { usePortfolioWallet } from './usePortfolioWallet';
 import { 
   Wallet, 
   TrendingUp, 
@@ -78,6 +79,17 @@ export default function PortfolioPage() {
   const [selectedCostBasis, setSelectedCostBasis] = useState<CostBasisMethod>('FIFO');
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  // Use LaserEyes hook for wallet connection
+  const { 
+    connectWallet: laserEyesConnect, 
+    disconnectWallet: laserEyesDisconnect,
+    connected: laserEyesConnected,
+    address: laserEyesAddress,
+    balance: laserEyesBalance,
+    connecting: laserEyesConnecting,
+    error: laserEyesError
+  } = usePortfolioWallet();
+
   // Load wallets and setup real-time updates
   useEffect(() => {
     loadAvailableWallets();
@@ -103,7 +115,7 @@ export default function PortfolioPage() {
     walletIntegrationService.addEventListener(handleLegacyWalletEvent);
 
     // Auto-refresh interval
-    let refreshInterval: NodeJS.Timeout;
+    let refreshInterval: ReturnType<typeof setInterval>;
     if (autoRefresh) {
       refreshInterval = setInterval(() => {
         if (!refreshing) {
@@ -378,53 +390,93 @@ export default function PortfolioPage() {
 
   // Connect wallet with enhanced error handling
   const connectWallet = useCallback(async (walletType: WalletType) => {
-    if (loading) return;
+    if (loading || laserEyesConnecting) return;
     
     setLoading(true);
     try {
       console.log(`🔗 Connecting ${walletType} wallet...`);
       addAlert('info', 'Connecting Wallet', `Connecting to ${getWalletName(walletType)}...`);
       
-      // Try both integration services for compatibility
-      let account: UniversalWalletAccount;
+      // Try LaserEyes connection first
+      const success = await laserEyesConnect(walletType);
       
-      try {
-        account = await walletIntegrationService.connectWallet(walletType);
-        await walletIntegrationService.createAuthSession(account.address, walletType);
-      } catch (legacyError) {
-        console.warn('Legacy wallet service failed, trying modern connector:', legacyError);
-        // This would need additional implementation in wallet-connector for direct connections
-        throw legacyError;
+      if (success) {
+        console.log('✅ Wallet connected via LaserEyes');
+        addAlert('success', 'Wallet Connected', `${getWalletName(walletType)} connected successfully`);
+        
+        // Update portfolio with the connected wallet
+        setTimeout(() => {
+          if (laserEyesAddress) {
+            // Add the wallet to connected wallets
+            const newWallet: WalletInfo = {
+              address: laserEyesAddress,
+              type: walletType,
+              balance: laserEyesBalance || { confirmed: 0, unconfirmed: 0, total: 0 },
+              assets: [],
+              performance: {
+                totalValue: 0,
+                totalChange: 0,
+                percentChange: 0,
+                lastUpdated: new Date()
+              }
+            };
+            
+            const updatedWallets = new Map(connectedWallets);
+            updatedWallets.set(laserEyesAddress, newWallet);
+            setConnectedWallets(updatedWallets);
+            updatePortfolioMetrics(updatedWallets);
+          }
+        }, 1000);
+      } else {
+        // Fallback to legacy service
+        try {
+          const account = await walletIntegrationService.connectWallet(walletType);
+          await walletIntegrationService.createAuthSession(account.address, walletType);
+          
+          console.log('✅ Wallet connected via legacy service:', account);
+          addAlert('success', 'Wallet Connected', `${getWalletName(walletType)} connected successfully`);
+          
+          // Wait for the wallet to be processed
+          setTimeout(() => {
+            const wallets = walletConnector.getConnectedWallets();
+            setConnectedWallets(wallets);
+            updatePortfolioMetrics(wallets);
+          }, 2000);
+        } catch (legacyError) {
+          console.warn('Legacy wallet service also failed:', legacyError);
+          throw laserEyesError || legacyError;
+        }
       }
-      
-      console.log('✅ Wallet connected:', account);
-      addAlert('success', 'Wallet Connected', `${getWalletName(walletType)} connected successfully`);
-      
-      // Wait for the wallet to be processed by the modern connector
-      setTimeout(() => {
-        const wallets = walletConnector.getConnectedWallets();
-        setConnectedWallets(wallets);
-        updatePortfolioMetrics(wallets);
-      }, 2000);
-      
     } catch (error) {
       console.error('❌ Failed to connect wallet:', error);
       addAlert('error', 'Connection Failed', `Failed to connect ${getWalletName(walletType)}: ${error}`);
     } finally {
       setLoading(false);
     }
-  }, [loading, getWalletName, addAlert, updatePortfolioMetrics]);
+  }, [loading, laserEyesConnecting, getWalletName, addAlert, updatePortfolioMetrics, laserEyesConnect, laserEyesAddress, laserEyesBalance, laserEyesError, connectedWallets]);
 
   // Disconnect wallet
   const disconnectWallet = useCallback(async (address: string) => {
     try {
-      walletConnector.disconnect(address);
+      // Try LaserEyes disconnect first if it's the connected wallet
+      if (laserEyesAddress === address) {
+        await laserEyesDisconnect();
+      } else {
+        walletConnector.disconnect(address);
+      }
+      
+      // Remove from connected wallets
+      const updatedWallets = new Map(connectedWallets);
+      updatedWallets.delete(address);
+      setConnectedWallets(updatedWallets);
+      updatePortfolioMetrics(updatedWallets);
+      
       addAlert('info', 'Wallet Disconnected', 'Wallet has been disconnected');
     } catch (error) {
       console.error('Failed to disconnect wallet:', error);
       addAlert('error', 'Disconnect Failed', 'Could not disconnect wallet');
     }
-  }, [addAlert]);
+  }, [addAlert, laserEyesAddress, laserEyesDisconnect, connectedWallets, updatePortfolioMetrics]);
 
   // Asset icon helper
   const getAssetIcon = useCallback((type: string) => {

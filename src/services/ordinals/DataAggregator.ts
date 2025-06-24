@@ -120,7 +120,7 @@ export class OrdinalsDataAggregator extends EventEmitter {
   private clients: Record<OrdinalsMarketplace, any>;
   private cache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
   private subscriptions: Map<string, DataSubscription> = new Map();
-  private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private updateIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
   private config: DataFeedConfig;
   private isRunning: boolean = false;
 

@@ -506,17 +506,17 @@ export class FeatureEngineer extends EventEmitter {
     
     // Macro features
     const correlationSP500 = this.calculateRollingCorrelation(
-      data.ohlcv.map(d => d.close),
+      data.ohlcv.map((d: any) => d.close),
       data.macro?.sp500 || new Array(defaultLength).fill(0),
       20
     );
     const correlationGold = this.calculateRollingCorrelation(
-      data.ohlcv.map(d => d.close),
+      data.ohlcv.map((d: any) => d.close),
       data.macro?.gold || new Array(defaultLength).fill(0),
       20
     );
     const correlationDXY = this.calculateRollingCorrelation(
-      data.ohlcv.map(d => d.close),
+      data.ohlcv.map((d: any) => d.close),
       data.macro?.dxy || new Array(defaultLength).fill(0),
       20
     );
@@ -546,10 +546,11 @@ export class FeatureEngineer extends EventEmitter {
    */
   private async extractStatisticalFeatures(ohlcv: any[]): Promise<StatisticalFeatures> {
     const closes = ohlcv.map(d => d.close);
+    const volumes = ohlcv.map(d => d.volume);
     const returns = this.calculateReturns(closes);
     
     // Entropy measures
-    const shannonEntropy = this.calculateShannonEntropy(returns, 10);
+    const shannonEntropy = this.calculateShannonEntropy(returns);
     const approximateEntropy = this.calculateApproximateEntropy(returns, 2, 0.2);
     const sampleEntropy = this.calculateSampleEntropy(returns, 2, 0.2);
     
@@ -562,8 +563,8 @@ export class FeatureEngineer extends EventEmitter {
     const transferEntropy: { [key: string]: number[] } = {};
     
     for (const lag of [1, 5, 10]) {
-      mutualInformation[`${lag}`] = this.calculateMutualInformation(returns, lag);
-      transferEntropy[`${lag}`] = this.calculateTransferEntropy(returns, lag);
+      mutualInformation[`${lag}`] = [this.calculateMutualInformation(returns, volumes)];
+      transferEntropy[`${lag}`] = [this.calculateTransferEntropy(returns, volumes, lag)];
     }
     
     // Non-linear features
@@ -571,15 +572,15 @@ export class FeatureEngineer extends EventEmitter {
     const correlationDimension = this.calculateCorrelationDimension(returns);
     
     return {
-      shannonEntropy,
-      approximateEntropy,
-      sampleEntropy,
-      hurstExponent,
-      fractalDimension,
+      shannonEntropy: [shannonEntropy],
+      approximateEntropy: [approximateEntropy],
+      sampleEntropy: [sampleEntropy],
+      hurstExponent: [hurstExponent],
+      fractalDimension: [fractalDimension],
       mutualInformation,
       transferEntropy,
-      lyapunovExponent,
-      correlationDimension
+      lyapunovExponent: [lyapunovExponent],
+      correlationDimension: [correlationDimension]
     };
   }
   
@@ -1363,6 +1364,416 @@ export class FeatureEngineer extends EventEmitter {
 
   private calculateRealizationShortfall(trades: any[], ohlcv: any[]): number[] {
     return [0]; // Stub implementation
+  }
+
+  // Missing methods implementations
+  private calculateRollingCorrelation(series1: number[], series2: number[], window: number): number[] {
+    const result: number[] = [];
+    for (let i = window - 1; i < series1.length; i++) {
+      const slice1 = series1.slice(i - window + 1, i + 1);
+      const slice2 = series2.slice(i - window + 1, i + 1);
+      
+      const mean1 = slice1.reduce((a, b) => a + b) / slice1.length;
+      const mean2 = slice2.reduce((a, b) => a + b) / slice2.length;
+      
+      let numerator = 0;
+      let sum1 = 0;
+      let sum2 = 0;
+      
+      for (let j = 0; j < slice1.length; j++) {
+        const diff1 = slice1[j] - mean1;
+        const diff2 = slice2[j] - mean2;
+        numerator += diff1 * diff2;
+        sum1 += diff1 * diff1;
+        sum2 += diff2 * diff2;
+      }
+      
+      const correlation = numerator / Math.sqrt(sum1 * sum2);
+      result.push(isNaN(correlation) ? 0 : correlation);
+    }
+    return result;
+  }
+
+  private calculateShannonEntropy(data: number[]): number {
+    const counts: { [key: string]: number } = {};
+    data.forEach(val => {
+      const bin = Math.floor(val * 100) / 100; // Bin to 2 decimal places
+      counts[bin] = (counts[bin] || 0) + 1;
+    });
+    
+    const total = data.length;
+    let entropy = 0;
+    
+    Object.values(counts).forEach(count => {
+      const probability = count / total;
+      if (probability > 0) {
+        entropy -= probability * Math.log2(probability);
+      }
+    });
+    
+    return entropy;
+  }
+
+  private calculateApproximateEntropy(data: number[], m: number = 2, r: number = 0.2): number {
+    const N = data.length;
+    const patterns: { [key: string]: number } = {};
+    
+    // Count patterns of length m
+    for (let i = 0; i <= N - m; i++) {
+      const pattern = data.slice(i, i + m).map(x => Math.round(x / r)).join(',');
+      patterns[pattern] = (patterns[pattern] || 0) + 1;
+    }
+    
+    let phi_m = 0;
+    Object.values(patterns).forEach(count => {
+      const probability = count / (N - m + 1);
+      phi_m += probability * Math.log(probability);
+    });
+    
+    // Count patterns of length m+1
+    const patterns_m1: { [key: string]: number } = {};
+    for (let i = 0; i <= N - m - 1; i++) {
+      const pattern = data.slice(i, i + m + 1).map(x => Math.round(x / r)).join(',');
+      patterns_m1[pattern] = (patterns_m1[pattern] || 0) + 1;
+    }
+    
+    let phi_m1 = 0;
+    Object.values(patterns_m1).forEach(count => {
+      const probability = count / (N - m);
+      phi_m1 += probability * Math.log(probability);
+    });
+    
+    return phi_m - phi_m1;
+  }
+
+  private calculateSampleEntropy(data: number[], m: number = 2, r: number = 0.2): number {
+    const N = data.length;
+    let A = 0;
+    let B = 0;
+    
+    for (let i = 0; i < N - m; i++) {
+      let template_m = data.slice(i, i + m);
+      let template_m1 = data.slice(i, i + m + 1);
+      
+      for (let j = i + 1; j < N - m; j++) {
+        let match_m = data.slice(j, j + m);
+        let match_m1 = data.slice(j, j + m + 1);
+        
+        // Check if patterns match within tolerance r
+        let matches_m = template_m.every((val, idx) => Math.abs(val - match_m[idx]) <= r);
+        if (matches_m) {
+          B++;
+          let matches_m1 = template_m1.every((val, idx) => Math.abs(val - match_m1[idx]) <= r);
+          if (matches_m1) {
+            A++;
+          }
+        }
+      }
+    }
+    
+    return A > 0 ? Math.log(B / A) : 0;
+  }
+
+  private calculateHurstExponent(data: number[]): number {
+    const N = data.length;
+    if (N < 10) return 0.5; // Default for insufficient data
+    
+    const lags = [5, 10, 20, 50].filter(lag => lag < N / 2);
+    const rs_values: number[] = [];
+    
+    lags.forEach(lag => {
+      const mean = data.reduce((a, b) => a + b) / N;
+      let sum_dev = 0;
+      let cum_dev = 0;
+      let max_cum_dev = -Infinity;
+      let min_cum_dev = Infinity;
+      
+      for (let i = 0; i < lag; i++) {
+        const deviation = data[i] - mean;
+        cum_dev += deviation;
+        sum_dev += deviation * deviation;
+        max_cum_dev = Math.max(max_cum_dev, cum_dev);
+        min_cum_dev = Math.min(min_cum_dev, cum_dev);
+      }
+      
+      const range = max_cum_dev - min_cum_dev;
+      const std_dev = Math.sqrt(sum_dev / lag);
+      
+      if (std_dev > 0) {
+        rs_values.push(range / std_dev);
+      }
+    });
+    
+    if (rs_values.length < 2) return 0.5;
+    
+    // Calculate slope of log(R/S) vs log(lag)
+    const log_lags = lags.map(x => Math.log(x));
+    const log_rs = rs_values.map(x => Math.log(x));
+    
+    const n = log_lags.length;
+    const sum_x = log_lags.reduce((a, b) => a + b);
+    const sum_y = log_rs.reduce((a, b) => a + b);
+    const sum_xy = log_lags.reduce((sum, x, i) => sum + x * log_rs[i], 0);
+    const sum_x2 = log_lags.reduce((sum, x) => sum + x * x, 0);
+    
+    const hurst = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+    return Math.max(0, Math.min(1, hurst)); // Clamp between 0 and 1
+  }
+
+  private calculateFractalDimension(data: number[]): number {
+    const hurst = this.calculateHurstExponent(data);
+    return 2 - hurst;
+  }
+
+  private calculateMutualInformation(x: number[], y: number[], bins: number = 10): number {
+    const N = x.length;
+    if (N !== y.length) return 0;
+    
+    // Create histograms
+    const x_min = Math.min(...x);
+    const x_max = Math.max(...x);
+    const y_min = Math.min(...y);
+    const y_max = Math.max(...y);
+    
+    const x_bins: number[] = new Array(bins).fill(0);
+    const y_bins: number[] = new Array(bins).fill(0);
+    const xy_bins: number[][] = Array(bins).fill(null).map(() => new Array(bins).fill(0));
+    
+    for (let i = 0; i < N; i++) {
+      const x_bin = Math.min(bins - 1, Math.floor((x[i] - x_min) / (x_max - x_min) * bins));
+      const y_bin = Math.min(bins - 1, Math.floor((y[i] - y_min) / (y_max - y_min) * bins));
+      
+      x_bins[x_bin]++;
+      y_bins[y_bin]++;
+      xy_bins[x_bin][y_bin]++;
+    }
+    
+    let mi = 0;
+    for (let i = 0; i < bins; i++) {
+      for (let j = 0; j < bins; j++) {
+        if (xy_bins[i][j] > 0) {
+          const p_xy = xy_bins[i][j] / N;
+          const p_x = x_bins[i] / N;
+          const p_y = y_bins[j] / N;
+          
+          mi += p_xy * Math.log2(p_xy / (p_x * p_y));
+        }
+      }
+    }
+    
+    return mi;
+  }
+
+  private calculateTransferEntropy(x: number[], y: number[], lag: number = 1): number {
+    if (x.length !== y.length || x.length < lag + 1) return 0;
+    
+    // Simplified transfer entropy calculation
+    // This would normally require more sophisticated entropy estimation
+    const mi_future_past = this.calculateMutualInformation(
+      y.slice(lag),
+      x.slice(0, -lag)
+    );
+    
+    const mi_future_present = this.calculateMutualInformation(
+      y.slice(lag),
+      y.slice(0, -lag)
+    );
+    
+    return Math.max(0, mi_future_past - mi_future_present);
+  }
+
+  private calculateLyapunovExponent(data: number[]): number {
+    const N = data.length;
+    if (N < 10) return 0;
+    
+    // Simplified Lyapunov exponent calculation
+    let sum = 0;
+    const epsilon = 1e-8;
+    
+    for (let i = 1; i < N - 1; i++) {
+      const derivative = Math.abs((data[i + 1] - data[i - 1]) / 2);
+      if (derivative > epsilon) {
+        sum += Math.log(derivative);
+      }
+    }
+    
+    return sum / (N - 2);
+  }
+
+  private calculateCorrelationDimension(data: number[], maxDim: number = 5): number {
+    const N = data.length;
+    if (N < 10) return 1;
+    
+    // Simplified correlation dimension using Grassberger-Procaccia algorithm
+    const epsilon_values = [0.1, 0.2, 0.5, 1.0];
+    const correlations: number[] = [];
+    
+    epsilon_values.forEach(epsilon => {
+      let count = 0;
+      let total = 0;
+      
+      for (let i = 0; i < N; i++) {
+        for (let j = i + 1; j < N; j++) {
+          const distance = Math.abs(data[i] - data[j]);
+          total++;
+          if (distance < epsilon) {
+            count++;
+          }
+        }
+      }
+      
+      const correlation = count / total;
+      if (correlation > 0) {
+        correlations.push(Math.log(correlation));
+      }
+    });
+    
+    if (correlations.length < 2) return 1;
+    
+    // Estimate dimension from slope
+    const log_epsilons = epsilon_values.slice(0, correlations.length).map(x => Math.log(x));
+    
+    let sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
+    const n = log_epsilons.length;
+    
+    for (let i = 0; i < n; i++) {
+      sum_x += log_epsilons[i];
+      sum_y += correlations[i];
+      sum_xy += log_epsilons[i] * correlations[i];
+      sum_x2 += log_epsilons[i] * log_epsilons[i];
+    }
+    
+    const slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+    return Math.max(1, Math.min(maxDim, slope));
+  }
+
+  private polynomialFeatures(features: number[][], degree: number = 2): number[][] {
+    const result: number[][] = [];
+    
+    features.forEach(row => {
+      const polyRow: number[] = [...row]; // Original features
+      
+      // Add polynomial combinations
+      if (degree >= 2) {
+        // Squared terms
+        row.forEach(val => polyRow.push(val * val));
+        
+        // Cross terms
+        for (let i = 0; i < row.length; i++) {
+          for (let j = i + 1; j < row.length; j++) {
+            polyRow.push(row[i] * row[j]);
+          }
+        }
+      }
+      
+      if (degree >= 3) {
+        // Cubic terms
+        row.forEach(val => polyRow.push(val * val * val));
+      }
+      
+      result.push(polyRow);
+    });
+    
+    return result;
+  }
+
+  private varianceThreshold(features: number[][], threshold: number = 0.01): number[] {
+    const numFeatures = features[0]?.length || 0;
+    const selected: number[] = [];
+    
+    for (let i = 0; i < numFeatures; i++) {
+      const column = features.map(row => row[i]);
+      const mean = column.reduce((a, b) => a + b) / column.length;
+      const variance = column.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / column.length;
+      
+      if (variance > threshold) {
+        selected.push(i);
+      }
+    }
+    
+    return selected;
+  }
+
+  private correlationThreshold(features: number[][], threshold: number = 0.95): number[] {
+    const numFeatures = features[0]?.length || 0;
+    const selected: number[] = [];
+    const correlations: number[][] = Array(numFeatures).fill(null).map(() => new Array(numFeatures).fill(0));
+    
+    // Calculate correlation matrix
+    for (let i = 0; i < numFeatures; i++) {
+      for (let j = i; j < numFeatures; j++) {
+        const col1 = features.map(row => row[i]);
+        const col2 = features.map(row => row[j]);
+        
+        const correlation = this.calculateRollingCorrelation(col1, col2, col1.length)[0] || 0;
+        correlations[i][j] = correlation;
+        correlations[j][i] = correlation;
+      }
+    }
+    
+    // Select features with low correlation
+    const used = new Set<number>();
+    for (let i = 0; i < numFeatures; i++) {
+      if (!used.has(i)) {
+        selected.push(i);
+        
+        // Mark highly correlated features as used
+        for (let j = i + 1; j < numFeatures; j++) {
+          if (Math.abs(correlations[i][j]) > threshold) {
+            used.add(j);
+          }
+        }
+      }
+    }
+    
+    return selected;
+  }
+
+  private lassoSelection(features: number[][], target: number[], alpha: number = 0.01): number[] {
+    // Simplified LASSO feature selection
+    const numFeatures = features[0]?.length || 0;
+    const selected: number[] = [];
+    
+    // Simple correlation-based selection as LASSO approximation
+    for (let i = 0; i < numFeatures; i++) {
+      const column = features.map(row => row[i]);
+      const correlation = Math.abs(this.calculateRollingCorrelation(column, target, column.length)[0] || 0);
+      
+      if (correlation > alpha) {
+        selected.push(i);
+      }
+    }
+    
+    return selected;
+  }
+
+  private randomForestImportance(features: number[][], target: number[]): number[] {
+    // Simplified random forest importance using correlation
+    const numFeatures = features[0]?.length || 0;
+    const importance: number[] = [];
+    
+    for (let i = 0; i < numFeatures; i++) {
+      const column = features.map(row => row[i]);
+      const correlation = Math.abs(this.calculateRollingCorrelation(column, target, column.length)[0] || 0);
+      importance.push(correlation);
+    }
+    
+    return importance;
+  }
+
+  private mutualInfoSelection(features: number[][], target: number[], k: number = 10): number[] {
+    const numFeatures = features[0]?.length || 0;
+    const scores: { index: number; score: number }[] = [];
+    
+    for (let i = 0; i < numFeatures; i++) {
+      const column = features.map(row => row[i]);
+      const mi = this.calculateMutualInformation(column, target);
+      scores.push({ index: i, score: mi });
+    }
+    
+    // Select top k features
+    scores.sort((a, b) => b.score - a.score);
+    return scores.slice(0, Math.min(k, numFeatures)).map(item => item.index);
   }
 }
 

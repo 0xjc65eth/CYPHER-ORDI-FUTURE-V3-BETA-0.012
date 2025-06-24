@@ -121,7 +121,7 @@ class BinanceWebSocket {
       this.ws.onerror = (error) => this.handleError(error);
       
     } catch (error) {
-      logger.error('❌ Failed to create Binance WebSocket connection:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Failed to create Binance WebSocket connection');
       this.scheduleReconnect();
     }
   }
@@ -163,7 +163,7 @@ class BinanceWebSocket {
       }
       
     } catch (error) {
-      logger.error('❌ Error processing Binance message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Error processing Binance message');
     }
   }
 
@@ -185,7 +185,7 @@ class BinanceWebSocket {
    * Handle WebSocket errors
    */
   private handleError(error: any): void {
-    logger.error('❌ Binance WebSocket error:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Binance WebSocket error');
     this.scheduleReconnect();
   }
 
@@ -418,7 +418,7 @@ class BinanceWebSocket {
       streams.forEach(stream => this.activeStreams.add(stream));
       logger.debug(`📡 Subscribed to Binance streams: ${streams.join(', ')}`);
     } catch (error) {
-      logger.error('❌ Failed to subscribe to Binance streams:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Failed to subscribe to Binance streams');
     }
   }
 
@@ -439,7 +439,7 @@ class BinanceWebSocket {
       streams.forEach(stream => this.activeStreams.delete(stream));
       logger.debug(`📡 Unsubscribed from Binance streams: ${streams.join(', ')}`);
     } catch (error) {
-      logger.error('❌ Failed to unsubscribe from Binance streams:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Failed to unsubscribe from Binance streams');
     }
   }
 
@@ -486,7 +486,7 @@ class BinanceWebSocket {
             this.reconnect();
           }
         } catch (error) {
-          logger.error('❌ Failed to send Binance ping:', error);
+          logger.error(error instanceof Error ? error : new Error(String(error)), '❌ Failed to send Binance ping');
           this.reconnect();
         }
       }

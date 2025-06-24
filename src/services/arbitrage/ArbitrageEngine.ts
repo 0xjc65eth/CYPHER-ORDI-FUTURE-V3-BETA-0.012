@@ -80,7 +80,7 @@ export class ArbitrageEngine extends EventEmitter {
       
       logger.info('Arbitrage engine started successfully');
     } catch (error) {
-      logger.error('Failed to start arbitrage engine:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start arbitrage engine:');
       throw error;
     }
   }
@@ -105,7 +105,7 @@ export class ArbitrageEngine extends EventEmitter {
       
       logger.info('Arbitrage engine stopped');
     } catch (error) {
-      logger.error('Error stopping arbitrage engine:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error stopping arbitrage engine:');
     }
   }
 
@@ -150,7 +150,7 @@ export class ArbitrageEngine extends EventEmitter {
       this.scanForOpportunities(symbol);
       
     } catch (error) {
-      logger.error('Error handling price update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling price update:');
     }
   }
 
@@ -380,7 +380,7 @@ export class ArbitrageEngine extends EventEmitter {
         await sellConnector.cancelOrder(sellResult.orderId);
       }
     } catch (error) {
-      logger.error('Failed to handle partial execution:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to handle partial execution:');
     }
   }
 

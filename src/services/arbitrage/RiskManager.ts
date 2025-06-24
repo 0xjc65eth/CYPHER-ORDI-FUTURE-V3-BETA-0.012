@@ -141,7 +141,7 @@ export class RiskManager {
       return positionSize;
 
     } catch (error) {
-      logger.error('Error calculating position size:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error calculating position size:');
       return 0;
     }
   }
@@ -190,7 +190,7 @@ export class RiskManager {
       return 'LOW';
 
     } catch (error) {
-      logger.error('Error assessing risk:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error assessing risk:');
       return 'HIGH'; // Default to high risk on error
     }
   }
@@ -243,7 +243,7 @@ export class RiskManager {
       return true;
 
     } catch (error) {
-      logger.error('Error checking trade execution eligibility:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error checking trade execution eligibility:');
       return false;
     }
   }
@@ -275,7 +275,7 @@ export class RiskManager {
       logger.info(`Recorded trade execution: ${opportunity.id}`);
 
     } catch (error) {
-      logger.error('Error recording execution:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error recording execution:');
     }
   }
 
@@ -301,7 +301,7 @@ export class RiskManager {
       logger.info(`Recorded trade result: ${tradeId}, profit: ${actualProfit}`);
 
     } catch (error) {
-      logger.error('Error recording trade result:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error recording trade result:');
     }
   }
 

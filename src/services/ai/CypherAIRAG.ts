@@ -215,7 +215,7 @@ export class CypherAIRAG extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Cypher AI RAG:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Cypher AI RAG:');
       throw error;
     }
   }
@@ -249,7 +249,7 @@ export class CypherAIRAG extends EventEmitter {
       return response;
 
     } catch (error) {
-      this.logger.error('Error processing input:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error processing input:');
       throw error;
     }
   }
@@ -363,7 +363,7 @@ export class CypherAIRAG extends EventEmitter {
       this.logger.info('Added documents to knowledge base', { count: documents.length });
 
     } catch (error) {
-      this.logger.error('Failed to add to knowledge base:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to add to knowledge base:');
       throw error;
     }
   }
@@ -454,7 +454,7 @@ export class CypherAIRAG extends EventEmitter {
       return documents;
 
     } catch (error) {
-      this.logger.error('Failed to retrieve documents:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to retrieve documents:');
       return [];
     }
   }
@@ -560,7 +560,7 @@ INSTRUÇÕES:
       };
 
     } catch (error) {
-      this.logger.error('Failed to generate response:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate response:');
       
       // Fallback response
       return {
@@ -626,7 +626,7 @@ INSTRUÇÕES:
       return { text: transcription.text };
 
     } catch (error) {
-      this.logger.error('Failed to transcribe audio:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to transcribe audio:');
       throw error;
     }
   }
@@ -655,7 +655,7 @@ INSTRUÇÕES:
       return `data:audio/mp3;base64,${Buffer.from(audioBuffer).toString('base64')}`;
 
     } catch (error) {
-      this.logger.error('Failed to generate voice response:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate voice response:');
       return '';
     }
   }
@@ -687,7 +687,7 @@ INSTRUÇÕES:
       return response.choices[0].message.content || 'Unable to analyze images';
 
     } catch (error) {
-      this.logger.error('Failed to analyze images:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to analyze images:');
       return 'Image analysis failed';
     }
   }
@@ -760,7 +760,7 @@ INSTRUÇÕES:
       return response.data.map(item => item.embedding);
 
     } catch (error) {
-      this.logger.error('Failed to generate embeddings:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate embeddings:');
       throw error;
     }
   }
@@ -947,7 +947,7 @@ INSTRUÇÕES:
       await this.addToKnowledgeBase([interactionDoc]);
 
     } catch (error) {
-      this.logger.error('Failed to store interaction:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to store interaction:');
     }
   }
 

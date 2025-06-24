@@ -247,7 +247,7 @@ export class StakingRewardsSystem extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Staking Rewards System:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Staking Rewards System:');
       throw error;
     }
   }
@@ -338,7 +338,7 @@ export class StakingRewardsSystem extends EventEmitter {
       return position;
 
     } catch (error) {
-      this.logger.error('Failed to stake tokens:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to stake tokens:');
       throw error;
     }
   }
@@ -449,7 +449,7 @@ export class StakingRewardsSystem extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to unstake tokens:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to unstake tokens:');
       throw error;
     }
   }
@@ -511,7 +511,7 @@ export class StakingRewardsSystem extends EventEmitter {
       return claimedRewards;
 
     } catch (error) {
-      this.logger.error('Failed to claim rewards:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to claim rewards:');
       throw error;
     }
   }
@@ -896,7 +896,7 @@ export class StakingRewardsSystem extends EventEmitter {
       try {
         await this.updateAllRewards();
       } catch (error) {
-        this.logger.error('Reward calculation failed:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Reward calculation failed:');
       }
     }, 60 * 1000); // Update every minute
   }
@@ -906,7 +906,7 @@ export class StakingRewardsSystem extends EventEmitter {
       try {
         await this.processAutoCompounding();
       } catch (error) {
-        this.logger.error('Auto-compound processing failed:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Auto-compound processing failed:');
       }
     }, 60 * 60 * 1000); // Process every hour
   }
@@ -916,7 +916,7 @@ export class StakingRewardsSystem extends EventEmitter {
       try {
         await this.updatePoolMetrics();
       } catch (error) {
-        this.logger.error('Pool update failed:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Pool update failed:');
       }
     }, 5 * 60 * 1000); // Update every 5 minutes
   }

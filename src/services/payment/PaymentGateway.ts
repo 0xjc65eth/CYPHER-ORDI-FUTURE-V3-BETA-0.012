@@ -300,7 +300,6 @@ export interface PaymentAnalytics {
 }
 
 export class PaymentGateway extends EventEmitter {
-  private logger: EnhancedLogger;
   private providers: Map<string, PaymentProvider> = new Map();
   private transactions: Map<string, PaymentTransaction> = new Map();
   private userTransactions: Map<string, Set<string>> = new Map();
@@ -330,9 +329,8 @@ export class PaymentGateway extends EventEmitter {
 
   constructor() {
     super();
-    this.logger = new EnhancedLogger();
 
-    this.logger.info('Payment Gateway initialized', {
+    EnhancedLogger.info('Payment Gateway initialized', {
       component: 'PaymentGateway',
       supportedFiat: this.SUPPORTED_FIAT.length,
       supportedCrypto: this.SUPPORTED_CRYPTO.length
@@ -356,11 +354,11 @@ export class PaymentGateway extends EventEmitter {
       // Start compliance checker
       this.startComplianceChecker();
 
-      this.logger.info('Payment Gateway initialized successfully');
+      EnhancedLogger.info('Payment Gateway initialized successfully');
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Payment Gateway:', error);
+      EnhancedLogger.error('Failed to initialize Payment Gateway:', error);
       throw error;
     }
   }
@@ -446,7 +444,7 @@ export class PaymentGateway extends EventEmitter {
       // Process transaction with provider
       await this.processWithProvider(transaction);
 
-      this.logger.info('Deposit transaction created', {
+      EnhancedLogger.info('Deposit transaction created', {
         transactionId: transaction.id,
         userId,
         fiatAmount,
@@ -460,7 +458,7 @@ export class PaymentGateway extends EventEmitter {
       return transaction;
 
     } catch (error) {
-      this.logger.error('Failed to create deposit:', error);
+      EnhancedLogger.error('Failed to create deposit:', error);
       throw error;
     }
   }
@@ -546,7 +544,7 @@ export class PaymentGateway extends EventEmitter {
 
       await this.processWithProvider(transaction);
 
-      this.logger.info('Withdrawal transaction created', {
+      EnhancedLogger.info('Withdrawal transaction created', {
         transactionId: transaction.id,
         userId,
         cryptoAmount,
@@ -560,7 +558,7 @@ export class PaymentGateway extends EventEmitter {
       return transaction;
 
     } catch (error) {
-      this.logger.error('Failed to create withdrawal:', error);
+      EnhancedLogger.error('Failed to create withdrawal:', error);
       throw error;
     }
   }
@@ -603,7 +601,7 @@ export class PaymentGateway extends EventEmitter {
 
       this.kycProfiles.set(userId, profile);
 
-      this.logger.info('KYC submission received', {
+      EnhancedLogger.info('KYC submission received', {
         userId,
         level,
         riskScore: profile.riskAssessment.score
@@ -613,7 +611,7 @@ export class PaymentGateway extends EventEmitter {
       return profile;
 
     } catch (error) {
-      this.logger.error('Failed to submit KYC:', error);
+      EnhancedLogger.error('Failed to submit KYC:', error);
       throw error;
     }
   }
@@ -643,13 +641,13 @@ export class PaymentGateway extends EventEmitter {
           throw new Error(`Unsupported payment method type: ${type}`);
       }
 
-      this.logger.info('Payment method added', { userId, type, methodId });
+      EnhancedLogger.info('Payment method added', { userId, type, methodId });
       this.emit('paymentMethodAdded', { userId, type, methodId });
 
       return methodId;
 
     } catch (error) {
-      this.logger.error('Failed to add payment method:', error);
+      EnhancedLogger.error('Failed to add payment method:', error);
       throw error;
     }
   }
@@ -857,7 +855,7 @@ export class PaymentGateway extends EventEmitter {
       this.providers.set(provider.id, provider);
     }
 
-    this.logger.info('Payment providers loaded', { count: mockProviders.length });
+    EnhancedLogger.info('Payment providers loaded', { count: mockProviders.length });
   }
 
   private async checkKYCRequirements(userId: string, amount: number, provider: PaymentProvider): Promise<void> {
@@ -1216,7 +1214,7 @@ export class PaymentGateway extends EventEmitter {
     for (const transaction of this.transactions.values()) {
       if (transaction.status === 'processing' && 
           now - transaction.timestamps.submitted > 30 * 60 * 1000) { // 30 minutes
-        this.logger.warn('Transaction timeout detected', {
+        EnhancedLogger.warn('Transaction timeout detected', {
           transactionId: transaction.id,
           userId: transaction.userId
         });

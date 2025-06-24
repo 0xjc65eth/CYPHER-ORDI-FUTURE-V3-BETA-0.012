@@ -75,11 +75,26 @@ class RunesService {
   }
 
   async getRunesMarketData(): Promise<RuneMarketData[]> {
+    try {
+      // Import the real data service
+      const { runesRealDataService } = await import('./runes/RunesRealDataService');
+      
+      // Get real data from multiple sources
+      const realData = await runesRealDataService.getRealRunesMarketData();
+      
+      if (realData && realData.length > 0) {
+        return realData;
+      }
+    } catch (error) {
+      console.error('Failed to fetch real Runes data, falling back to mock:', error);
+    }
+
+    // Fallback to enhanced mock data if real data fails
     const runeNames = [
-      'UNCOMMON•GOODS', 'RSIC•METAPROTOCOL', 'DOG•GO•TO•THE•MOON',
-      'SATOSHI•NAKAMOTO', 'BITCOIN•PIZZA•DAY', 'MEME•ECONOMICS',
-      'ORDINAL•THEORY', 'DIGITAL•ARTIFACTS', 'RARE•SATS•CLUB',
-      'LIGHTNING•NETWORK'
+      'RSIC•GENESIS•RUNE', 'RUNESTONE', 'DOG•GO•TO•THE•MOON',
+      'SATOSHI•NAKAMOTO', 'UNCOMMON•GOODS', 'Z•Z•Z•Z•Z•FEHU•Z•Z•Z•Z•Z',
+      'WANKO•MANKO•RUNE', 'BILLION•DOLLAR•CAT', 'MEME•ECONOMICS',
+      'BITCOIN•WIZARDS', 'THE•TICKER•IS•WORLD•PEACE', 'ANARCHO•CATBUS'
     ];
 
     return runeNames.map((name, index) => {

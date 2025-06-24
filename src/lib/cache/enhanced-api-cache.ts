@@ -48,8 +48,8 @@ export class EnhancedAPICache {
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = {
       defaultTTL: 300000,           // 5 minutes
-      maxSize: 1000,                // Max 1000 entries
-      compressionThreshold: 1024,   // Compress data > 1KB
+      maxSize: 5000,                // Increased to 5000 entries
+      compressionThreshold: 10240,  // Increased to 10KB threshold
       enableCompression: false,     // Disabled for now (could use LZ-string)
       enableMetrics: true,
       ...config

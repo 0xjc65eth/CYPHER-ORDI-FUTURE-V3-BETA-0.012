@@ -219,7 +219,7 @@ export class DerivativesEngine extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Derivatives Engine:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Derivatives Engine:');
       throw error;
     }
   }
@@ -259,7 +259,7 @@ export class DerivativesEngine extends EventEmitter {
       return contract;
 
     } catch (error) {
-      this.logger.error('Failed to open position:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to open position:');
       throw error;
     }
   }
@@ -332,7 +332,7 @@ export class DerivativesEngine extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to close position:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to close position:');
       throw error;
     }
   }

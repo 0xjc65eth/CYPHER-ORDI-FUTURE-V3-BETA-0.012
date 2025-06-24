@@ -232,7 +232,7 @@ export class RunesAnalytics {
       return metrics;
 
     } catch (error) {
-      this.logger.error('Failed to get market metrics:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get market metrics:');
       throw error;
     }
   }
@@ -301,7 +301,7 @@ export class RunesAnalytics {
       return analysis;
 
     } catch (error) {
-      this.logger.error('Failed to analyze token:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to analyze token:');
       throw error;
     }
   }
@@ -365,7 +365,7 @@ export class RunesAnalytics {
       };
 
     } catch (error) {
-      this.logger.error('Failed to optimize yield:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to optimize yield:');
       throw error;
     }
   }
@@ -432,7 +432,7 @@ export class RunesAnalytics {
       };
 
     } catch (error) {
-      this.logger.error('Failed to analyze impermanent loss:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to analyze impermanent loss:');
       throw error;
     }
   }
@@ -490,7 +490,7 @@ export class RunesAnalytics {
       };
 
     } catch (error) {
-      this.logger.error('Failed to calculate portfolio metrics:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to calculate portfolio metrics:');
       throw error;
     }
   }

@@ -382,7 +382,7 @@ export function RunesTabFixed() {
 
   // Refs for performance
   const abortControllerRef = useRef<AbortController>();
-  const refreshIntervalRef = useRef<NodeJS.Timeout>();
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   // Load data effect with auto-refresh
   useEffect(() => {

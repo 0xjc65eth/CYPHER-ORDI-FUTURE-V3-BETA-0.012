@@ -45,8 +45,8 @@ export class OrdinalsWebSocketManager extends EventEmitter {
   private connections: Map<OrdinalsMarketplace, WebSocket> = new Map();
   private config: WebSocketConfig;
   private connectionStatus: Map<OrdinalsMarketplace, ConnectionStatus> = new Map();
-  private heartbeatIntervals: Map<OrdinalsMarketplace, NodeJS.Timeout> = new Map();
-  private reconnectTimeouts: Map<OrdinalsMarketplace, NodeJS.Timeout> = new Map();
+  private heartbeatIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
+  private reconnectTimeouts: Map<string, ReturnType<typeof setInterval>> = new Map();
   private isRunning: boolean = false;
   private messageQueue: Map<OrdinalsMarketplace, WebSocketMessage[]> = new Map();
 

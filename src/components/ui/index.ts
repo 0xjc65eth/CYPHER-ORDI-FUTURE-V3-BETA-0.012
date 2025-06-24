@@ -111,6 +111,7 @@ export { default as Select } from './select';
 export { default as Separator } from './separator';
 export { default as Slider } from './slider';
 export { default as Switch } from './switch';
+export * from './table';
 export { default as Tabs } from './tabs';
 export { default as Tooltip } from './tooltip';
 export { useToast } from './use-toast';

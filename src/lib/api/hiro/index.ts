@@ -76,7 +76,7 @@ export class HiroAPI {
       await this.runes.getStats()
       results.runes = true
     } catch (error) {
-      logger.error('Runes API health check failed:', error)
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Runes API health check failed:')
     }
 
     // Check Ordinals API
@@ -84,7 +84,7 @@ export class HiroAPI {
       await this.ordinals.getStats()
       results.ordinals = true
     } catch (error) {
-      logger.error('Ordinals API health check failed:', error)
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Ordinals API health check failed:')
     }
 
     // Check BRC-20 API
@@ -92,7 +92,7 @@ export class HiroAPI {
       await this.brc20.getStats()
       results.brc20 = true
     } catch (error) {
-      logger.error('BRC-20 API health check failed:', error)
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'BRC-20 API health check failed:')
     }
 
     // Check WebSocket
@@ -103,7 +103,7 @@ export class HiroAPI {
       this.cache.getStats()
       results.cache = true
     } catch (error) {
-      logger.error('Cache health check failed:', error)
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Cache health check failed:')
     }
 
     return results

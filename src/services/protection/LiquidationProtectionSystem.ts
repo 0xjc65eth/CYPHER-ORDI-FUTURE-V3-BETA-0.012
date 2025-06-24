@@ -346,7 +346,7 @@ export class LiquidationProtectionSystem extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Liquidation Protection System:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Liquidation Protection System:');
       throw error;
     }
   }
@@ -424,7 +424,7 @@ export class LiquidationProtectionSystem extends EventEmitter {
       return protectedPosition;
 
     } catch (error) {
-      this.logger.error('Failed to enable protection:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to enable protection:');
       throw error;
     }
   }
@@ -528,7 +528,7 @@ export class LiquidationProtectionSystem extends EventEmitter {
       return action;
 
     } catch (error) {
-      this.logger.error('Failed to execute protection action:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to execute protection action:');
       throw error;
     }
   }

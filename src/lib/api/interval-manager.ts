@@ -1,6 +1,6 @@
 // Global interval manager to prevent overlapping intervals and memory leaks
 class IntervalManager {
-  private intervals: Map<string, NodeJS.Timeout> = new Map();
+  private intervals: Map<string, ReturnType<typeof setInterval>> = new Map();
   private static instance: IntervalManager | null = null;
 
   constructor() {

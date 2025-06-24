@@ -301,11 +301,21 @@ export class OrdinalsMarketplaceFactory {
   }
 
   static getAllClients(config?: { uniSatApiKey?: string }) {
-    return {
-      [OrdinalsMarketplace.MAGIC_EDEN]: magicEdenAPI,
-      [OrdinalsMarketplace.OKX]: okxOrdinalsAPI,
-      [OrdinalsMarketplace.UNISAT]: new UniSatAPI(config?.uniSatApiKey),
-      [OrdinalsMarketplace.HIRO]: hiroOrdinalsService
-    };
+    try {
+      return {
+        [OrdinalsMarketplace.MAGIC_EDEN]: magicEdenAPI,
+        [OrdinalsMarketplace.OKX]: okxOrdinalsAPI,
+        [OrdinalsMarketplace.UNISAT]: new UniSatAPI(config?.uniSatApiKey),
+        [OrdinalsMarketplace.HIRO]: hiroOrdinalsService
+      };
+    } catch (error) {
+      console.warn('Error creating marketplace clients:', error);
+      return {
+        [OrdinalsMarketplace.MAGIC_EDEN]: null,
+        [OrdinalsMarketplace.OKX]: null,
+        [OrdinalsMarketplace.UNISAT]: null,
+        [OrdinalsMarketplace.HIRO]: null
+      };
+    }
   }
 }

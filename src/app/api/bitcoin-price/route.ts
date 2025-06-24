@@ -54,7 +54,7 @@ export async function GET() {
     return NextResponse.json(response);
     
   } catch (error) {
-    logger.error('CoinMarketCap API error:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'CoinMarketCap API error');
     
     // Secondary: Fallback to realDataService
     try {
@@ -78,7 +78,7 @@ export async function GET() {
         source: 'real-data-service-fallback'
       });
     } catch (realDataError) {
-      logger.error('Real data service fallback failed:', realDataError);
+      logger.error(realDataError instanceof Error ? realDataError : new Error(String(realDataError)), 'Real data service fallback failed');
     }
 
     // Tertiary: Fallback to Binance API
@@ -108,7 +108,7 @@ export async function GET() {
         });
       }
     } catch (binanceError) {
-      logger.error('Binance fallback also failed:', binanceError);
+      logger.error(binanceError instanceof Error ? binanceError : new Error(String(binanceError)), 'Binance fallback also failed');
     }
     
     // Final fallback to mock data

@@ -52,7 +52,7 @@ export class OKXConnector extends ExchangeConnector {
       this.webSocket = this.createWebSocket(this.wsURL);
       
     } catch (error) {
-      logger.error('Failed to connect to OKX:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to OKX:');
       throw error;
     }
   }
@@ -84,7 +84,7 @@ export class OKXConnector extends ExchangeConnector {
       this.emit('disconnected');
       
     } catch (error) {
-      logger.error('Error disconnecting from OKX:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error disconnecting from OKX:');
     }
   }
 
@@ -99,7 +99,7 @@ export class OKXConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Error handling OKX WebSocket message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling OKX WebSocket message:');
     }
   }
 
@@ -164,7 +164,7 @@ export class OKXConnector extends ExchangeConnector {
       });
       
     } catch (error) {
-      logger.error('Error handling OKX ticker update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling OKX ticker update:');
     }
   }
 
@@ -180,7 +180,7 @@ export class OKXConnector extends ExchangeConnector {
       });
       
     } catch (error) {
-      logger.error('Error handling OKX book update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling OKX book update:');
     }
   }
 
@@ -197,7 +197,7 @@ export class OKXConnector extends ExchangeConnector {
       });
       
     } catch (error) {
-      logger.error('Error handling OKX trade update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling OKX trade update:');
     }
   }
 
@@ -217,7 +217,7 @@ export class OKXConnector extends ExchangeConnector {
       });
       
     } catch (error) {
-      logger.error('Error handling OKX order update:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling OKX order update:');
     }
   }
 
@@ -537,7 +537,7 @@ export class OKXConnector extends ExchangeConnector {
       logger.debug(`Loaded info for ${response.data.length} OKX instruments`);
       
     } catch (error) {
-      logger.error('Failed to load OKX instruments:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load OKX instruments:');
       throw error;
     }
   }

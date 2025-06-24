@@ -178,7 +178,7 @@ async function fetchCryptoMarketData(options: any) {
 
     return cryptoAssets;
   } catch (error) {
-    logger.error('Failed to fetch real crypto market data, falling back to mock data:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to fetch real crypto market data, falling back to mock data');
     // Fallback to basic mock data if API fails
     return [
       {
@@ -304,7 +304,7 @@ async function fetchGlobalMarketMetrics() {
       lastUpdated: globalData.last_updated
     };
   } catch (error) {
-    logger.error('Failed to fetch real global metrics, falling back to mock data:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to fetch real global metrics, falling back to mock data');
     // Fallback to mock data if API fails
     return {
       totalMarketCap: 2500000000000,

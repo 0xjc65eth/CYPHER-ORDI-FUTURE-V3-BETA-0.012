@@ -224,7 +224,7 @@ export class GrafanaDashboard extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Grafana Dashboard service:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Grafana Dashboard service');
       throw error;
     }
   }
@@ -251,7 +251,7 @@ export class GrafanaDashboard extends EventEmitter {
       return response.uid;
 
     } catch (error) {
-      this.logger.error('Failed to create dashboard:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create dashboard:');
       throw error;
     }
   }
@@ -300,7 +300,7 @@ export class GrafanaDashboard extends EventEmitter {
       this.emit('metricsReceived', metrics);
 
     } catch (error) {
-      this.logger.error('Failed to send metrics:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to send metrics:');
     }
   }
 
@@ -744,7 +744,7 @@ export class GrafanaDashboard extends EventEmitter {
       return response.id;
 
     } catch (error) {
-      this.logger.error('Failed to setup alert:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to setup alert:');
       throw error;
     }
   }
@@ -781,7 +781,7 @@ export class GrafanaDashboard extends EventEmitter {
       return snapshot;
 
     } catch (error) {
-      this.logger.error('Failed to create snapshot:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create snapshot:');
       throw error;
     }
   }
@@ -819,7 +819,7 @@ export class GrafanaDashboard extends EventEmitter {
       await this.makeGrafanaRequest('/api/health');
       this.logger.info('Grafana connection test successful');
     } catch (error) {
-      this.logger.error('Grafana connection test failed:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Grafana connection test failed:');
       throw error;
     }
   }
@@ -899,7 +899,7 @@ export class GrafanaDashboard extends EventEmitter {
       try {
         await this.setupAlert(alert);
       } catch (error) {
-        this.logger.error('Failed to setup default alert:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to setup default alert:');
       }
     }
   }

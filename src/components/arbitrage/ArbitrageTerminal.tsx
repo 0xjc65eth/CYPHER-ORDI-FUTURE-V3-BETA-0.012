@@ -113,7 +113,7 @@ export default function ArbitrageTerminal({
 
     } catch (error: any) {
       setError(error.message);
-      logger.error('Failed to initialize arbitrage engine:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize arbitrage engine');
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +159,7 @@ export default function ArbitrageTerminal({
         // Get security status from security manager if available
         // setSecurityStatus(engine.getSecurityManager().getSecurityStatus());
       } catch (error) {
-        logger.error('Error updating system status:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Error updating system status');
       }
     };
 

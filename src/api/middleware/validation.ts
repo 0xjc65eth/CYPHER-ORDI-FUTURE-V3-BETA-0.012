@@ -6,7 +6,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 
-const logger = new EnhancedLogger();
 
 export interface ValidationRule {
   field: string;
@@ -56,7 +55,7 @@ export const validateRequest = (requiredFields: string[], options: ValidationOpt
 
       next();
     } catch (error) {
-      logger.error('Validation middleware error:', error);
+      EnhancedLogger.error('Validation middleware error:', error);
       res.status(500).json({
         success: false,
         error: 'Validation error'
@@ -94,7 +93,7 @@ export const validateWithRules = (rules: ValidationRule[], options: ValidationOp
 
       next();
     } catch (error) {
-      logger.error('Advanced validation error:', error);
+      EnhancedLogger.error('Advanced validation error:', error);
       res.status(500).json({
         success: false,
         error: 'Validation error'

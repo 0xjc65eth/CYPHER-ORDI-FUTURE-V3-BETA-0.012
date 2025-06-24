@@ -6,7 +6,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { EnhancedLogger } from '@/lib/enhanced-logger';
 
-const logger = new EnhancedLogger();
 
 interface RateLimitConfig {
   maxRequests: number;
@@ -116,7 +115,7 @@ export const rateLimit = (config: RateLimitConfig) => {
       }
 
       if (current > maxRequests) {
-        logger.warn('Rate limit exceeded', {
+        EnhancedLogger.warn('Rate limit exceeded', {
           key,
           current,
           limit: maxRequests,
@@ -156,7 +155,7 @@ export const rateLimit = (config: RateLimitConfig) => {
 
       next();
     } catch (error) {
-      logger.error('Rate limiting error:', error);
+      EnhancedLogger.error('Rate limiting error:', error);
       next(); // Continue on error to avoid blocking requests
     }
   };
@@ -203,7 +202,7 @@ export const slidingWindowRateLimit = (config: RateLimitConfig) => {
       const requests = await getSlidingWindowCount(key, windowStart, now);
 
       if (requests >= config.maxRequests) {
-        logger.warn('Sliding window rate limit exceeded', {
+        EnhancedLogger.warn('Sliding window rate limit exceeded', {
           key,
           requests,
           limit: config.maxRequests
@@ -229,7 +228,7 @@ export const slidingWindowRateLimit = (config: RateLimitConfig) => {
 
       next();
     } catch (error) {
-      logger.error('Sliding window rate limiting error:', error);
+      EnhancedLogger.error('Sliding window rate limiting error:', error);
       next();
     }
   };

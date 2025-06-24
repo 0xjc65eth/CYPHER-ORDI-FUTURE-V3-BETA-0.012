@@ -283,7 +283,7 @@ export class CoinMarketCapService {
       return data.data as T;
       
     } catch (error) {
-      logger.error('CoinMarketCap API request failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'CoinMarketCap API request failed');
       throw error;
     }
   }

@@ -327,7 +327,7 @@ export class MempoolService {
       
       return data as T;
     } catch (error) {
-      logger.error('Mempool API request failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Mempool API request failed');
       
       // Try to return cached data if request fails
       const staleData = this.cache.get(cacheKey);

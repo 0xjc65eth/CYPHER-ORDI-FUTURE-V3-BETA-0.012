@@ -88,7 +88,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
       }
     },
     onError: (error) => {
-      logger.error('Failed to place order:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to place order:');
     },
   });
 
@@ -124,7 +124,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
       }
     },
     onError: (error) => {
-      logger.error('Failed to cancel order:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to cancel order:');
     },
   });
 
@@ -142,7 +142,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
           walletAddress: address,
         });
       } catch (error) {
-        logger.error('Failed to estimate fees:', error);
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to estimate fees:');
         return null;
       }
     },
@@ -176,7 +176,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
       const signature = await signMessage(message);
       return signature;
     } catch (error) {
-      logger.error('Failed to sign order message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to sign order message:');
       throw new Error('Failed to sign order. Please try again.');
     }
   };
@@ -197,7 +197,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
       // This is a simplified approach - in production, use proper key derivation
       return `pub_${address}_${Date.now()}`;
     } catch (error) {
-      logger.error('Failed to get wallet public key:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get wallet public key:');
       throw new Error('Failed to get wallet public key');
     }
   };
@@ -255,7 +255,7 @@ export function useRunesDXOrders(options: UseRunesDXOrdersOptions = {}) {
     try {
       return await runesDXService.getOrderStatus(orderId);
     } catch (error) {
-      logger.error('Failed to get order status:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get order status:');
       return null;
     }
   }, []);

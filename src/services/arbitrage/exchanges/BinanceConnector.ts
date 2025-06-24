@@ -72,7 +72,7 @@ export class BinanceConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Failed to connect to Binance:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to Binance:');
       throw error;
     }
   }
@@ -92,7 +92,7 @@ export class BinanceConnector extends ExchangeConnector {
       this.emit('disconnected');
       
     } catch (error) {
-      logger.error('Error disconnecting from Binance:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error disconnecting from Binance:');
     }
   }
 
@@ -123,7 +123,7 @@ export class BinanceConnector extends ExchangeConnector {
       }
       
     } catch (error) {
-      logger.error('Error handling Binance WebSocket message:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling Binance WebSocket message:');
     }
   }
 
@@ -421,7 +421,7 @@ export class BinanceConnector extends ExchangeConnector {
       logger.debug(`Loaded info for ${exchangeInfo.symbols.length} Binance symbols`);
       
     } catch (error) {
-      logger.error('Failed to load Binance exchange info:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to load Binance exchange info:');
       throw error;
     }
   }
@@ -440,13 +440,13 @@ export class BinanceConnector extends ExchangeConnector {
           this.makeAuthenticatedRequest('PUT', '/v3/userDataStream', {
             listenKey: this.listenKey
           }).catch((error) => {
-            logger.error('Failed to keep alive Binance user data stream:', error);
+            logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to keep alive Binance user data stream:');
           });
         }
       }, 30 * 60 * 1000); // Every 30 minutes
       
     } catch (error) {
-      logger.error('Failed to connect to Binance user data stream:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to Binance user data stream:');
     }
   }
 
@@ -460,7 +460,7 @@ export class BinanceConnector extends ExchangeConnector {
       this.listenKey = null;
       
     } catch (error) {
-      logger.error('Failed to close Binance user data stream:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to close Binance user data stream:');
     }
   }
 

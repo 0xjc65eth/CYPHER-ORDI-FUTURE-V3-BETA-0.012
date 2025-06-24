@@ -4,11 +4,12 @@
 This is CYPHER ORDi Future V3 - Beta 0.012, a Bloomberg Terminal style cryptocurrency trading dashboard with advanced Bitcoin, Ordinals, and Runes trading capabilities.
 
 ## Current Version Status
-- **Version**: Beta 0.012
-- **Date**: June 13, 2025
-- **Status**: ✅ FULLY OPERATIONAL
+- **Version**: Beta 0.014
+- **Date**: June 23, 2025
+- **Status**: ✅ FULLY OPERATIONAL + RUNES PROFESSIONAL TERMINAL
 - **Server**: http://localhost:4444
 - **Branch**: bloomberg-terminal-restored-fixed
+- **Latest Fix**: Table UI component created - Runes dashboard operational
 
 ## Key Features Implemented
 ### Bloomberg Terminal Dashboard
@@ -23,6 +24,14 @@ This is CYPHER ORDi Future V3 - Beta 0.012, a Bloomberg Terminal style cryptocur
 - Bitcoin balance and transaction history
 - Ordinals and inscriptions viewing
 - Portfolio analytics and performance tracking
+
+### RUNES Professional Terminal (NEW!)
+- Real-time Runes market data from multiple sources (Hiro, UniSat, OKX)
+- Professional TradingView-style charts with candlesticks, lines, and volume
+- Comprehensive market table with sorting, filtering, and favorites
+- Live price updates and market analytics
+- Real Runes tickers: RSIC•GENESIS•RUNE, RUNESTONE, DOG•GO•TO•THE•MOON
+- Bloomberg Terminal-inspired design with professional layout
 
 ### CYPHER AI Analytics
 - Market sentiment analysis

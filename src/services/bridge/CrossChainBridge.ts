@@ -347,7 +347,7 @@ export class CrossChainBridge extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize Cross-Chain Bridge:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Cross-Chain Bridge:');
       throw error;
     }
   }
@@ -411,7 +411,7 @@ export class CrossChainBridge extends EventEmitter {
       };
 
     } catch (error) {
-      this.logger.error('Failed to get bridge quote:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get bridge quote:');
       throw error;
     }
   }
@@ -497,7 +497,7 @@ export class CrossChainBridge extends EventEmitter {
       return transaction;
 
     } catch (error) {
-      this.logger.error('Failed to execute bridge:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to execute bridge:');
       throw error;
     }
   }

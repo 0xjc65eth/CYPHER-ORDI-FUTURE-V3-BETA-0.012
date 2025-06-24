@@ -48,7 +48,7 @@ export function RealTimeMonitor() {
   const [marketData, setMarketData] = useState<MarketTick[]>([]);
   const [currentMetrics, setCurrentMetrics] = useState<SystemMetrics | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     // Simular dados em tempo real

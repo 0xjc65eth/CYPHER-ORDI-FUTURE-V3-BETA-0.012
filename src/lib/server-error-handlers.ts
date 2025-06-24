@@ -5,11 +5,17 @@ import { intervalManager } from './api/interval-manager';
 import { requestDeduplicator } from './api/request-deduplicator';
 
 if (typeof process !== 'undefined') {
+  // Fix memory leak warnings by increasing max listeners
+  process.setMaxListeners(20);
+  
   // Enhanced error tracking
   let errorCount = 0;
   let lastErrorTime = 0;
   const ERROR_THRESHOLD = 10;
   const ERROR_WINDOW = 60000; // 1 minute
+  
+  // Track existing listeners to prevent duplicates
+  const existingListeners = new Set();
 
   // Handle uncaught exceptions with enhanced logging
   process.on('uncaughtException', (error: Error) => {

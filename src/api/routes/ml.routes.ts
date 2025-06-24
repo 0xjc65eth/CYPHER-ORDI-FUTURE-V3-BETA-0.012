@@ -10,7 +10,6 @@ import { validateRequest } from '@/api/middleware/validation';
 import { rateLimit } from '@/api/middleware/rateLimit';
 
 const router = Router();
-const logger = new EnhancedLogger();
 
 // Get prediction service
 const getPredictionService = () => systemIntegrator.getService('ml');
@@ -43,7 +42,7 @@ router.post('/predict', mlRateLimit, validateRequest(['symbol']), async (req, re
     });
 
   } catch (error) {
-    logger.error('ML prediction failed:', error);
+    EnhancedLogger.error('ML prediction failed:', error);
     res.status(500).json({
       success: false,
       error: 'Prediction generation failed'
@@ -75,7 +74,7 @@ router.get('/models', mlRateLimit, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get ML models:', error);
+    EnhancedLogger.error('Failed to get ML models:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve models'
@@ -113,7 +112,7 @@ router.post('/train', mlRateLimit, validateRequest(['symbol', 'data']), async (r
     });
 
   } catch (error) {
-    logger.error('ML training failed:', error);
+    EnhancedLogger.error('ML training failed:', error);
     res.status(500).json({
       success: false,
       error: 'Model training failed'
@@ -147,7 +146,7 @@ router.get('/performance/:symbol', mlRateLimit, async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get ML performance:', error);
+    EnhancedLogger.error('Failed to get ML performance:', error);
     res.status(500).json({
       success: false,
       error: 'Could not retrieve performance metrics'
@@ -183,7 +182,7 @@ router.post('/backtest', mlRateLimit, validateRequest(['symbol', 'strategy']), a
     });
 
   } catch (error) {
-    logger.error('ML backtest failed:', error);
+    EnhancedLogger.error('ML backtest failed:', error);
     res.status(500).json({
       success: false,
       error: 'Backtest execution failed'
@@ -223,7 +222,7 @@ router.get('/status', async (req, res) => {
     });
 
   } catch (error) {
-    logger.error('Failed to get ML status:', error);
+    EnhancedLogger.error('Failed to get ML status:', error);
     res.status(500).json({
       success: false,
       error: 'Status unavailable'

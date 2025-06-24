@@ -69,7 +69,7 @@ export class TwoFactorAuth {
         backupCodes,
       };
     } catch (error) {
-      logger.error('Failed to generate 2FA secret:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate 2FA secret:');
       throw new Error('Failed to generate 2FA secret');
     }
   }
@@ -102,7 +102,7 @@ export class TwoFactorAuth {
 
       return verified;
     } catch (error) {
-      logger.error('Failed to verify 2FA token:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to verify 2FA token:');
       return false;
     }
   }
@@ -128,7 +128,7 @@ export class TwoFactorAuth {
       logger.info(`2FA enabled for user: ${userId}`);
       return true;
     } catch (error) {
-      logger.error('Failed to enable 2FA:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to enable 2FA:');
       return false;
     }
   }
@@ -148,7 +148,7 @@ export class TwoFactorAuth {
       logger.info(`2FA disabled for user: ${userId}`);
       return true;
     } catch (error) {
-      logger.error('Failed to disable 2FA:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to disable 2FA:');
       return false;
     }
   }
@@ -176,7 +176,7 @@ export class TwoFactorAuth {
       logger.info(`Backup code used for user: ${userId}`);
       return true;
     } catch (error) {
-      logger.error('Failed to verify backup code:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to verify backup code:');
       return false;
     }
   }
@@ -198,7 +198,7 @@ export class TwoFactorAuth {
       logger.info(`Backup codes regenerated for user: ${userId}`);
       return newCodes;
     } catch (error) {
-      logger.error('Failed to regenerate backup codes:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to regenerate backup codes:');
       throw error;
     }
   }
@@ -209,7 +209,7 @@ export class TwoFactorAuth {
       const twoFactorData = await this.getTwoFactorData(userId);
       return twoFactorData?.enabled || false;
     } catch (error) {
-      logger.error('Failed to check 2FA status:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to check 2FA status:');
       return false;
     }
   }
@@ -237,7 +237,7 @@ export class TwoFactorAuth {
       await this.vault.storeSecret(`mfa/${userId}`, mfaConfig);
       logger.info(`MFA configured for user: ${userId}`);
     } catch (error) {
-      logger.error('Failed to setup MFA:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to setup MFA:');
       throw error;
     }
   }
@@ -257,7 +257,7 @@ export class TwoFactorAuth {
       // Aqui você integraria com serviços de SMS/Email
       logger.info(`Verification code sent via ${method} for user: ${userId}`);
     } catch (error) {
-      logger.error('Failed to send verification code:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to send verification code:');
       throw error;
     }
   }
@@ -291,7 +291,7 @@ export class TwoFactorAuth {
       await this.vault.storeSecret(`verification/${userId}/${method}`, null);
       return true;
     } catch (error) {
-      logger.error('Failed to verify code:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to verify code:');
       return false;
     }
   }

@@ -20,7 +20,7 @@ export function useIntervalSafe(
   
   // Refs para evitar race conditions
   const savedCallback = useRef<() => void | Promise<void>>();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
   const isRunningRef = useRef(false);
 
@@ -115,7 +115,7 @@ export function useTimeoutSafe(
   enabled: boolean = true
 ) {
   const savedCallback = useRef<() => void | Promise<void>>();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
   // Salvar callback mais recente
@@ -199,7 +199,7 @@ export function useDebounceSafe<T extends (...args: any[]) => any>(
   delay: number,
   deps: React.DependencyList = []
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
   const debouncedCallback = useCallback(
@@ -241,7 +241,7 @@ export function useThrottleSafe<T extends (...args: any[]) => any>(
   deps: React.DependencyList = []
 ): T {
   const lastRunRef = useRef(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
   const throttledCallback = useCallback(

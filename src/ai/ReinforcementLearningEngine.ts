@@ -75,10 +75,10 @@ export interface TradingAction {
 }
 
 export interface ReplayBuffer {
-  states: tf.Tensor[];
+  states: any[];
   actions: number[];
   rewards: number[];
-  nextStates: tf.Tensor[];
+  nextStates: any[];
   dones: boolean[];
   capacity: number;
   size: number;
@@ -89,9 +89,9 @@ export interface ReplayBuffer {
  * 🧠 Deep Q-Network Implementation
  */
 export class DQNAgent {
-  private qNetwork: tf.LayersModel;
-  private targetNetwork: tf.LayersModel;
-  private optimizer: tf.Optimizer;
+  private qNetwork: any;
+  private targetNetwork: any;
+  private optimizer: any;
   private replayBuffer: ReplayBuffer;
   
   private epsilon: number = 1.0; // Exploration rate
@@ -153,7 +153,7 @@ export class DQNAgent {
   /**
    * Build neural network architecture
    */
-  private buildNetwork(inputSize: number, outputSize: number): tf.LayersModel {
+  private buildNetwork(inputSize: number, outputSize: number): any {
     const model = tf.sequential({
       layers: [
         // Input layer
@@ -218,9 +218,9 @@ export class DQNAgent {
     }
     
     // Exploitation: use Q-network
-    const stateTensor = tf.tensor2d([state]);
-    const qValues = this.qNetwork.predict(stateTensor) as tf.Tensor;
-    const action = tf.argMax(qValues, 1).dataSync()[0];
+    const stateTensor = tf.tensor([state]);
+    const qValues = this.qNetwork.predict(stateTensor) as any;
+    const action = qValues.argMax(1).dataSync()[0];
     
     stateTensor.dispose();
     qValues.dispose();
@@ -241,8 +241,8 @@ export class DQNAgent {
     const idx = this.replayBuffer.pointer;
     
     // Convert to tensors
-    const stateTensor = tf.tensor1d(state);
-    const nextStateTensor = tf.tensor1d(nextState);
+    const stateTensor = tf.tensor(state);
+    const nextStateTensor = tf.tensor(nextState);
     
     // Store in buffer
     if (this.replayBuffer.size < this.replayBuffer.capacity) {
@@ -302,44 +302,42 @@ export class DQNAgent {
     }
     
     // Convert to tensors
-    const statesTensor = tf.tensor2d(states);
-    const nextStatesTensor = tf.tensor2d(nextStates);
-    const actionsTensor = tf.tensor1d(actions, 'int32');
-    const rewardsTensor = tf.tensor1d(rewards);
-    const donesTensor = tf.tensor1d(dones.map(d => d ? 0 : 1));
-    const weightsTensor = tf.tensor1d(weights);
+    const statesTensor = tf.tensor(states);
+    const nextStatesTensor = tf.tensor(nextStates);
+    const actionsTensor = tf.tensor(actions, [actions.length], 'int32');
+    const rewardsTensor = tf.tensor(rewards);
+    const donesTensor = tf.tensor(dones.map(d => d ? 0 : 1));
+    const weightsTensor = tf.tensor(weights);
     
     // Calculate loss and update
     const loss = await this.optimizer.minimize(() => {
       // Current Q values
-      const qValues = this.qNetwork.predict(statesTensor) as tf.Tensor;
-      const currentQValues = tf.gather(qValues, actionsTensor, 1, 1);
+      const qValues = this.qNetwork.predict(statesTensor) as any;
+      const currentQValues = qValues.gather(actionsTensor, 1);
       
       // Target Q values
-      let targetQValues: tf.Tensor;
+      let targetQValues: any;
       
       if (this.useDoubleDQN) {
         // Double DQN: use online network to select action, target network to evaluate
-        const nextQValues = this.qNetwork.predict(nextStatesTensor) as tf.Tensor;
-        const nextActions = tf.argMax(nextQValues, 1);
-        const targetNextQValues = this.targetNetwork.predict(nextStatesTensor) as tf.Tensor;
-        const selectedQValues = tf.gather(targetNextQValues, nextActions, 1, 1);
-        targetQValues = tf.add(
-          rewardsTensor,
-          tf.mul(tf.mul(selectedQValues, donesTensor), this.gamma)
+        const nextQValues = this.qNetwork.predict(nextStatesTensor) as any;
+        const nextActions = nextQValues.argMax(1);
+        const targetNextQValues = this.targetNetwork.predict(nextStatesTensor) as any;
+        const selectedQValues = targetNextQValues.gather(nextActions, 1);
+        targetQValues = rewardsTensor.add(
+          selectedQValues.mul(donesTensor).mul(this.gamma)
         );
       } else {
         // Standard DQN
-        const nextQValues = this.targetNetwork.predict(nextStatesTensor) as tf.Tensor;
-        const maxNextQValues = tf.max(nextQValues, 1);
-        targetQValues = tf.add(
-          rewardsTensor,
-          tf.mul(tf.mul(maxNextQValues, donesTensor), this.gamma)
+        const nextQValues = this.targetNetwork.predict(nextStatesTensor) as any;
+        const maxNextQValues = nextQValues.max(1);
+        targetQValues = rewardsTensor.add(
+          maxNextQValues.mul(donesTensor).mul(this.gamma)
         );
       }
       
       // Calculate TD error for PER
-      const tdErrors = tf.abs(tf.sub(targetQValues, currentQValues));
+      const tdErrors = targetQValues.sub(currentQValues).abs();
       
       // Update priorities if using PER
       if (this.usePER) {
@@ -350,10 +348,10 @@ export class DQNAgent {
       }
       
       // Weighted MSE loss
-      const squaredError = tf.square(tf.sub(targetQValues, currentQValues));
-      const weightedLoss = tf.mul(squaredError, weightsTensor);
+      const squaredError = targetQValues.sub(currentQValues).square();
+      const weightedLoss = squaredError.mul(weightsTensor);
       
-      return tf.mean(weightedLoss);
+      return weightedLoss.mean();
     });
     
     // Cleanup tensors
@@ -380,7 +378,7 @@ export class DQNAgent {
       this.beta = Math.min(1.0, this.beta + this.betaIncrease);
     }
     
-    return (loss as tf.Scalar).dataSync()[0];
+    return (loss as any).dataSync()[0];
   }
   
   /**
@@ -459,11 +457,11 @@ export class DQNAgent {
  * 🎯 Proximal Policy Optimization (PPO) Agent
  */
 export class PPOAgent {
-  private actor: tf.LayersModel;
-  private critic: tf.LayersModel;
-  private oldActor: tf.LayersModel;
+  private actor: any;
+  private critic: any;
+  private oldActor: any;
   
-  private optimizer: tf.Optimizer;
+  private optimizer: any;
   private gamma: number = 0.99;
   private lambda: number = 0.95; // GAE lambda
   private clipRatio: number = 0.2;
@@ -475,7 +473,7 @@ export class PPOAgent {
   
   // Buffer for trajectory collection
   private trajectoryBuffer: {
-    states: tf.Tensor[];
+    states: any[];
     actions: number[];
     rewards: number[];
     values: number[];
@@ -521,27 +519,27 @@ export class PPOAgent {
   /**
    * Build actor network (policy)
    */
-  private buildActorNetwork(inputSize: number, outputSize: number): tf.LayersModel {
+  private buildActorNetwork(inputSize: number, outputSize: number): any {
     const input = tf.input({ shape: [inputSize] });
     
     let x = tf.layers.dense({
       units: 256,
       activation: 'tanh',
       kernelInitializer: 'glorotUniform'
-    }).apply(input) as tf.SymbolicTensor;
+    }).apply(input) as any;
     
     x = tf.layers.dense({
       units: 256,
       activation: 'tanh',
       kernelInitializer: 'glorotUniform'
-    }).apply(x) as tf.SymbolicTensor;
+    }).apply(x) as any;
     
     // Output layer with softmax for action probabilities
     const output = tf.layers.dense({
       units: outputSize,
       activation: 'softmax',
       kernelInitializer: 'glorotUniform'
-    }).apply(x) as tf.SymbolicTensor;
+    }).apply(x) as any;
     
     const model = tf.model({ inputs: input, outputs: output });
     
@@ -551,7 +549,7 @@ export class PPOAgent {
   /**
    * Build critic network (value function)
    */
-  private buildCriticNetwork(inputSize: number): tf.LayersModel {
+  private buildCriticNetwork(inputSize: number): any {
     const model = tf.sequential({
       layers: [
         tf.layers.dense({
@@ -580,10 +578,10 @@ export class PPOAgent {
    * Select action from policy
    */
   async selectAction(state: number[]): Promise<{ action: number; logProb: number; value: number }> {
-    const stateTensor = tf.tensor2d([state]);
+    const stateTensor = tf.tensor([state]);
     
     // Get action probabilities from actor
-    const actionProbs = this.actor.predict(stateTensor) as tf.Tensor;
+    const actionProbs = this.actor.predict(stateTensor) as any;
     const probs = await actionProbs.array() as number[][];
     
     // Sample action from probability distribution
@@ -593,7 +591,7 @@ export class PPOAgent {
     const logProb = Math.log(probs[0][action] + 1e-8);
     
     // Get value estimate from critic
-    const valueTensor = this.critic.predict(stateTensor) as tf.Tensor;
+    const valueTensor = this.critic.predict(stateTensor) as any;
     const value = (await valueTensor.array() as number[][])[0][0];
     
     // Cleanup
@@ -615,7 +613,7 @@ export class PPOAgent {
     logProb: number,
     done: boolean
   ): void {
-    this.trajectoryBuffer.states.push(tf.tensor1d(state));
+    this.trajectoryBuffer.states.push(tf.tensor(state));
     this.trajectoryBuffer.actions.push(action);
     this.trajectoryBuffer.rewards.push(reward);
     this.trajectoryBuffer.values.push(value);
@@ -637,10 +635,10 @@ export class PPOAgent {
     
     // Convert trajectory to tensors
     const states = tf.stack(this.trajectoryBuffer.states);
-    const actions = tf.tensor1d(this.trajectoryBuffer.actions, 'int32');
-    const oldLogProbs = tf.tensor1d(this.trajectoryBuffer.logProbs);
-    const advantagesTensor = tf.tensor1d(advantages);
-    const returnsTensor = tf.tensor1d(returns);
+    const actions = tf.tensor(this.trajectoryBuffer.actions, [this.trajectoryBuffer.actions.length], 'int32');
+    const oldLogProbs = tf.tensor(this.trajectoryBuffer.logProbs);
+    const advantagesTensor = tf.tensor(advantages);
+    const returnsTensor = tf.tensor(returns);
     
     let totalPolicyLoss = 0;
     let totalValueLoss = 0;
@@ -648,59 +646,54 @@ export class PPOAgent {
     // PPO epochs
     for (let epoch = 0; epoch < this.epochs; epoch++) {
       // Generate mini-batches
-      const indices = tf.util.createShuffledIndices(this.trajectoryBuffer.states.length);
+      const indices = this.createShuffledIndices(this.trajectoryBuffer.states.length);
       
       for (let i = 0; i < indices.length; i += this.miniBatchSize) {
         const batchIndices = indices.slice(i, Math.min(i + this.miniBatchSize, indices.length));
         const batchSize = batchIndices.length;
         
         // Get batch data
-        const batchStates = tf.gather(states, batchIndices);
-        const batchActions = tf.gather(actions, batchIndices);
-        const batchOldLogProbs = tf.gather(oldLogProbs, batchIndices);
-        const batchAdvantages = tf.gather(advantagesTensor, batchIndices);
-        const batchReturns = tf.gather(returnsTensor, batchIndices);
+        const batchStates = states.gather(batchIndices);
+        const batchActions = actions.gather(batchIndices);
+        const batchOldLogProbs = oldLogProbs.gather(batchIndices);
+        const batchAdvantages = advantagesTensor.gather(batchIndices);
+        const batchReturns = returnsTensor.gather(batchIndices);
         
         // Normalize advantages
-        const advMean = tf.mean(batchAdvantages);
-        const advStd = tf.add(tf.sqrt(tf.moments(batchAdvantages).variance), 1e-8);
-        const normalizedAdvantages = tf.div(tf.sub(batchAdvantages, advMean), advStd);
+        const advMean = batchAdvantages.mean();
+        const advStd = tf.sqrt(tf.moments(batchAdvantages).variance).add(1e-8);
+        const normalizedAdvantages = batchAdvantages.sub(advMean).div(advStd);
         
         // Calculate losses
         const losses = await this.optimizer.minimize(() => {
           // Actor loss (PPO-Clip)
-          const actionProbs = this.actor.predict(batchStates) as tf.Tensor;
+          const actionProbs = this.actor.predict(batchStates) as any;
           const indices = tf.range(0, batchSize, 1, 'int32');
-          const gatheredProbs = tf.gather(actionProbs, batchActions, 1, 1);
-          const newLogProbs = tf.log(tf.add(gatheredProbs, 1e-8));
+          const gatheredProbs = actionProbs.gather(batchActions, 1);
+          const newLogProbs = tf.log(gatheredProbs.add(1e-8));
           
-          const ratio = tf.exp(tf.sub(newLogProbs, batchOldLogProbs));
+          const ratio = newLogProbs.sub(batchOldLogProbs).exp();
           const clippedRatio = tf.clipByValue(ratio, 1 - this.clipRatio, 1 + this.clipRatio);
           
-          const policyLoss = tf.neg(tf.mean(
-            tf.minimum(
-              tf.mul(ratio, normalizedAdvantages),
-              tf.mul(clippedRatio, normalizedAdvantages)
-            )
-          ));
+          const policyLoss = tf.minimum(
+              ratio.mul(normalizedAdvantages),
+              clippedRatio.mul(normalizedAdvantages)
+            ).mean().neg();
           
           // Entropy bonus
-          const entropy = tf.neg(tf.mean(
-            tf.sum(tf.mul(actionProbs, tf.log(tf.add(actionProbs, 1e-8))), 1)
-          ));
+          const entropy = tf.sum(actionProbs.mul(tf.log(actionProbs.add(1e-8))), 1)
+            .mean().neg();
           
           // Value loss
-          const values = tf.squeeze(this.critic.predict(batchStates) as tf.Tensor);
-          const valueLoss = tf.mean(tf.square(tf.sub(batchReturns, values)));
+          const values = tf.squeeze(this.critic.predict(batchStates) as any);
+          const valueLoss = batchReturns.sub(values).square().mean();
           
           // Total loss
-          const totalLoss = tf.add(
-            tf.add(policyLoss, tf.mul(valueLoss, this.valueCoeff)),
-            tf.mul(entropy, -this.entropyCoeff)
-          );
+          const totalLoss = policyLoss.add(valueLoss.mul(this.valueCoeff))
+            .add(entropy.mul(-this.entropyCoeff));
           
-          totalPolicyLoss += (policyLoss as tf.Scalar).dataSync()[0];
-          totalValueLoss += (valueLoss as tf.Scalar).dataSync()[0];
+          totalPolicyLoss += (policyLoss as any).dataSync()[0];
+          totalValueLoss += (valueLoss as any).dataSync()[0];
           
           return totalLoss;
         });
@@ -745,7 +738,7 @@ export class PPOAgent {
     
     // Get final value estimate
     const lastState = this.trajectoryBuffer.states[this.trajectoryBuffer.states.length - 1];
-    const lastValueTensor = this.critic.predict(tf.expandDims(lastState, 0)) as tf.Tensor;
+    const lastValueTensor = this.critic.predict(tf.expandDims(lastState, 0)) as any;
     const lastValue = (await lastValueTensor.array() as number[][])[0][0];
     lastValueTensor.dispose();
     
@@ -781,6 +774,18 @@ export class PPOAgent {
     return returns;
   }
   
+  /**
+   * Create shuffled indices array
+   */
+  private createShuffledIndices(length: number): number[] {
+    const indices = Array.from({ length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  }
+
   /**
    * Sample from probability distribution
    */

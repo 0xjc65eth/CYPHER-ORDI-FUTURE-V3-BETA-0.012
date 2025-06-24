@@ -242,7 +242,7 @@ export default function InscriptionExplorer({ searchQuery = '' }: InscriptionExp
                         <div className="grid grid-cols-4 gap-8 text-sm">
                           <div>
                             <span className="text-muted-foreground">Size:</span>
-                            <span className="ml-2 font-mono">{(inscription.size / 1024).toFixed(2)} KB</span>
+                            <span className="ml-2 font-mono">{(inscription.size ? (inscription.size / 1024).toFixed(2) : '0.00')} KB</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Fee:</span>
@@ -319,7 +319,7 @@ export default function InscriptionExplorer({ searchQuery = '' }: InscriptionExp
                       </div>
                       <div>
                         <p className="font-mono text-sm">{inscription.id}</p>
-                        <p className="text-xs text-muted-foreground">{inscription.content} • {(inscription.size / 1024).toFixed(2)} KB</p>
+                        <p className="text-xs text-muted-foreground">{inscription.content} • {(inscription.size ? (inscription.size / 1024).toFixed(2) : '0.00')} KB</p>
                       </div>
                     </div>
                     <div className="text-right">

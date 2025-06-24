@@ -97,7 +97,7 @@ export class SecurityManager {
       
       logger.info('Security Manager initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize Security Manager:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize Security Manager:');
       throw error;
     }
   }
@@ -247,7 +247,7 @@ export class SecurityManager {
       return true;
       
     } catch (error) {
-      logger.error('Security validation failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Security validation failed:');
       this.createSecurityAlert('SUSPICIOUS_ACTIVITY', 'CRITICAL', 
         `Security validation error: ${error.message}`);
       return false;

@@ -1,7 +1,8 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
+import { initializeWalletProviderPatches } from '@/lib/wallet-providers-patch'
 import { Provider } from 'react-redux'
 import { ErrorBoundary } from 'react-error-boundary'
 import { store } from '@/store'
@@ -10,6 +11,10 @@ import { NotificationContainer } from '@/components/notifications'
 import { NotificationSystemActivator } from '@/components/notifications/NotificationSystemActivator'
 import { AuthProvider } from '@/lib/auth/AuthContext'
 import { WalletProvider } from '@/contexts/WalletContext'
+// Temporarily use simple provider to avoid BigInt issues
+import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/SimpleLaserEyesProvider'
+// import { WalletProvider as LaserEyesWalletProvider } from '@/providers/WalletProvider'
+// import { LaserEyesSafeWrapper } from '@/components/LaserEyesSafeWrapper'
 import { AudioManager } from '@/components/notifications/AudioManager'
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration'
 
@@ -111,9 +116,11 @@ function SafeWalletProvider({ children }: { children: React.ReactNode }) {
       FallbackComponent={ErrorFallback}
       onError={(error) => console.error('Wallet Provider Error:', error)}
     >
-      <WalletProvider>
-        {children}
-      </WalletProvider>
+      <LaserEyesWalletProvider>
+        <WalletProvider>
+          {children}
+        </WalletProvider>
+      </LaserEyesWalletProvider>
     </ErrorBoundary>
   )
 }
@@ -132,6 +139,11 @@ function SafeNotificationProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // Apply wallet provider patches on mount
+  useEffect(() => {
+    initializeWalletProviderPatches();
+  }, []);
+
   return (
     <ErrorBoundary
       FallbackComponent={ErrorFallback}

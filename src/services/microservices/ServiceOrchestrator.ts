@@ -298,7 +298,7 @@ export class ServiceOrchestrator extends EventEmitter {
       this.emit('started');
 
     } catch (error) {
-      this.logger.error('Failed to start service orchestrator:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start service orchestrator:');
       this.isRunning = false;
       throw error;
     }
@@ -322,7 +322,7 @@ export class ServiceOrchestrator extends EventEmitter {
       this.emit('stopped');
 
     } catch (error) {
-      this.logger.error('Error stopping service orchestrator:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error stopping service orchestrator:');
     }
   }
 
@@ -349,7 +349,7 @@ export class ServiceOrchestrator extends EventEmitter {
       this.emit('serviceRegistered', { service: config.name, config });
 
     } catch (error) {
-      this.logger.error('Failed to register service:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to register service:');
       throw error;
     }
   }

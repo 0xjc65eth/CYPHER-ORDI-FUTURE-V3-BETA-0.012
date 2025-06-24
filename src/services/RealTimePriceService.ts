@@ -207,7 +207,7 @@ class RealTimePriceService {
       }
 
     } catch (error) {
-      logger.error('Failed to update prices:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to update prices');
       
       // Fallback to individual symbol updates
       await this.fallbackPriceUpdates();

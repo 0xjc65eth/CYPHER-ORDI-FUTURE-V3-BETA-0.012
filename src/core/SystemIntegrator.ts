@@ -120,7 +120,6 @@ export interface SystemMetrics {
 }
 
 export class SystemIntegrator extends EventEmitter {
-  private logger: EnhancedLogger;
   private config: SystemConfiguration;
   private services: Map<string, any> = new Map();
   private serviceHealth: Map<string, ServiceHealth> = new Map();
@@ -151,10 +150,9 @@ export class SystemIntegrator extends EventEmitter {
 
   constructor(config: SystemConfiguration) {
     super();
-    this.logger = new EnhancedLogger();
     this.config = config;
 
-    this.logger.info('System Integrator initialized', {
+    EnhancedLogger.info('System Integrator initialized', {
       environment: config.environment,
       version: config.version,
       services: Object.keys(this.SERVICE_REGISTRY).length
@@ -166,12 +164,12 @@ export class SystemIntegrator extends EventEmitter {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      this.logger.warn('System already initialized');
+      EnhancedLogger.warn('System already initialized');
       return;
     }
 
     try {
-      this.logger.info('Starting system initialization...');
+      EnhancedLogger.info('Starting system initialization...');
 
       // Validate configuration
       this.validateConfiguration();
@@ -196,11 +194,11 @@ export class SystemIntegrator extends EventEmitter {
       this.startMetricsCollection();
 
       this.isInitialized = true;
-      this.logger.info('System initialization completed successfully');
+      EnhancedLogger.info('System initialization completed successfully');
       this.emit('systemInitialized');
 
     } catch (error) {
-      this.logger.error('System initialization failed:', error);
+      EnhancedLogger.error('System initialization failed:', error);
       throw error;
     }
   }
@@ -209,7 +207,7 @@ export class SystemIntegrator extends EventEmitter {
    * Shutdown the system gracefully
    */
   async shutdown(): Promise<void> {
-    this.logger.info('Starting system shutdown...');
+    EnhancedLogger.info('Starting system shutdown...');
 
     try {
       // Stop health monitoring
@@ -223,11 +221,11 @@ export class SystemIntegrator extends EventEmitter {
       }
 
       this.isInitialized = false;
-      this.logger.info('System shutdown completed');
+      EnhancedLogger.info('System shutdown completed');
       this.emit('systemShutdown');
 
     } catch (error) {
-      this.logger.error('System shutdown error:', error);
+      EnhancedLogger.error('System shutdown error:', error);
       throw error;
     }
   }
@@ -363,7 +361,7 @@ export class SystemIntegrator extends EventEmitter {
         throw new Error(`Service ${serviceId} not found in registry`);
       }
 
-      this.logger.info(`Initializing ${serviceInfo.name}...`);
+      EnhancedLogger.info(`Initializing ${serviceInfo.name}...`);
 
       // Initialize the service
       if (serviceInfo.instance.initialize) {
@@ -383,11 +381,11 @@ export class SystemIntegrator extends EventEmitter {
         responseTime: 0
       });
 
-      this.logger.info(`${serviceInfo.name} initialized successfully`);
+      EnhancedLogger.info(`${serviceInfo.name} initialized successfully`);
       this.emit('serviceInitialized', { serviceId, name: serviceInfo.name });
 
     } catch (error) {
-      this.logger.error(`Failed to initialize service ${serviceId}:`, error);
+      EnhancedLogger.error(`Failed to initialize service ${serviceId}:`, error);
       throw error;
     }
   }
@@ -398,7 +396,7 @@ export class SystemIntegrator extends EventEmitter {
       if (!service) return;
 
       const serviceInfo = this.SERVICE_REGISTRY[serviceId as keyof typeof this.SERVICE_REGISTRY];
-      this.logger.info(`Shutting down ${serviceInfo.name}...`);
+      EnhancedLogger.info(`Shutting down ${serviceInfo.name}...`);
 
       // Call shutdown method if available
       if (service.shutdown) {
@@ -408,11 +406,11 @@ export class SystemIntegrator extends EventEmitter {
       this.services.delete(serviceId);
       this.serviceHealth.delete(serviceId);
 
-      this.logger.info(`${serviceInfo.name} shut down successfully`);
+      EnhancedLogger.info(`${serviceInfo.name} shut down successfully`);
       this.emit('serviceShutdown', { serviceId, name: serviceInfo.name });
 
     } catch (error) {
-      this.logger.error(`Failed to shutdown service ${serviceId}:`, error);
+      EnhancedLogger.error(`Failed to shutdown service ${serviceId}:`, error);
       // Continue with shutdown even if individual services fail
     }
   }
@@ -456,7 +454,7 @@ export class SystemIntegrator extends EventEmitter {
       this.emit('paymentCompleted', transaction);
     });
 
-    this.logger.info('Cross-service event handlers configured');
+    EnhancedLogger.info('Cross-service event handlers configured');
   }
 
   private startHealthMonitoring(): void {
@@ -489,7 +487,7 @@ export class SystemIntegrator extends EventEmitter {
           this.serviceHealth.set(serviceId, health);
         }
       } catch (error) {
-        this.logger.error(`Health check failed for ${serviceId}:`, error);
+        EnhancedLogger.error(`Health check failed for ${serviceId}:`, error);
         
         const health = this.serviceHealth.get(serviceId);
         if (health) {

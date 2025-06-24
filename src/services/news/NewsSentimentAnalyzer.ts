@@ -255,7 +255,7 @@ export class NewsSentimentAnalyzer extends EventEmitter {
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize News Sentiment Analyzer:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to initialize News Sentiment Analyzer:');
       throw error;
     }
   }
@@ -300,7 +300,7 @@ export class NewsSentimentAnalyzer extends EventEmitter {
       return sentiment;
 
     } catch (error) {
-      this.logger.error('Failed to analyze sentiment:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to analyze sentiment:');
       throw error;
     }
   }
@@ -396,7 +396,7 @@ export class NewsSentimentAnalyzer extends EventEmitter {
       return article;
 
     } catch (error) {
-      this.logger.error('Failed to process article:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to process article:');
       throw error;
     }
   }

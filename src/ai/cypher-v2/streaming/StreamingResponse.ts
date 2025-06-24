@@ -27,7 +27,7 @@ export interface StreamingConfig {
 
 export class StreamingResponse extends EventEmitter {
   private config: StreamingConfig;
-  private activeStreams: Map<string, NodeJS.Timeout> = new Map();
+  private activeStreams: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private streamCounter: number = 0;
 
   constructor(config: Partial<StreamingConfig> = {}) {

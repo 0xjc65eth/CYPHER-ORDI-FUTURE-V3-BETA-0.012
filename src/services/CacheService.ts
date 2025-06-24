@@ -211,7 +211,7 @@ export class CacheService {
       this.set(key, data, options);
       return data;
     } catch (error) {
-      logger.error('Cache fetcher failed:', error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'Cache fetcher failed:');
       throw error;
     }
   }

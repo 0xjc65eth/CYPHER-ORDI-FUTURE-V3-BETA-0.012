@@ -26,7 +26,7 @@ interface IntervalOptions {
 
 export class IntervalManager {
   private tasks = new Map<string, IntervalTask>();
-  private timers = new Map<string, NodeJS.Timeout>();
+  private timers = new Map<string, ReturnType<typeof setInterval>>();
   private isActive = true;
   private stats = {
     totalExecutions: 0,

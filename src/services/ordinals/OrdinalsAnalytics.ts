@@ -163,13 +163,26 @@ export interface PortfolioAnalytics {
 }
 
 export class OrdinalsAnalytics {
-  private clients: Record<OrdinalsMarketplace, any>;
+  private clients: Record<OrdinalsMarketplace, any> | null = null;
+  private config?: { uniSatApiKey?: string };
   private cache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
   private readonly DEFAULT_TTL = 300000; // 5 minutes
   private analysisResults: Map<string, CollectionAnalysis> = new Map();
 
   constructor(config?: { uniSatApiKey?: string }) {
-    this.clients = OrdinalsMarketplaceFactory.getAllClients(config);
+    this.config = config;
+  }
+
+  private initializeClients() {
+    if (!this.clients) {
+      try {
+        this.clients = OrdinalsMarketplaceFactory.getAllClients(this.config);
+      } catch (error) {
+        console.warn('Failed to initialize Ordinals API clients:', error);
+        this.clients = {} as Record<OrdinalsMarketplace, any>;
+      }
+    }
+    return this.clients;
   }
 
   private getCached<T>(key: string): T | null {
@@ -202,7 +215,8 @@ export class OrdinalsAnalytics {
 
       for (const mp of marketplaces) {
         try {
-          const client = this.clients[mp];
+          const clients = this.initializeClients();
+          const client = clients[mp];
           
           // Get collection info
           const collection = await this.getCollectionFromMarketplace(collectionId, mp, client);
@@ -1120,7 +1134,8 @@ export class OrdinalsAnalytics {
     const collections: string[] = [];
     
     try {
-      const magicEdenCollections = await this.clients[OrdinalsMarketplace.MAGIC_EDEN].getCollections(limit);
+      const clients = this.initializeClients();
+      const magicEdenCollections = await clients[OrdinalsMarketplace.MAGIC_EDEN].getCollections(limit);
       collections.push(...magicEdenCollections.map((c: any) => c.symbol));
     } catch (error) {
       console.warn('Failed to fetch Magic Eden collections:', error);
@@ -1134,7 +1149,8 @@ export class OrdinalsAnalytics {
     
     for (const mp of marketplaces) {
       try {
-        const client = this.clients[mp];
+        const clients = this.initializeClients();
+        const client = clients[mp];
         let inscription;
         
         switch (mp) {
@@ -1165,7 +1181,8 @@ export class OrdinalsAnalytics {
 
   private async getRecentSales(collectionId: string): Promise<Array<{ price: number; timestamp: number }>> {
     // Get recent sales data for bid estimation
-    const activities = await this.getActivitiesFromMarketplace(collectionId, OrdinalsMarketplace.MAGIC_EDEN, this.clients[OrdinalsMarketplace.MAGIC_EDEN]);
+    const clients = this.initializeClients();
+    const activities = await this.getActivitiesFromMarketplace(collectionId, OrdinalsMarketplace.MAGIC_EDEN, clients[OrdinalsMarketplace.MAGIC_EDEN]);
     return activities
       .filter((a: any) => a.type === 'sale' && a.price)
       .map((a: any) => ({ price: a.price, timestamp: a.timestamp }))

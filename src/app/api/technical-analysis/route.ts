@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Technical analysis API error:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'Technical analysis API error');
     
     return NextResponse.json(
       { 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error('Technical analysis POST API error:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), 'Technical analysis POST API error');
     
     return NextResponse.json(
       { 

@@ -75,7 +75,6 @@ export interface TrainingData {
 }
 
 export class PredictionEngine extends EventEmitter {
-  private logger: EnhancedLogger;
   private models: Map<string, tf.LayersModel> = new Map();
   private modelConfigs: Map<string, ModelConfig> = new Map();
   private featureScalers: Map<string, { mean: number[]; std: number[] }> = new Map();
@@ -129,9 +128,7 @@ export class PredictionEngine extends EventEmitter {
 
   constructor() {
     super();
-    this.logger = new EnhancedLogger();
-
-    this.logger.info('ML Prediction Engine initialized', {
+    EnhancedLogger.info('ML Prediction Engine initialized', {
       component: 'PredictionEngine',
       modelsConfigured: this.MODEL_CONFIGS.length
     });
@@ -163,11 +160,11 @@ export class PredictionEngine extends EventEmitter {
       // Start model update scheduler
       this.startModelUpdateScheduler();
 
-      this.logger.info('ML Prediction Engine initialized successfully');
+      EnhancedLogger.info('ML Prediction Engine initialized successfully');
       this.emit('initialized');
 
     } catch (error) {
-      this.logger.error('Failed to initialize ML Prediction Engine:', error);
+      EnhancedLogger.error('Failed to initialize ML Prediction Engine:', error);
       throw error;
     }
   }
@@ -222,7 +219,7 @@ export class PredictionEngine extends EventEmitter {
       // Cache result
       this.predictionCache.set(cacheKey, { prediction: result, timestamp: Date.now() });
 
-      this.logger.info('Prediction generated', {
+      EnhancedLogger.info('Prediction generated', {
         symbol,
         modelUsed: modelName,
         confidence,
@@ -233,7 +230,7 @@ export class PredictionEngine extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.logger.error('Failed to generate prediction:', error);
+      EnhancedLogger.error('Failed to generate prediction:', error);
       throw error;
     }
   }
@@ -243,13 +240,13 @@ export class PredictionEngine extends EventEmitter {
    */
   async trainModel(modelName: string, newData?: TrainingData): Promise<void> {
     if (this.isTraining) {
-      this.logger.warn('Training already in progress');
+      EnhancedLogger.warn('Training already in progress');
       return;
     }
 
     try {
       this.isTraining = true;
-      this.logger.info('Starting model training', { modelName });
+      EnhancedLogger.info('Starting model training', { modelName });
 
       const config = this.modelConfigs.get(modelName);
       const model = this.models.get(modelName);
@@ -285,7 +282,7 @@ export class PredictionEngine extends EventEmitter {
         callbacks: {
           onEpochEnd: (epoch, logs) => {
             if (epoch % 10 === 0) {
-              this.logger.info('Training progress', {
+              EnhancedLogger.info('Training progress', {
                 modelName,
                 epoch,
                 loss: logs?.loss,
@@ -306,7 +303,7 @@ export class PredictionEngine extends EventEmitter {
       // Update accuracy metrics
       await this.updateModelAccuracy(modelName, history);
 
-      this.logger.info('Model training completed', {
+      EnhancedLogger.info('Model training completed', {
         modelName,
         finalLoss: history.history.loss[history.history.loss.length - 1]
       });
@@ -314,7 +311,7 @@ export class PredictionEngine extends EventEmitter {
       this.emit('modelTrained', { modelName, history });
 
     } catch (error) {
-      this.logger.error('Model training failed:', error);
+      EnhancedLogger.error('Model training failed:', error);
       throw error;
     } finally {
       this.isTraining = false;
@@ -356,14 +353,14 @@ export class PredictionEngine extends EventEmitter {
 
       this.trainingData.set(symbol, existing);
 
-      this.logger.info('Market data updated', {
+      EnhancedLogger.info('Market data updated', {
         symbol,
         newDataPoints: marketData.length,
         totalDataPoints: existing.features.length
       });
 
     } catch (error) {
-      this.logger.error('Failed to update market data:', error);
+      EnhancedLogger.error('Failed to update market data:', error);
     }
   }
 
@@ -682,7 +679,7 @@ export class PredictionEngine extends EventEmitter {
         
         if (Date.now() - lastUpdate > updateInterval) {
           this.trainModel(modelName).catch(error => {
-            this.logger.error(`Scheduled training failed for ${modelName}:`, error);
+            EnhancedLogger.error(`Scheduled training failed for ${modelName}:`, error);
           });
         }
       }
@@ -692,9 +689,9 @@ export class PredictionEngine extends EventEmitter {
   private async saveModel(modelName: string, model: tf.LayersModel): Promise<void> {
     try {
       await model.save(`file://./models/${modelName}`);
-      this.logger.info('Model saved', { modelName });
+      EnhancedLogger.info('Model saved', { modelName });
     } catch (error) {
-      this.logger.error('Failed to save model:', error);
+      EnhancedLogger.error('Failed to save model:', error);
     }
   }
 
@@ -703,7 +700,7 @@ export class PredictionEngine extends EventEmitter {
     const finalLoss = history.history.loss[history.history.loss.length - 1];
     const accuracy = Math.max(0, 1 - finalLoss); // Simple accuracy calculation
     
-    this.logger.info('Model accuracy updated', {
+    EnhancedLogger.info('Model accuracy updated', {
       modelName,
       accuracy,
       finalLoss

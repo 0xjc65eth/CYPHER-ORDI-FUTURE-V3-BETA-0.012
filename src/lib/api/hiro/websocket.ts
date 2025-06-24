@@ -77,12 +77,12 @@ export class HiroWebSocket extends EventEmitter {
             const message: WebSocketMessage = JSON.parse(event.data)
             this.handleMessage(message)
           } catch (error) {
-            logger.error('Failed to parse WebSocket message:', error)
+            logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to parse WebSocket message:')
           }
         }
 
         this.ws.onerror = (error) => {
-          logger.error('WebSocket error:', error)
+          logger.error(error instanceof Error ? error : new Error(String(error)), 'WebSocket error:')
           this.emit('error', error)
         }
 
@@ -102,7 +102,7 @@ export class HiroWebSocket extends EventEmitter {
         }
       } catch (error) {
         this.isConnecting = false
-        logger.error('Failed to create WebSocket:', error)
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to create WebSocket:')
         reject(error)
       }
     })
@@ -321,7 +321,7 @@ export class HiroWebSocket extends EventEmitter {
     
     this.reconnectTimer = setTimeout(() => {
       this.connect().catch(error => {
-        logger.error('Reconnection failed:', error)
+        logger.error(error instanceof Error ? error : new Error(String(error)), 'Reconnection failed:')
       })
     }, delay)
   }

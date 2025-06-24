@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# 🔍 JOHN CARMACK-LEVEL PRE-COMMIT VALIDATION
+# Prevents placeholder pages from being committed
+
+echo "🚀 Running John Carmack-level page validation..."
+
+# Run the page validator
+node scripts/validate-pages.mjs
+
+# If validation fails, prevent commit
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ COMMIT REJECTED: Placeholder pages detected!"
+  echo "🔧 Fix the placeholder pages before committing."
+  echo "💡 Use functional components instead of 'Under construction' messages."
+  echo ""
+  exit 1
+fi
+
+echo "✅ All pages validated successfully - commit allowed"

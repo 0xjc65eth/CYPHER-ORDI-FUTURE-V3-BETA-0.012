@@ -196,12 +196,12 @@ export class XversePortfolioService extends EventEmitter {
       };
 
       this.ws.onerror = (error) => {
-        this.logger.error('Xverse WebSocket error:', error);
+        this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Xverse WebSocket error:');
         this.emit('error', error);
       };
 
     } catch (error) {
-      this.logger.error('Failed to connect to Xverse:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to connect to Xverse:');
       throw error;
     }
   }
@@ -225,7 +225,7 @@ export class XversePortfolioService extends EventEmitter {
       return wallet;
 
     } catch (error) {
-      this.logger.error('Failed to get wallet:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get wallet:');
       throw error;
     }
   }
@@ -251,7 +251,7 @@ export class XversePortfolioService extends EventEmitter {
       return assets;
 
     } catch (error) {
-      this.logger.error('Failed to get assets:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get assets:');
       throw error;
     }
   }
@@ -280,7 +280,7 @@ export class XversePortfolioService extends EventEmitter {
       return analytics;
 
     } catch (error) {
-      this.logger.error('Failed to get portfolio analytics:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to get portfolio analytics:');
       throw error;
     }
   }
@@ -305,7 +305,7 @@ export class XversePortfolioService extends EventEmitter {
       return recommendations;
 
     } catch (error) {
-      this.logger.error('Failed to generate recommendations:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate recommendations:');
       throw error;
     }
   }
@@ -337,7 +337,7 @@ export class XversePortfolioService extends EventEmitter {
       return report;
 
     } catch (error) {
-      this.logger.error('Failed to generate tax report:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to generate tax report:');
       throw error;
     }
   }
@@ -379,7 +379,7 @@ export class XversePortfolioService extends EventEmitter {
       this.logger.info('Portfolio monitoring started', { address, alerts });
 
     } catch (error) {
-      this.logger.error('Failed to start portfolio monitoring:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to start portfolio monitoring:');
       throw error;
     }
   }
@@ -422,7 +422,7 @@ export class XversePortfolioService extends EventEmitter {
       return rebalancingPlan;
 
     } catch (error) {
-      this.logger.error('Failed to rebalance portfolio:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Failed to rebalance portfolio:');
       throw error;
     }
   }
@@ -818,7 +818,7 @@ export class XversePortfolioService extends EventEmitter {
           this.logger.debug('Unknown WebSocket message type:', message.type);
       }
     } catch (error) {
-      this.logger.error('Error handling WebSocket message:', error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)), 'Error handling WebSocket message:');
     }
   }
 
