@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import WalletConnectButton from '../../components/Dashboard/WalletConnectButton';
+import WalletConnectButton from '../../components/dashboard/WalletConnectButton';
 
 export default function WalletConnectTestPage() {
   const [walletData, setWalletData] = useState(null);
