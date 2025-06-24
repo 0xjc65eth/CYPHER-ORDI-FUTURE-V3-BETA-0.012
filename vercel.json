@@ -1,21 +1,24 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm ci --only=production && npm run build",
+  "installCommand": "npm ci --only=production",
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1",
-    "NODE_OPTIONS": "--max-old-space-size=4096"
+    "NODE_OPTIONS": "--max-old-space-size=8192"
   },
   "build": {
     "env": {
-      "NODE_ENV": "production",
-      "NEXT_TELEMETRY_DISABLED": "1"
+      "NODE_ENV": "production", 
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_OPTIONS": "--max-old-space-size=8192"
     }
   },
   "functions": {
     "src/app/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "regions": ["iad1"]
 }
