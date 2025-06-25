@@ -62,13 +62,7 @@
       "destination": "/api/:path*"
     }
   ],
-  "redirects": [
-    {
-      "source": "/dashboard",
-      "destination": "/",
-      "permanent": false
-    }
-  ],
+  "redirects": [],
   "trailingSlash": false,
   "cleanUrls": true
 }

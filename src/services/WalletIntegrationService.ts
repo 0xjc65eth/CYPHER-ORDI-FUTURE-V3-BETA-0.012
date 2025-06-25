@@ -233,11 +233,11 @@ export class WalletIntegrationService {
     
     const integration = this.integrations.get(walletType);
     if (!integration) {
-      throw new WalletError(`Wallet type ${walletType} not supported`, 'WALLET_NOT_SUPPORTED');
+      throw createWalletError(`Wallet type ${walletType} not supported`, 'WALLET_NOT_SUPPORTED');
     }
 
     if (!integration.isInstalled) {
-      throw new WalletError(`${integration.name} is not installed`, 'WALLET_NOT_INSTALLED');
+      throw createWalletError(`${integration.name} is not installed`, 'WALLET_NOT_INSTALLED');
     }
 
     try {
@@ -256,7 +256,7 @@ export class WalletIntegrationService {
           account = await this.connectOyl(integration);
           break;
         default:
-          throw new WalletError(`Connection method for ${walletType} not implemented`, 'METHOD_NOT_IMPLEMENTED');
+          throw createWalletError(`Connection method for ${walletType} not implemented`, 'METHOD_NOT_IMPLEMENTED');
       }
 
       // Store active connection
@@ -291,7 +291,7 @@ export class WalletIntegrationService {
     try {
       // First check if provider exists and has the required methods
       if (!provider) {
-        throw new WalletError('Xverse provider not found', 'PROVIDER_NOT_FOUND');
+        throw createWalletError('Xverse provider not found', 'PROVIDER_NOT_FOUND');
       }
 
       let accounts: any[] = [];
@@ -342,7 +342,7 @@ export class WalletIntegrationService {
       }
       
       if (!accounts || accounts.length === 0) {
-        throw new WalletError('No accounts found in Xverse wallet. Please ensure Xverse is unlocked and has accounts.', 'NO_ACCOUNTS');
+        throw createWalletError('No accounts found in Xverse wallet. Please ensure Xverse is unlocked and has accounts.', 'NO_ACCOUNTS');
       }
 
       const primaryAccount = accounts[0];
@@ -364,10 +364,10 @@ export class WalletIntegrationService {
       };
     } catch (error) {
       console.error('Xverse connection error:', error);
-      if (error instanceof WalletError) {
+      if (error && typeof error === 'object' && 'code' in error && 'name' in error && error.name === 'WalletError') {
         throw error;
       }
-      throw new WalletError(`Failed to connect to Xverse: ${error}`, 'XVERSE_CONNECTION_FAILED');
+      throw createWalletError(`Failed to connect to Xverse: ${error}`, 'XVERSE_CONNECTION_FAILED');
     }
   }
 
@@ -381,7 +381,7 @@ export class WalletIntegrationService {
       const accounts = await provider.requestAccounts();
       
       if (!accounts || accounts.length === 0) {
-        throw new WalletError('No accounts found in Unisat wallet', 'NO_ACCOUNTS');
+        throw createWalletError('No accounts found in Unisat wallet', 'NO_ACCOUNTS');
       }
 
       const address = accounts[0];
@@ -403,7 +403,7 @@ export class WalletIntegrationService {
         }
       };
     } catch (error) {
-      throw new WalletError(`Failed to connect to Unisat: ${error}`, 'UNISAT_CONNECTION_FAILED');
+      throw createWalletError(`Failed to connect to Unisat: ${error}`, 'UNISAT_CONNECTION_FAILED');
     }
   }
 
@@ -417,7 +417,7 @@ export class WalletIntegrationService {
       const connection = await provider.connect();
       
       if (!connection.address) {
-        throw new WalletError('No address found in Oyl wallet', 'NO_ADDRESS');
+        throw createWalletError('No address found in Oyl wallet', 'NO_ADDRESS');
       }
 
       // Get balance (implementation depends on Oyl's API)
@@ -432,7 +432,7 @@ export class WalletIntegrationService {
         balance
       };
     } catch (error) {
-      throw new WalletError(`Failed to connect to Oyl: ${error}`, 'OYL_CONNECTION_FAILED');
+      throw createWalletError(`Failed to connect to Oyl: ${error}`, 'OYL_CONNECTION_FAILED');
     }
   }
 
@@ -469,7 +469,7 @@ export class WalletIntegrationService {
   ): Promise<WalletAuthSession> {
     const integration = this.integrations.get(walletType);
     if (!integration) {
-      throw new WalletError(`Wallet type ${walletType} not supported`, 'WALLET_NOT_SUPPORTED');
+      throw createWalletError(`Wallet type ${walletType} not supported`, 'WALLET_NOT_SUPPORTED');
     }
 
     const authMessage = message || `Authenticate with CYPHER ORDi Future V3\nAddress: ${address}\nTimestamp: ${Date.now()}`;
@@ -488,7 +488,7 @@ export class WalletIntegrationService {
           signature = await integration.provider.signMessage(authMessage);
           break;
         default:
-          throw new WalletError(`Signing not implemented for ${walletType}`, 'SIGNING_NOT_IMPLEMENTED');
+          throw createWalletError(`Signing not implemented for ${walletType}`, 'SIGNING_NOT_IMPLEMENTED');
       }
 
       const session: WalletAuthSession = {
@@ -505,7 +505,7 @@ export class WalletIntegrationService {
       return session;
 
     } catch (error) {
-      throw new WalletError(`Failed to create auth session: ${error}`, 'AUTH_SESSION_FAILED');
+      throw createWalletError(`Failed to create auth session: ${error}`, 'AUTH_SESSION_FAILED');
     }
   }
 
@@ -621,17 +621,20 @@ export class WalletIntegrationService {
   }
 }
 
-// Custom error class for wallet operations
-class WalletError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public walletType?: WalletType,
-    public details?: any
-  ) {
-    super(message);
-    this.name = 'WalletError';
-  }
+// WalletError is defined in types/wallet.ts
+// Helper function to create WalletError instances
+export function createWalletError(
+  message: string,
+  code: string,
+  walletType?: WalletType,
+  details?: any
+): WalletError {
+  const error = new Error(message) as WalletError;
+  error.code = code;
+  error.walletType = walletType;
+  error.details = details;
+  error.name = 'WalletError';
+  return error;
 }
 
 // Export singleton instance
