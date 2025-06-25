@@ -1,0 +1,380 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Bloomberg Terminal font */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Import select overrides to fix transparency issues */
+/* @import '../styles/select-overrides.css'; */
+
+/* Bloomberg Terminal CSS Variables */
+:root {
+  /* Color System */
+  --bloomberg-orange: #F7931A;
+  --bloomberg-orange-rgb: 247, 147, 26;
+  --bloomberg-black: #000000;
+  --bloomberg-black-rgb: 0, 0, 0;
+  --bloomberg-gray: #374151;
+  --bloomberg-gray-rgb: 55, 65, 81;
+  
+  /* Status Colors */
+  --bloomberg-green: #10B981;
+  --bloomberg-green-rgb: 16, 185, 129;
+  --bloomberg-red: #EF4444;
+  --bloomberg-red-rgb: 239, 68, 68;
+  --bloomberg-blue: #3B82F6;
+  --bloomberg-blue-rgb: 59, 130, 246;
+  --bloomberg-purple: #8B5CF6;
+  --bloomberg-purple-rgb: 139, 92, 246;
+  --bloomberg-yellow: #F59E0B;
+  --bloomberg-yellow-rgb: 245, 158, 11;
+  
+  /* Terminal Spacing */
+  --terminal-border-width: 1px;
+  --terminal-border-radius: 2px;
+  --terminal-font-size-xs: 10px;
+  --terminal-font-size-sm: 11px;
+  --terminal-font-size-base: 12px;
+  --terminal-font-size-lg: 14px;
+  --terminal-line-height: 1.4;
+  
+  /* Animation Durations */
+  --animation-fast: 0.15s;
+  --animation-normal: 0.3s;
+  --animation-slow: 0.5s;
+  
+  /* Legacy support */
+  --foreground-rgb: 247, 147, 26;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+}
+
+/* Bloomberg Terminal Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+  font-size: var(--terminal-font-size-base);
+  line-height: var(--terminal-line-height);
+  color: var(--bloomberg-orange);
+  background-color: var(--bloomberg-black);
+  background-image: 
+    radial-gradient(rgba(var(--bloomberg-orange-rgb), 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.025em;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Terminal Typography System */
+.terminal-heading-1 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  color: var(--bloomberg-orange);
+  text-transform: uppercase;
+}
+
+.terminal-heading-2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.05em;
+  color: var(--bloomberg-orange);
+  text-transform: uppercase;
+}
+
+.terminal-heading-3 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.05em;
+  color: var(--bloomberg-orange);
+  text-transform: uppercase;
+}
+
+.terminal-text {
+  font-size: var(--terminal-font-size-base);
+  line-height: var(--terminal-line-height);
+  color: var(--bloomberg-orange);
+  letter-spacing: 0.025em;
+}
+
+.terminal-text-sm {
+  font-size: var(--terminal-font-size-sm);
+  line-height: 1.3;
+  color: rgba(var(--bloomberg-orange-rgb), 0.8);
+  letter-spacing: 0.025em;
+}
+
+.terminal-text-xs {
+  font-size: var(--terminal-font-size-xs);
+  line-height: 1.2;
+  color: rgba(var(--bloomberg-orange-rgb), 0.6);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+/* Terminal Component Styles */
+.terminal-card {
+  background-color: var(--bloomberg-black);
+  border: var(--terminal-border-width) solid rgba(var(--bloomberg-orange-rgb), 0.3);
+  border-radius: var(--terminal-border-radius);
+  position: relative;
+  backdrop-filter: blur(8px);
+}
+
+.terminal-card:hover {
+  border-color: rgba(var(--bloomberg-orange-rgb), 0.5);
+}
+
+.terminal-card:focus-within {
+  border-color: var(--bloomberg-orange);
+  box-shadow: 0 0 0 2px rgba(var(--bloomberg-orange-rgb), 0.2);
+}
+
+.terminal-button {
+  font-family: inherit;
+  font-size: var(--terminal-font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border: var(--terminal-border-width) solid var(--bloomberg-orange);
+  background-color: transparent;
+  color: var(--bloomberg-orange);
+  cursor: pointer;
+  transition: all var(--animation-fast) ease;
+  border-radius: var(--terminal-border-radius);
+}
+
+.terminal-button:hover {
+  background-color: var(--bloomberg-orange);
+  color: var(--bloomberg-black);
+  box-shadow: 0 0 8px rgba(var(--bloomberg-orange-rgb), 0.4);
+}
+
+.terminal-button:focus {
+  outline: 2px solid var(--bloomberg-orange);
+  outline-offset: 2px;
+}
+
+.terminal-button:active {
+  transform: translateY(1px);
+}
+
+.terminal-button-primary {
+  background-color: var(--bloomberg-orange);
+  color: var(--bloomberg-black);
+}
+
+.terminal-button-primary:hover {
+  background-color: rgba(var(--bloomberg-orange-rgb), 0.9);
+  box-shadow: 0 0 12px rgba(var(--bloomberg-orange-rgb), 0.6);
+}
+
+.terminal-input {
+  font-family: inherit;
+  font-size: var(--terminal-font-size-base);
+  padding: 8px 12px;
+  border: var(--terminal-border-width) solid rgba(var(--bloomberg-orange-rgb), 0.3);
+  background-color: rgba(var(--bloomberg-black-rgb), 0.8);
+  color: var(--bloomberg-orange);
+  border-radius: var(--terminal-border-radius);
+  outline: none;
+  transition: all var(--animation-fast) ease;
+}
+
+.terminal-input:focus {
+  border-color: var(--bloomberg-orange);
+  box-shadow: 0 0 0 2px rgba(var(--bloomberg-orange-rgb), 0.2);
+}
+
+.terminal-input::placeholder {
+  color: rgba(var(--bloomberg-orange-rgb), 0.4);
+}
+
+/* Terminal Table Styles */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.terminal-table th {
+  font-size: var(--terminal-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border-bottom: var(--terminal-border-width) solid rgba(var(--bloomberg-orange-rgb), 0.3);
+  color: rgba(var(--bloomberg-orange-rgb), 0.6);
+  text-align: left;
+}
+
+.terminal-table td {
+  font-size: var(--terminal-font-size-sm);
+  padding: 6px 12px;
+  border-bottom: var(--terminal-border-width) solid rgba(var(--bloomberg-orange-rgb), 0.1);
+  color: var(--bloomberg-orange);
+}
+
+.terminal-table tr:hover {
+  background-color: rgba(var(--bloomberg-orange-rgb), 0.05);
+}
+
+/* Terminal Grid System */
+.terminal-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.terminal-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.terminal-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.terminal-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.terminal-grid-6 { grid-template-columns: repeat(6, 1fr); }
+.terminal-grid-12 { grid-template-columns: repeat(12, 1fr); }
+
+/* Status Indicators */
+.status-bullish { color: var(--bloomberg-green); }
+.status-bearish { color: var(--bloomberg-red); }
+.status-neutral { color: var(--bloomberg-orange); }
+.status-info { color: var(--bloomberg-blue); }
+.status-warning { color: var(--bloomberg-yellow); }
+.status-special { color: var(--bloomberg-purple); }
+
+/* Animation Classes */
+.animate-price-up {
+  animation: price-flash var(--animation-normal) ease-in-out;
+  background-color: rgba(var(--bloomberg-green-rgb), 0.2);
+}
+
+.animate-price-down {
+  animation: price-flash var(--animation-normal) ease-in-out;
+  background-color: rgba(var(--bloomberg-red-rgb), 0.2);
+}
+
+.animate-number-update {
+  animation: number-update var(--animation-normal) ease-in-out;
+}
+
+/* Terminal Effects */
+.terminal-glow {
+  box-shadow: 0 0 20px rgba(var(--bloomberg-orange-rgb), 0.3);
+}
+
+.terminal-scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: linear-gradient(
+    transparent 50%, 
+    rgba(var(--bloomberg-orange-rgb), 0.02) 50%
+  );
+  background-size: 100% 2px;
+  pointer-events: none;
+}
+
+/* Accessibility Improvements */
+.focus-visible:focus {
+  outline: 2px solid var(--bloomberg-orange);
+  outline-offset: 2px;
+}
+
+.focus-visible:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .terminal-scanlines::before {
+    display: none;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --bloomberg-orange: #FFB000;
+    --terminal-border-width: 2px;
+  }
+  
+  .terminal-card {
+    border-width: 2px;
+  }
+  
+  .terminal-input,
+  .terminal-button {
+    border-width: 2px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .terminal-card {
+    border: 1px solid black;
+    background: white;
+  }
+  
+  .terminal-button {
+    display: none;
+  }
+}
+
+/* Responsive Design Helpers */
+@media (max-width: 768px) {
+  :root {
+    --terminal-font-size-base: 11px;
+    --terminal-font-size-sm: 10px;
+    --terminal-font-size-xs: 9px;
+  }
+  
+  .terminal-grid-2,
+  .terminal-grid-3,
+  .terminal-grid-4,
+  .terminal-grid-6,
+  .terminal-grid-12 {
+    grid-template-columns: 1fr;
+  }
+  
+  .terminal-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 10px;
+  }
+  
+  .terminal-heading-1 { font-size: 16px; }
+  .terminal-heading-2 { font-size: 14px; }
+  .terminal-heading-3 { font-size: 12px; }
+}
