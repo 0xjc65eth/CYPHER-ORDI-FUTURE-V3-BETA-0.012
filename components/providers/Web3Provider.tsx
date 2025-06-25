@@ -44,30 +44,27 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
         // Health checks com timeout
         const healthChecks: Record<string, boolean> = {};
         
-        for (const network of config.supportedNetworks) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            
-            const response = await fetch(`${network.apiUrl}/v2/info`, {
-              signal: controller.signal,
-              headers: {
-                'x-api-key': process.env.NEXT_PUBLIC_HIRO_API_KEY || ''
-              }
-            });
-            
-            clearTimeout(timeoutId);
-            healthChecks[network.id] = response.ok;
-          } catch (error) {
-            console.warn(`Health check falhou para ${network.name}:`, error);
-            healthChecks[network.id] = false;
-          }
+        // Configuração básica de health check
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const response = await fetch(`${config.rpcUrl}`, {
+            signal: controller.signal,
+            method: 'HEAD'
+          });
+          
+          clearTimeout(timeoutId);
+          healthChecks[config.name] = response.ok;
+        } catch (error) {
+          console.warn(`Health check falhou para ${config.name}:`, error);
+          healthChecks[config.name] = false;
         }
 
         setState({
           isInitialized: true,
-          supportedNetworks: config.supportedNetworks,
-          currentNetwork: config.supportedNetworks[0],
+          supportedNetworks: [config],
+          currentNetwork: config,
           error: null,
           healthChecks
         });

@@ -6,7 +6,7 @@ class HiroAPIService {
   
   constructor(network?: NetworkConfig) {
     this.apiKey = process.env.HIRO_API_KEY || '3100ea7623797d267da3bd6dc94f47f9';
-    this.baseUrl = network?.apiUrl || 'https://api.hiro.so';
+    this.baseUrl = 'https://api.hiro.so'; // Use default Hiro API endpoint
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

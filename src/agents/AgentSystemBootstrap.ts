@@ -96,7 +96,7 @@ export class AgentSystemBootstrap {
       // });
       
     } catch (error) {
-      logger.error(error as Error, 'Inicialização do sistema');
+      logger.error('Inicialização do sistema', error as Error);
       await this.emergencyShutdown();
       throw error;
     }
@@ -126,7 +126,7 @@ export class AgentSystemBootstrap {
         this.agents.set(type, agent);
         logger.debug(`✓ Agente ${type} criado`);
       } catch (error) {
-        logger.error(error as Error, "Erro ao criar agente ${type}:");
+        logger.error(`Erro ao criar agente ${type}:`, error as Error);
         throw new Error(`Falha ao criar agente ${type}`);
       }
     }
@@ -143,7 +143,7 @@ export class AgentSystemBootstrap {
         await this.coordinator.registerAgent(agent);
         logger.debug(`✓ Agente ${type} registrado`);
       } catch (error) {
-        logger.error(error as Error, "Erro ao registrar agente ${type}:");
+        logger.error(`Erro ao registrar agente ${type}:`, error as Error);
         throw error;
       }
     }
@@ -347,7 +347,7 @@ export class AgentSystemBootstrap {
       await agent.initialize();
       logger.info(`✅ Agente ${agentType} recuperado com sucesso`);
     } catch (error) {
-      logger.error(error as Error, "Falha ao recuperar agente ${agentType}:");
+      logger.error(`Falha ao recuperar agente ${agentType}:`, error as Error);
       
       // TODO: Implementar broadcastSystemEvent no AgentCoordinator
       // await this.coordinator.broadcastSystemEvent({
@@ -375,7 +375,7 @@ export class AgentSystemBootstrap {
    * Handler para erros de agentes
    */
   private handleAgentError(error: any): void {
-    logger.error(error as Error, 'Erro em agente');
+    logger.error('Erro em agente', error as Error);
     
     // TODO: Implementar lógica de recuperação ou notificação
     if (error.critical) {
@@ -404,13 +404,13 @@ export class AgentSystemBootstrap {
     
     // Handler para erros não capturados
     process.on('uncaughtException', async (error) => {
-      logger.error(error as Error, 'Erro não capturado');
+      logger.error('Erro não capturado', error as Error);
       await this.emergencyShutdown();
       process.exit(1);
     });
     
     process.on('unhandledRejection', async (reason) => {
-      logger.error(reason as Error, 'Promise rejeitada não tratada');
+      logger.error('Promise rejeitada não tratada', reason as Error);
       await this.emergencyShutdown();
       process.exit(1);
     });
@@ -452,7 +452,7 @@ export class AgentSystemBootstrap {
             await agent.stop();
             logger.info(`✓ Agente ${agentType} desligado`);
           } catch (error) {
-            logger.error(error as Error, "Erro ao desligar agente ${agentType}:");
+            logger.error(`Erro ao desligar agente ${agentType}:`, error as Error);
           }
         }
       }
@@ -462,7 +462,7 @@ export class AgentSystemBootstrap {
         try {
           await handler();
         } catch (error) {
-          logger.error(error as Error, 'Handler de shutdown');
+          logger.error('Handler de shutdown', error as Error);
         }
       }
       
@@ -473,7 +473,7 @@ export class AgentSystemBootstrap {
       logger.info('✅ Sistema desligado com sucesso');
       
     } catch (error) {
-      logger.error(error as Error, 'Shutdown');
+      logger.error('Shutdown', error as Error);
       await this.emergencyShutdown();
     }
   }
@@ -493,7 +493,7 @@ export class AgentSystemBootstrap {
     try {
       // Tentar desligar todos os agentes rapidamente
       const shutdownPromises = Array.from(this.agents.values()).map(agent =>
-        agent.stop().catch((err: any) => logger.error(err as Error, 'Shutdown de emergência'))
+        agent.stop().catch((err: any) => logger.error('Shutdown de emergência', err as Error))
       );
       
       await Promise.race([
@@ -503,7 +503,7 @@ export class AgentSystemBootstrap {
       
       clearTimeout(timeout);
     } catch (error) {
-      logger.error(error as Error, 'Shutdown de emergência crítico');
+      logger.error('Shutdown de emergência crítico', error as Error);
       clearTimeout(timeout);
       process.exit(1);
     }

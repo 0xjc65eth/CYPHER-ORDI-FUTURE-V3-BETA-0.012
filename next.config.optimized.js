@@ -1,7 +1,3 @@
-// Importar dependências necessárias
-const crypto = require('crypto');
-const webpack = require('webpack');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Modo de produção rigoroso
@@ -33,13 +29,13 @@ const nextConfig = {
   // TypeScript - Remover após corrigir todos os erros
   typescript: {
     // TODO: Mudar para false após corrigir erros
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // ESLint - Remover após corrigir todos os warnings
   eslint: {
     // TODO: Mudar para false após corrigir warnings
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // Otimizações experimentais
@@ -122,8 +118,7 @@ const nextConfig = {
               priority: 30,
               minChunks: 1,
               reuseExistingChunk: true,
-            },
-            commons: {
+            },            commons: {
               name: 'commons',
               chunks: 'all',
               minChunks: 2,
@@ -153,8 +148,7 @@ const nextConfig = {
         // Apenas os essenciais para crypto/blockchain
         crypto: require.resolve('crypto-browserify'),
         stream: require.resolve('stream-browserify'),
-        buffer: require.resolve('buffer'),
-        // Desabilitar módulos Node.js não essenciais
+        buffer: require.resolve('buffer'),        // Desabilitar módulos Node.js não essenciais
         fs: false,
         net: false,
         tls: false,
@@ -184,8 +178,7 @@ const nextConfig = {
   // Redirecionamentos e rewrites
   async redirects() {
     return [
-      // Redirecionar rotas antigas para novas
-      {
+      // Redirecionar rotas antigas para novas      {
         source: '/dashboard',
         destination: '/',
         permanent: false,
@@ -207,5 +200,9 @@ const nextConfig = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://cypher-ordi-future.vercel.app',
   },
 };
+
+// Importar crypto apenas no servidor
+const crypto = require('crypto');
+const webpack = require('webpack');
 
 module.exports = nextConfig;

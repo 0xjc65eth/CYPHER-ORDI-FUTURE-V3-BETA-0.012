@@ -157,7 +157,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
     } catch (error) {
       const duration = Date.now() - startTime;
       this.status = AgentStatus.ERROR;
-      this.logger.error(error as Error, `Execução do agente ${this.name}`);
+      this.logger.error(`Execução do agente ${this.name}`, error as Error);
       
       const executionResult: IExecutionResult = {
         success: false,
@@ -210,7 +210,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
       this.logger.info(`Agente ${this.name} parado com sucesso`);
       this.emit('stopped', { agentId: this.id });
     } catch (error) {
-      this.logger.error(error as Error, `Parada do agente ${this.name}`);
+      this.logger.error(`Parada do agente ${this.name}`, error as Error);
       throw error;
     }
   }
@@ -225,7 +225,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
       await this.onMessage(message);
       this.emit('message-processed', message);
     } catch (error) {
-      this.logger.error(error as Error, `Processamento de mensagem`);
+      this.logger.error(`Processamento de mensagem`, error as Error);
       this.emit('message-error', { message, error });
     }
   }
@@ -307,7 +307,7 @@ export class AgentCoordinator extends EventEmitter {
     
     const initPromises = Array.from(this.agents.values()).map(agent => 
       agent.initialize().catch(error => {
-        this.logger.error(error as Error, `Inicialização do agente ${agent.name}`);
+        this.logger.error(`Inicialização do agente ${agent.name}`, error as Error);
         return { agentId: agent.id, error };
       })
     );
@@ -370,7 +370,7 @@ export class AgentCoordinator extends EventEmitter {
     // Para todos os agentes
     const stopPromises = Array.from(this.agents.values()).map(agent =>
       agent.stop().catch(error => {
-        this.logger.error(error as Error, `Parada do agente ${agent.name}`);
+        this.logger.error(`Parada do agente ${agent.name}`, error as Error);
         return { agentId: agent.id, error };
       })
     );
@@ -431,7 +431,7 @@ export class AgentCoordinator extends EventEmitter {
         const monitoring = await agent.monitor();
         statusMap.set(id, { agent, monitoring });
       } catch (error) {
-        this.logger.error(error as Error, `Monitoramento do agente ${agent.name}`);
+        this.logger.error(`Monitoramento do agente ${agent.name}`, error as Error);
         statusMap.set(id, {
           agent,
           monitoring: {
@@ -492,7 +492,7 @@ export class AgentCoordinator extends EventEmitter {
             this.emit('message-delivery-failed', { message, reason: 'Agent not found' });
           }
         } catch (error) {
-          this.logger.error(error as Error, 'Processamento de mensagem na fila');
+          this.logger.error('Processamento de mensagem na fila', error as Error);
           this.emit('message-processing-error', { message, error });
         }
       }
