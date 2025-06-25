@@ -1,21 +1,35 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UniversalChart } from '@/components/charts/UniversalChart';
+import dynamic from 'next/dynamic';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
+// Import UniversalChart dynamically to avoid SSR issues
+const UniversalChart = dynamic(() => import('@/components/charts/UniversalChart').then(mod => ({ default: mod.UniversalChart })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] bg-gray-800 rounded-lg flex items-center justify-center">
+      <div className="text-gray-400">Loading chart...</div>
+    </div>
+  )
+});
 
 export default function ChartDebugPage() {
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [dataTest, setDataTest] = useState<any>(null);
   const [browserInfo, setBrowserInfo] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check browser info
-    setBrowserInfo(`${navigator.userAgent}`);
+    setMounted(true);
     
-    // Test API
-    testAPI();
+    // Check browser info only on client
+    if (typeof window !== 'undefined') {
+      setBrowserInfo(`${navigator.userAgent}`);
+      // Test API
+      testAPI();
+    }
   }, []);
 
   const testAPI = async () => {
@@ -23,12 +37,29 @@ export default function ChartDebugPage() {
       const response = await fetch('/api/binance/klines?symbol=BTCUSDT&interval=1h&limit=10');
       const data = await response.json();
       setDataTest(data);
-      setApiStatus(data.success ? 'online' : 'offline');
+      setApiStatus(data?.success ? 'online' : 'offline');
     } catch (error) {
       setApiStatus('offline');
       console.error('API test failed:', error);
     }
   };
+
+  // Return loading state during SSR
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold mb-8">🔍 Chart Debug Tool</h1>
+          <Card className="p-6 bg-gray-800">
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-gray-700 rounded w-1/4"></div>
+              <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
@@ -60,7 +91,7 @@ export default function ChartDebugPage() {
             <div>
               <p className="text-gray-400">Sample Data Points:</p>
               <pre className="text-xs bg-gray-900 p-2 rounded overflow-auto">
-                {JSON.stringify(dataTest.data?.slice(0, 2), null, 2)}
+                {JSON.stringify(dataTest.data?.slice(0, 2) || [], null, 2)}
               </pre>
             </div>
           )}
@@ -152,13 +183,7 @@ export default function ChartDebugPage() {
               onClick={testAPI}
               variant="outline"
             >
-              Retest API
-            </Button>
-            <Button 
-              onClick={() => console.log('Chart debug info:', { apiStatus, dataTest })}
-              variant="outline"
-            >
-              Log Debug Info
+              Test API
             </Button>
           </div>
         </Card>

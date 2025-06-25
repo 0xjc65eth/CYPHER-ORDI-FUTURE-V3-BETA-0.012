@@ -1,111 +1,66 @@
-import fs from 'fs';
-import path from 'path';
+// src/lib/logger.ts
+export interface ILogger {
+  info(message: string, data?: any): void
+  error(message: string, error?: any): void
+  warn(message: string, data?: any): void
+  debug(message: string, data?: any): void
+}
 
-/**
- * Sistema de Logging para Desenvolvimento
- * Registra progresso, erros e métricas de performance
- */
+class UniversalLogger implements ILogger {
+  private static instance: UniversalLogger
+  private isDev = process.env.NODE_ENV === 'development'
+  private isServer = typeof window === 'undefined'
 
-export class DevelopmentLogger {
-  private logDir: string;
-  
-  constructor() {
-    // Em ambiente browser, não usar fs
-    if (typeof window !== 'undefined') {
-      this.logDir = '';
-      return;
+  static getInstance(): UniversalLogger {
+    if (!UniversalLogger.instance) {
+      UniversalLogger.instance = new UniversalLogger()
     }
-    
-    this.logDir = path.join(process.cwd(), 'logs');
-    
-    // Criar diretório se não existir
-    try {
-      if (!fs.existsSync(this.logDir)) {
-        fs.mkdirSync(this.logDir, { recursive: true });
-      }
-    } catch (error) {
-      console.error('Erro ao criar diretório de logs:', error);
+    return UniversalLogger.instance
+  }
+
+  info(message: string, data?: any): void {
+    if (this.isDev || this.isServer) {
+      console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '')
     }
   }
 
+  error(message: string, error?: any): void {
+    console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '')
+  }
+
+  warn(message: string, data?: any): void {
+    if (this.isDev || this.isServer) {
+      console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, data || '')
+    }
+  }
+
+  debug(message: string, data?: any): void {
+    if (this.isDev) {
+      console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, data || '')
+    }
+  }
+
+  // Métodos de compatibilidade com versões anteriores
   log(category: string, message: string, data?: any) {
-    const timestamp = new Date().toISOString();
-    const logEntry = `[${timestamp}] [${category}] ${message}\n${data ? JSON.stringify(data, null, 2) : ''}\n---\n`;
-    
-    // Log no console
-    console.log(`🔍 [${category}]`, message, data || '');
-    
-    // Em ambiente browser, apenas console
-    if (typeof window !== 'undefined') {
-      return;
-    }
-    
-    // Salvar em arquivo apenas no servidor
-    try {
-      const logFile = path.join(this.logDir, 'development-log.md');
-      fs.appendFileSync(logFile, logEntry);
-      
-      // Log específico por categoria
-      if (category === 'ERROR') {
-        fs.appendFileSync(path.join(this.logDir, 'errors.log'), logEntry);
-      } else if (category === 'PERFORMANCE') {
-        fs.appendFileSync(path.join(this.logDir, 'performance.log'), logEntry);
-      }
-    } catch (error) {
-      console.error('Erro ao escrever log:', error);
-    }
+    this.info(`[${category}] ${message}`, data)
   }
 
   milestone(title: string, details: string) {
-    const entry = `\n## 🎯 MILESTONE: ${title}\n${new Date().toISOString()}\n${details}\n\n`;
-    
-    // Log no console
-    console.log('🎯 MILESTONE:', title);
-    console.log(details);
-    
-    // Em ambiente browser, apenas console
-    if (typeof window !== 'undefined') {
-      return;
-    }
-    
-    // Salvar em arquivo apenas no servidor
-    try {
-      fs.appendFileSync(path.join(this.logDir, 'development-log.md'), entry);
-    } catch (error) {
-      console.error('Erro ao escrever milestone:', error);
-    }
+    this.info(`🎯 MILESTONE: ${title}`, details)
   }
 
   progress(feature: string, percentage: number) {
-    this.log('PROGRESS', `${feature}: ${percentage}% complete`);
-  }
-
-  error(error: Error, context?: string) {
-    this.log('ERROR', error.message, { 
-      stack: error.stack, 
-      context,
-      timestamp: new Date().toISOString()
-    });
+    this.info(`${feature}: ${percentage}% complete`)
   }
 
   performance(metric: string, value: number, unit: string = 'ms') {
-    this.log('PERFORMANCE', `${metric}: ${value}${unit}`);
-  }
-
-  info(message: string, data?: any) {
-    this.log('INFO', message, data);
-  }
-
-  warn(message: string, data?: any) {
-    this.log('WARN', message, data);
-  }
-
-  debug(message: string, data?: any) {
-    this.log('DEBUG', message, data);
+    this.info(`${metric}: ${value}${unit}`)
   }
 }
 
-// Exportar instância singleton
-export const devLogger = new DevelopmentLogger();
-export const logger = devLogger;
-export const loggerService = devLogger;
+export const logger = UniversalLogger.getInstance()
+export default logger
+
+// Exports para compatibilidade
+export const devLogger = logger
+export const loggerService = logger

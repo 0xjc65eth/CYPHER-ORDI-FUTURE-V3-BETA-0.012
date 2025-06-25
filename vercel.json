@@ -1,24 +1,74 @@
 {
-  "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm ci --only=production && npm run build",
-  "installCommand": "npm ci --only=production",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "functions": {
+    "src/app/api/*/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/ai/*/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cypher-ai/*/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/trading/*/route.ts": {
+      "maxDuration": 30
+    }
+  },
   "env": {
-    "NODE_ENV": "production",
-    "NEXT_TELEMETRY_DISABLED": "1",
-    "NODE_OPTIONS": "--max-old-space-size=8192"
+    "NODE_OPTIONS": "--max-old-space-size=4096"
   },
   "build": {
     "env": {
-      "NODE_ENV": "production", 
       "NEXT_TELEMETRY_DISABLED": "1",
       "NODE_OPTIONS": "--max-old-space-size=8192"
     }
   },
-  "functions": {
-    "src/app/**/*.ts": {
-      "maxDuration": 30
+  "regions": ["iad1"],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
-  },
-  "regions": ["iad1"]
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/dashboard",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "trailingSlash": false,
+  "cleanUrls": true
 }

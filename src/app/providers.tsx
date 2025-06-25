@@ -17,6 +17,12 @@ import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/Simple
 // import { LaserEyesSafeWrapper } from '@/components/LaserEyesSafeWrapper'
 import { AudioManager } from '@/components/notifications/AudioManager'
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration'
+// Import AppKit configuration
+import '@/config/appkit.config'
+import { WagmiProvider } from 'wagmi'
+import { wagmiAdapter } from '@/config/appkit.config'
+import { PremiumProvider } from '@/contexts/PremiumContext'
+import { Web3Provider } from '@/components/providers/Web3Provider'
 
 // Error fallback component
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
@@ -116,11 +122,17 @@ function SafeWalletProvider({ children }: { children: React.ReactNode }) {
       FallbackComponent={ErrorFallback}
       onError={(error) => console.error('Wallet Provider Error:', error)}
     >
-      <LaserEyesWalletProvider>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
-      </LaserEyesWalletProvider>
+      <Web3Provider>
+        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+          <PremiumProvider>
+            <LaserEyesWalletProvider>
+              <WalletProvider>
+                {children}
+              </WalletProvider>
+            </LaserEyesWalletProvider>
+          </PremiumProvider>
+        </WagmiProvider>
+      </Web3Provider>
     </ErrorBoundary>
   )
 }

@@ -20,8 +20,6 @@ import {
   Zap
 } from 'lucide-react'
 import { SUPPORTED_EVM_CHAINS, SUPPORTED_SOLANA_CHAINS } from '../../config/web3modal.config'
-// Remove problematic import - use API calls instead
-// import multiChainWalletService from '../../services/MultiChainWallet.js'
 
 interface ChainBalance {
   chainId: number | string
@@ -85,25 +83,30 @@ export const MultiChainWallet: React.FC<MultiChainWalletProps> = ({
     
     setLoading(true)
     try {
-      // Use the new service to fetch all balances
-      const allBalances = await multiChainWalletService.getAllBalances(walletAddress)
+      // For now, we'll use the current chain balance as placeholder
+      // This can be enhanced with actual multi-chain balance fetching
+      const mockBalances: ChainBalance[] = []
       
-      // Calculate USD values using the service
-      const balancesWithUSD = allBalances.map(balance => {
-        const price = multiChainWalletService.getPrice(balance.coingeckoId || '')
-        const usdValue = parseFloat(balance.formattedBalance) * price.price
-        return {
-          ...balance,
-          usdValue
-        }
-      })
+      if (currentChain && evmBalance) {
+        const balance = parseFloat(formatEther(evmBalance.value))
+        const usdValue = balance * 3000 // Mock price
+        
+        mockBalances.push({
+          chainId: currentChain.id,
+          chainName: currentChain.name,
+          balance: evmBalance.value.toString(),
+          formattedBalance: balance.toFixed(4),
+          currency: currentChain.symbol,
+          usdValue,
+          explorerUrl: currentChain.blockExplorers?.default?.url || ''
+        })
+      }
 
-      setBalances(balancesWithUSD)
+      setBalances(mockBalances)
       
-      // Calculate portfolio metrics using the service
-      const portfolio = multiChainWalletService.calculatePortfolioValue(balancesWithUSD)
-      setTotalPortfolioValue(portfolio.totalValue)
-      onBalanceUpdate?.(portfolio.totalValue)
+      const totalValue = mockBalances.reduce((sum, b) => sum + (b.usdValue || 0), 0)
+      setTotalPortfolioValue(totalValue)
+      onBalanceUpdate?.(totalValue)
       
     } catch (error) {
       console.error('Error fetching balances:', error)

@@ -120,7 +120,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
       this.emit('initialized', { agentId: this.id });
     } catch (error) {
       this.status = AgentStatus.ERROR;
-      this.logger.error(error as Error, `Inicialização do agente ${this.name}`);
+      this.logger.error((error as Error).message, `Inicialização do agente ${this.name}`);
       throw error;
     }
   }
