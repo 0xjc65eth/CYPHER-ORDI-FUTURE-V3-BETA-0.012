@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-06-26T00:00:07.618Z",
+  "summary": {
+    "total": 14,
+    "success": 8,
+    "errors": 2,
+    "warnings": 3,
+    "info": 1
+  },
+  "checks": [
+    {
+      "name": "package.json",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": "next.config.js",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": "tsconfig.json",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": ".gitignore",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": "src/app/layout.tsx",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": "src/app/page.tsx",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "name": "vercel.json",
+      "status": "success",
+      "message": "JSON válido"
+    },
+    {
+      "name": "next.config.js",
+      "status": "warning",
+      "message": "'ignoreBuildErrors: true' pode mascarar erros importantes"
+    },
+    {
+      "name": "Variáveis de ambiente",
+      "status": "info",
+      "message": "26 variáveis necessárias encontradas"
+    },
+    {
+      "name": "node_modules",
+      "status": "error",
+      "message": "Não encontrado - execute npm install"
+    },
+    {
+      "name": "TypeScript",
+      "status": "warning",
+      "message": "4053 erros encontrados (ignorados na config)"
+    },
+    {
+      "name": "ESLint",
+      "status": "success",
+      "message": "Verificação completa"
+    },
+    {
+      "name": "Build",
+      "status": "error",
+      "message": "Build falhou - verifique os logs acima"
+    },
+    {
+      "name": "Build size",
+      "status": "warning",
+      "message": "540.77 MB - considere otimizar"
+    }
+  ],
+  "errors": [
+    "node_modules: Não encontrado - execute npm install",
+    "Build: Build falhou - verifique os logs acima"
+  ],
+  "warnings": [
+    "next.config.js: 'ignoreBuildErrors: true' pode mascarar erros importantes",
+    "TypeScript: 4053 erros encontrados (ignorados na config)",
+    "Build size: 540.77 MB - considere otimizar"
+  ],
+  "ready": false
+}
