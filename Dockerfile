@@ -211,7 +211,9 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/cypher-ordi/future-v3"
 
 # Runtime configuration
-VOLUME ["/app/logs", "/app/data"]
+# VOLUME removed for Railway compatibility - use Railway volumes instead
+# Create directories for potential volume mounting
+RUN mkdir -p /app/logs /app/data
 
 # Signal handling
 STOPSIGNAL SIGTERM
