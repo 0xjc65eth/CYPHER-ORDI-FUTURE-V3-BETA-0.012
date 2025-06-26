@@ -1,16 +1,20 @@
 # Railway-optimized Dockerfile for CYPHER ORDi Future V3
-# Simplified for Railway deployment
+# Simplified for Railway deployment with optional dependency handling
 
 FROM node:18-alpine
+
+# Install necessary build tools for optional native modules
+RUN apk add --no-cache python3 make g++ linux-headers
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and npm config
 COPY package*.json ./
+COPY .npmrc ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies without optional packages to avoid USB compilation issues
+RUN npm ci --omit=optional --only=production
 
 # Copy source code (excluding non-existent files)
 COPY src/ ./src/

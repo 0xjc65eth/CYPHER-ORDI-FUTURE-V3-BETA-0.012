@@ -22,12 +22,13 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and npm config
 COPY package*.json ./
+COPY .npmrc ./
 COPY tsconfig.json ./
 
 # Install dependencies (ignore optional dependencies that require native compilation)
-RUN npm ci --only=production --ignore-optional && npm cache clean --force
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
 COPY src/ ./src/
