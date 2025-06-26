@@ -29,7 +29,7 @@ export function useRealTimePrice(symbols: string[]) {
       try {
         // Use request deduplicator to prevent duplicate API calls
         const data = await requestDeduplicator.dedupe(requestKey, async () => {
-          const response = await fetch(`/api/coinmarketcap?symbols=${symbolsParam}`, {
+          const response = await fetch(`/api/realtime-prices?symbols=${symbolsParam}`, {
             signal: abortController.signal // Cancel request if component unmounts
           });
           
@@ -43,18 +43,18 @@ export function useRealTimePrice(symbols: string[]) {
         // Only update state if component is still mounted
         if (!isMounted) return;
         
-        if (data.success && data.data?.current) {
+        if (data.success && data.data) {
           const formattedPrices: Record<string, PriceData> = {};
 
           symbols.forEach(symbol => {
-            if (data.data.current[symbol]) {
+            if (data.data[symbol]) {
               formattedPrices[symbol] = {
                 symbol,
-                price: data.data.current[symbol].price,
-                change24h: data.data.current[symbol].change24h,
-                volume24h: data.data.current[symbol].volume24h,
-                marketCap: data.data.current[symbol].marketCap,
-                lastUpdate: new Date()
+                price: data.data[symbol].price,
+                change24h: data.data[symbol].change24h,
+                volume24h: data.data[symbol].volume24h,
+                marketCap: data.data[symbol].marketCap,
+                lastUpdate: new Date(data.data[symbol].lastUpdated)
               };
             }
           });

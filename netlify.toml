@@ -1,5 +1,5 @@
 [build]
-  publish = ".next"
+  publish = "out"
   command = "npm run build"
 
 [build.environment]
@@ -37,13 +37,7 @@
   force = true
   headers = {X-From = "Netlify"}
 
-# Next.js API routes
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/___netlify-handler"
-  status = 200
-
-# Redirect all other requests to Next.js
+# Redirect all other requests to Next.js static export
 [[redirects]]
   from = "/*"
   to = "/index.html"

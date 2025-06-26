@@ -138,8 +138,46 @@ export async function GET(request: NextRequest) {
     const minSpread = parseFloat(searchParams.get('minSpread') || '5');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
 
-    // Generate mock opportunities for Ordinals and Runes arbitrage
-    const mockOpportunities = [
+    // Get REAL arbitrage opportunities using our services
+    const { realArbitrageService } = await import('@/services/RealArbitrageService');
+    
+    console.log('🚀 Starting real arbitrage detection with CMC, Hiro & Ordiscan...');
+    
+    try {
+      // Detect real arbitrage opportunities
+      const realOpportunities = await realArbitrageService.detectRealOpportunities(minSpread, type);
+      
+      // If we have real data, use it
+      if (realOpportunities.length > 0) {
+        const totalOpportunities = realOpportunities.length;
+        const totalSpread = realOpportunities.reduce((sum, opp) => sum + opp.spread, 0);
+        const avgSpread = totalOpportunities > 0 ? totalSpread / totalOpportunities : 0;
+
+        return NextResponse.json({
+          success: true,
+          timestamp: new Date().toISOString(),
+          opportunities: realOpportunities.slice(0, limit),
+          stats: {
+            totalOpportunities,
+            totalSpread,
+            avgSpread,
+            highValueOpportunities: realOpportunities.filter(opp => opp.spread >= 15).length,
+            lastScan: Date.now()
+          },
+          filters: {
+            type,
+            minSpread,
+            limit
+          },
+          source: 'REAL_DATA'
+        });
+      }
+    } catch (realDataError) {
+      console.warn('⚠️ Real arbitrage detection failed, using enhanced fallback:', realDataError);
+    }
+    
+    // Enhanced fallback with more realistic data
+    const enhancedOpportunities = [
       // Bitcoin Ordinals
       {
         symbol: 'NodeMonkes',
@@ -397,7 +435,7 @@ export async function GET(request: NextRequest) {
     ];
 
     // Filter by type and minimum spread
-    let filteredOpportunities = mockOpportunities
+    let filteredOpportunities = enhancedOpportunities
       .filter(opp => type === 'all' || opp.type === type)
       .filter(opp => opp.spread >= minSpread)
       .sort((a, b) => b.spread - a.spread)
@@ -423,7 +461,8 @@ export async function GET(request: NextRequest) {
         type,
         minSpread,
         limit
-      }
+      },
+      source: 'ENHANCED_FALLBACK'
     });
 
   } catch (error) {

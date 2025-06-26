@@ -16,6 +16,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { ConditionalNavigation } from '@/components/navigation/ConditionalNavigation'
+import { ClientScriptLoader } from '@/components/ClientScriptLoader'
 import { DEFAULT_META } from '@/lib/constants/routes'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -97,15 +98,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* CRITICAL: Ultimate Wallet Protection Script - Must be first */}
-        <script src="/ultimate-wallet-protection.js"></script>
-        
-        {/* Chunk Error Handler */}
-        <script src="/chunk-error-handler.js"></script>
-        
-        {/* Error Tracking for Debug */}
-        <script src="/error-tracker.js"></script>
-        
         {/* Critical Performance Optimizations */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -136,24 +128,11 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/splash/ipadpro1_splash.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" />
         <link rel="apple-touch-startup-image" href="/splash/ipadpro3_splash.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" />
         
-        {/* Wallet Conflict Resolver */}
-        <script src="/wallet-conflict-resolver.js" async></script>
-        <script src="/wallet-conflict-suppressor.js" async></script>
-        
-        {/* Console Logger for Debugging */}
-        <script src="/console-logger.js" async></script>
-        
-        {/* Navigation Debug Script */}
-        <script src="/navigation-debug.js" async></script>
-        
-        {/* DEBUG CSS PARA TABS - TEMPORARIAMENTE DESABILITADO */}
-        {/* <link rel="stylesheet" href="/debug-tabs.css" /> */}
-        
-        {/* Performance Scripts */}
+        {/* Theme Script - Critical for preventing FOUC */}
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
-              // Prevent FOUC
               try {
                 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                   document.documentElement.classList.add('dark')
@@ -161,25 +140,12 @@ export default function RootLayout({
                   document.documentElement.classList.remove('dark')
                 }
               } catch (_) {}
-              
-              // Navigation Debug
-              window.addEventListener('load', function() {
-                console.log('🔧 Debug: Page loaded, checking navigation...');
-                setTimeout(() => {
-                  const navLinks = document.querySelectorAll('nav a');
-                  console.log('🔍 Found navigation links:', navLinks.length);
-                  
-                  navLinks.forEach((link, index) => {
-                    const rect = link.getBoundingClientRect();
-                    console.log('Link', index, ':', link.href, 'Visible:', rect.width > 0 && rect.height > 0);
-                  });
-                }, 1000);
-              });
             `,
           }}
         />
       </head>
       <body className={`${inter.className} bg-black text-white antialiased`} suppressHydrationWarning>
+        <ClientScriptLoader />
         <Providers>
           <ConditionalNavigation>
             {children}

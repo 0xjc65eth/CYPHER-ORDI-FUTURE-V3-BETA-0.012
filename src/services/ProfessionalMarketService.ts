@@ -275,12 +275,12 @@ export class ProfessionalMarketService {
   // Helper methods for real data calculation
   private async getCurrentPrice(symbol: string): Promise<number> {
     try {
-      // Use our CMC API route instead of direct CoinGecko
-      const response = await fetch(`/api/coinmarketcap?symbols=${symbol}`);
+      // Use our enhanced real-time prices API
+      const response = await fetch(`/api/realtime-prices?symbols=${symbol}`);
       const data = await response.json();
       
-      if (data.success && data.data?.current?.[symbol]) {
-        const priceData = data.data.current[symbol];
+      if (data.success && data.data?.[symbol]) {
+        const priceData = data.data[symbol];
         
         // Update cache with all data
         if (this.priceCache) {
@@ -292,6 +292,7 @@ export class ProfessionalMarketService {
             timestamp: Date.now()
           });
         }
+        console.log(`📈 Real-time price for ${symbol}: $${priceData.price}`);
         return priceData.price;
       }
     } catch (error) {
