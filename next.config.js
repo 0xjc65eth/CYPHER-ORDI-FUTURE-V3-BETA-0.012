@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
+// Fix for "self is not defined" error
+require('./global-shim');
+
 // Bundle analyzer removed to fix deployment issue
 // const withBundleAnalyzer = require('@next/bundle-analyzer')({
 //   enabled: process.env.ANALYZE === 'true',
@@ -77,6 +82,17 @@ const nextConfig = {
         path: false,
         buffer: false,
       };
+    }
+
+    // Fix for "self is not defined" error in SSR
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+
+    // Prevent SSR issues with browser-only packages
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'canvas', 'jsdom'];
     }
 
     // Optimized module rules for Next.js 15
