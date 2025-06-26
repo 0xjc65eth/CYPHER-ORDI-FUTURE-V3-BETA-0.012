@@ -10,6 +10,8 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import { NotificationContainer } from '@/components/notifications'
 import { NotificationSystemActivator } from '@/components/notifications/NotificationSystemActivator'
 import { AuthProvider } from '@/lib/auth/AuthContext'
+import { AuthProvider as AuthProviderStub } from '@/lib/auth/AuthContextStub'
+import { isSupabaseConfigured } from '@/lib/auth/supabase'
 import { WalletProvider } from '@/contexts/WalletContext'
 // Temporarily use simple provider to avoid BigInt issues
 import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/SimpleLaserEyesProvider'
@@ -104,14 +106,17 @@ function SafeQueryProvider({ children }: { children: React.ReactNode }) {
 }
 
 function SafeAuthProvider({ children }: { children: React.ReactNode }) {
+  // Use stub provider if Supabase is not configured
+  const Provider = isSupabaseConfigured() ? AuthProvider : AuthProviderStub;
+  
   return (
     <ErrorBoundary
       FallbackComponent={ErrorFallback}
       onError={(error) => console.error('Auth Provider Error:', error)}
     >
-      <AuthProvider>
+      <Provider>
         {children}
-      </AuthProvider>
+      </Provider>
     </ErrorBoundary>
   )
 }

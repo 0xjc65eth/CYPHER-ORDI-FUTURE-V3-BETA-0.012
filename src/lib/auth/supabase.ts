@@ -10,7 +10,10 @@ import { devLogger } from '@/lib/logger';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+// Export function to check if Supabase is configured
+export const isSupabaseConfigured = () => !!(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured()) {
   console.warn('⚠️ Supabase environment variables not configured - using development stub');
 }
 

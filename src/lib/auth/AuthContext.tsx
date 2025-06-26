@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, authHelpers, UserProfile } from '@/lib/auth/supabase';
+import { supabase, authHelpers, UserProfile, isSupabaseConfigured } from '@/lib/auth/supabase';
 import { useRouter } from 'next/navigation';
 import { devLogger } from '@/lib/logger';
 
