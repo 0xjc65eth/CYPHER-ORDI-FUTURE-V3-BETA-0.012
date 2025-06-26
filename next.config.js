@@ -84,40 +84,8 @@ const nextConfig = {
   compress: true,
   generateEtags: true,
   
-  async headers() {
-    return [
-      {
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, X-CMC_PRO_API_KEY, xi-api-key',
-          },
-        ],
-      },
-    ];
-  },
-  
-  async rewrites() {
-    return [
-      {
-        source: '/api/proxy/coinmarketcap/:path*',
-        destination: 'https://pro-api.coinmarketcap.com/:path*',
-      },
-      {
-        source: '/api/proxy/elevenlabs/:path*',
-        destination: 'https://api.elevenlabs.io/:path*',
-      },
-    ];
-  }
+  // Headers and rewrites removed for static export compatibility
+  // These will be handled by netlify.toml instead
 }
 
 module.exports = nextConfig
