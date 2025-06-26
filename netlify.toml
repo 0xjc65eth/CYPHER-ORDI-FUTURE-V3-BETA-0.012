@@ -22,7 +22,28 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Redirect all requests to Next.js
+# API Proxies for CORS handling
+[[redirects]]
+  from = "/api/mempool-direct/*"
+  to = "https://mempool.space/api/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
+
+[[redirects]]
+  from = "/api/coingecko-direct/*"
+  to = "https://api.coingecko.com/api/v3/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
+
+# Next.js API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/___netlify-handler"
+  status = 200
+
+# Redirect all other requests to Next.js
 [[redirects]]
   from = "/*"
   to = "/index.html"

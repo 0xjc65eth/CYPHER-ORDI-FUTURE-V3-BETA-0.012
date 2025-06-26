@@ -241,6 +241,11 @@ export class MempoolService {
    * Get the appropriate API base URL based on network
    */
   private getApiBaseUrl(): string {
+    // Use local proxy for CORS-free requests in production
+    if (typeof window !== 'undefined') {
+      return '/api/mempool';
+    }
+    
     const networkPath = this.config.network === 'mainnet' ? '' : `/${this.config.network}`;
     return `${this.config.baseUrl}${networkPath}/api`;
   }
@@ -304,40 +309,104 @@ export class MempoolService {
       throw new Error('Rate limit exceeded. Please wait before making more requests.');
     }
 
-    const url = `${this.getApiBaseUrl()}${endpoint}`;
+    // Use proxy for client-side requests
+    const isClientSide = typeof window !== 'undefined';
+    const url = isClientSide 
+      ? `/api/mempool?endpoint=${encodeURIComponent(endpoint)}`
+      : `${this.getApiBaseUrl()}${endpoint}`;
 
     try {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...(isClientSide ? {} : { 'User-Agent': 'CYPHER-ORDi-Future/3.0' }),
         },
+        mode: 'cors',
+        credentials: 'omit',
         signal: AbortSignal.timeout(this.config.timeout || 10000),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error(`Mempool API error: ${response.status} - ${errorText}`, { url, endpoint });
         throw new Error(`Mempool API error: ${response.status} - ${errorText}`);
       }
 
+      // Verificar se a resposta é realmente JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        logger.error('Invalid content type from Mempool API', { contentType, url, preview: text.substring(0, 200) });
+        throw new Error(`Invalid content type: ${contentType}. Expected JSON but got HTML/text.`);
+      }
+
       const data = await response.json();
+      
+      // Validar se os dados são válidos
+      if (data === null || data === undefined) {
+        logger.warn('Mempool API returned null/undefined data', { url, endpoint });
+        throw new Error('Invalid data received from Mempool API');
+      }
       
       // Cache successful response
       this.setCachedData(cacheKey, data, ttl);
       
       return data as T;
     } catch (error) {
-      logger.error(error instanceof Error ? error : new Error(String(error)), 'Mempool API request failed');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Mempool API request failed: ${errorMessage}`, { url, endpoint, error });
       
       // Try to return cached data if request fails
       const staleData = this.cache.get(cacheKey);
       if (staleData) {
-        logger.warn('Returning stale cached data due to API failure');
+        logger.warn('Returning stale cached data due to API failure', { endpoint, age: Date.now() - staleData.timestamp });
         return staleData.data as T;
       }
       
-      throw error;
+      // Return fallback data for critical endpoints
+      return this.getFallbackData<T>(endpoint);
     }
+  }
+
+  /**
+   * Get fallback data when API fails
+   */
+  private getFallbackData<T>(endpoint: string): T {
+    const fallbackData: Record<string, any> = {
+      '/mempool': {
+        count: 0,
+        vsize: 0,
+        total_fee: 0,
+        fee_histogram: []
+      },
+      '/v1/fees/recommended': {
+        fastestFee: 20,
+        halfHourFee: 15,
+        hourFee: 10,
+        economyFee: 5,
+        minimumFee: 1
+      },
+      '/mempool/fees': [],
+      '/v1/blocks': [],
+      '/v1/difficulty-adjustment': {
+        progressPercent: 0,
+        difficultyChange: 0,
+        estimatedRetargetDate: Date.now() + (14 * 24 * 60 * 60 * 1000),
+        remainingBlocks: 2016,
+        remainingTime: 14 * 24 * 60 * 60 * 1000
+      }
+    };
+
+    const fallback = fallbackData[endpoint];
+    if (fallback) {
+      logger.warn(`Using fallback data for endpoint: ${endpoint}`);
+      return fallback as T;
+    }
+
+    logger.error(`No fallback data available for endpoint: ${endpoint}`);
+    throw new Error(`Mempool API failed and no fallback data available for: ${endpoint}`);
   }
 
   /**
