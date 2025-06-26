@@ -8,13 +8,16 @@ LABEL maintainer="CYPHER ORDi Team <dev@cypher-ordi.com>"
 LABEL version="3.0.0"
 LABEL description="CYPHER ORDi Future V3 - Advanced Cryptocurrency Trading Platform"
 
-# Install build dependencies
+# Install build dependencies including Linux headers for native modules
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
     git \
-    curl
+    curl \
+    linux-headers \
+    libudev-zero-dev \
+    eudev-dev
 
 # Set working directory
 WORKDIR /app
@@ -23,8 +26,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies (ignore optional dependencies that require native compilation)
+RUN npm ci --only=production --ignore-optional && npm cache clean --force
 
 # Copy source code
 COPY src/ ./src/
