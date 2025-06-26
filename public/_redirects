@@ -1,0 +1,6 @@
+# Redirect all API calls to external services (if needed)
+/api/coinmarketcap/* https://pro-api.coinmarketcap.com/:splat 200
+/api/coingecko/* https://api.coingecko.com/api/v3/:splat 200
+
+# SPA fallback - must be last
+/* /index.html 200

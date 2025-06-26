@@ -6,6 +6,9 @@
 
 const nextConfig = {
   reactStrictMode: true,
+  // Static export for Netlify
+  output: 'export',
+  trailingSlash: true,
   images: {
     domains: ['ordinals.com', 'magiceden.io', 'api.coinmarketcap.com', 'api.ordiscan.com'],
     unoptimized: true,
