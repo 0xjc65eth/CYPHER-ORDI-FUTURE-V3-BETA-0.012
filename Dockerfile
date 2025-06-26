@@ -15,9 +15,7 @@ RUN apk add --no-cache \
     g++ \
     git \
     curl \
-    linux-headers \
-    libudev-zero-dev \
-    eudev-dev
+    linux-headers
 
 # Set working directory
 WORKDIR /app
