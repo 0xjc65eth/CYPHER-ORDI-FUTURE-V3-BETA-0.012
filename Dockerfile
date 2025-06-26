@@ -58,9 +58,9 @@ COPY --from=builder --chown=cypher:cypher /app/node_modules ./node_modules
 COPY --from=builder --chown=cypher:cypher /app/dist ./dist
 COPY --from=builder --chown=cypher:cypher /app/package*.json ./
 
-# Copy additional files
-COPY --chown=cypher:cypher README.md ./
-COPY --chown=cypher:cypher CLAUDE.md ./
+# Copy additional files - removed non-existent files for Railway deployment
+# COPY --chown=cypher:cypher README.md ./
+# COPY --chown=cypher:cypher CLAUDE.md ./
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/data /app/temp && \
