@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic'
 import { getFeeAddresses } from '@/lib/fees/feeAddresses';
+
 import { validateFeeAddresses, sanitizeInput } from '@/lib/fees/validation';
+
 
 // Rate limiting for addresses endpoint (lighter than calculation)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic'
 import { rateLimiter } from '@/lib/rateLimiter';
+
 import { blockchainEventService } from '@/services/BlockchainEventService';
+
 import { logger } from '@/lib/logger';
+
 
 interface ActivityItem {
   id: string;

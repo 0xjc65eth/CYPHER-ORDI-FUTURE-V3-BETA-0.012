@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 const HIRO_API_KEY = '3100ea7623797d267da3bd6dc94f47f9';
 const HIRO_BASE_URL = 'https://api.hiro.so/runes/v1';
 
