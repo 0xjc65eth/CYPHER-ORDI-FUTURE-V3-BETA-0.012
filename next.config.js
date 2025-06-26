@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',
+  // output: 'export', // Disabled for Vercel - enables API routes
   trailingSlash: true,
-  distDir: 'out',
   images: {
     domains: ['ordinals.com', 'magiceden.io', 'api.coinmarketcap.com', 'api.ordiscan.com'],
     unoptimized: true,
