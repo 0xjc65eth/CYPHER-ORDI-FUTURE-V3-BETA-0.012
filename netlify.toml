@@ -1,6 +1,7 @@
 [build]
   publish = "out"
-  command = "npm run build"
+  command = "npm run build && npm run export"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -9,9 +10,10 @@
   NEXT_TELEMETRY_DISABLED = "1"
   NODE_OPTIONS = "--max-old-space-size=8192"
 
-# Next.js plugin
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# Functions configuration
+[functions]
+  external_node_modules = ["axios"]
+  node_bundler = "esbuild"
 
 # Headers for security
 [[headers]]
@@ -22,7 +24,32 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# API Proxies for CORS handling
+# API Routes to Netlify Functions
+[[redirects]]
+  from = "/api/realtime-prices"
+  to = "/.netlify/functions/realtime-prices"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/arbitrage/opportunities"
+  to = "/.netlify/functions/arbitrage-opportunities"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/runes/*"
+  to = "/.netlify/functions/runes-data"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ordinals/*"
+  to = "/.netlify/functions/ordinals-data"
+  status = 200
+  force = true
+
+# External API Proxies for CORS handling
 [[redirects]]
   from = "/api/mempool-direct/*"
   to = "https://mempool.space/api/:splat"
@@ -37,7 +64,7 @@
   force = true
   headers = {X-From = "Netlify"}
 
-# Redirect all other requests to Next.js static export
+# SPA fallback - must be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
