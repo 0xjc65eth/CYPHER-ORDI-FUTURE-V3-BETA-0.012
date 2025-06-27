@@ -46,12 +46,29 @@ export function SimpleChart() {
     return () => clearInterval(interval);
   }, [selectedTimeframe]);
 
-  // Calculate price change
-  const priceChange = chartData.length >= 2 
+  // Calculate price change - with safety check
+  const priceChange = (chartData && chartData.length >= 2) 
     ? ((chartData[chartData.length - 1]?.price - chartData[0]?.price) / chartData[0]?.price) * 100
     : 0;
 
   const isPositive = priceChange >= 0;
+
+  // Safety check - render loading if no chart data
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Card className="bg-gray-900/50 backdrop-blur-sm border-gray-800 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Activity className="w-5 h-5 text-orange-500" />
+            <h3 className="text-xl font-semibold text-white">Bitcoin Price Chart</h3>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-400">Loading chart data...</div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-gray-900/50 backdrop-blur-sm border-gray-800 p-6">
