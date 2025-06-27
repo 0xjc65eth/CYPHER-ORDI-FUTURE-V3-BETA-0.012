@@ -1,8 +1,34 @@
 'use client';
 
 import React, { useState } from 'react';
-import { EnhancedChart } from '@/components/charts/EnhancedChart';
-import { SimpleChart } from '@/components/charts/SimpleChart';
+import dynamic from 'next/dynamic';
+
+// Dynamic imports to prevent SSR length errors on chart data
+const EnhancedChart = dynamic(
+  () => import('@/components/charts/EnhancedChart').then(mod => ({ default: mod.EnhancedChart })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-4"></div>
+        <div className="h-64 bg-gray-700 rounded"></div>
+      </div>
+    )
+  }
+);
+
+const SimpleChart = dynamic(
+  () => import('@/components/charts/SimpleChart').then(mod => ({ default: mod.SimpleChart })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-4"></div>
+        <div className="h-64 bg-gray-700 rounded"></div>
+      </div>
+    )
+  }
+);
 
 export default function TestChartPage() {
   const [chartType, setChartType] = useState<'enhanced' | 'simple'>('simple');
