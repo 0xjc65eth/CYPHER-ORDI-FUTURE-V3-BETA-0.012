@@ -9,7 +9,7 @@ import { store } from '@/store'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { NotificationContainer } from '@/components/notifications'
 // import { NotificationSystemActivator } from '@/components/notifications/NotificationSystemActivator'
-// import { AuthProvider } from '@/lib/auth/AuthContext'
+import { AuthProvider } from '@/lib/auth/AuthContext'
 import { WalletProvider } from '@/contexts/WalletContext'
 // Temporarily use simple provider to avoid BigInt issues
 import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/SimpleLaserEyesProvider'
@@ -98,9 +98,17 @@ function SafeQueryProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Simple Auth Provider stub for now
 function SafeAuthProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error) => console.error('Auth Provider Error:', error)}
+    >
+      <AuthProvider>
+        {children}
+      </AuthProvider>
+    </ErrorBoundary>
+  )
 }
 
 function SafeWalletProvider({ children }: { children: React.ReactNode }) {
