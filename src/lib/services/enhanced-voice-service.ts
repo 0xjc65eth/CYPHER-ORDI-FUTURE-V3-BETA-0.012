@@ -3,9 +3,18 @@ export class EnhancedVoiceService {
   private synthesis: SpeechSynthesis | null = null;
   private isListening: boolean = false;
   private language: string = 'pt-BR';
+  private isInitialized: boolean = false;
   
   constructor() {
-    if (typeof window !== 'undefined') {
+    // Defer initialization to avoid SSR issues
+    this.initializeAsync();
+  }
+
+  private async initializeAsync() {
+    // Only initialize in browser environment
+    if (typeof window === 'undefined') return;
+    
+    try {
       this.synthesis = window.speechSynthesis;
       
       // Configurar reconhecimento de voz
@@ -17,12 +26,16 @@ export class EnhancedVoiceService {
         this.recognition.lang = this.language;
         this.recognition.maxAlternatives = 3;
       }
+      
+      this.isInitialized = true;
+    } catch (error) {
+      console.warn('Voice services not available:', error);
     }
   }
   
   startListening(onResult: (text: string) => void, onError?: (error: any) => void): void {
-    if (!this.recognition) {
-      console.error('Reconhecimento de voz não suportado');
+    if (!this.isInitialized || !this.recognition) {
+      console.error('Reconhecimento de voz não suportado ou não inicializado');
       return;
     }
     
@@ -58,8 +71,8 @@ export class EnhancedVoiceService {
   
   speak(text: string, options?: { rate?: number; pitch?: number; voice?: string }): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.synthesis) {
-        reject(new Error('Síntese de voz não suportada'));
+      if (!this.isInitialized || !this.synthesis) {
+        reject(new Error('Síntese de voz não suportada ou não inicializada'));
         return;
       }
       
@@ -87,7 +100,7 @@ export class EnhancedVoiceService {
   }
   
   getVoices(): SpeechSynthesisVoice[] {
-    if (!this.synthesis) return [];
+    if (!this.isInitialized || !this.synthesis) return [];
     return this.synthesis.getVoices();
   }
   
@@ -99,7 +112,7 @@ export class EnhancedVoiceService {
   }
   
   isSupported(): boolean {
-    return !!(this.recognition && this.synthesis);
+    return this.isInitialized && !!(this.recognition && this.synthesis);
   }
 }
 

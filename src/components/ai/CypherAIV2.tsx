@@ -140,6 +140,9 @@ const CypherAIV2: React.FC = () => {
 
   // Inicializar CYPHER AI
   useEffect(() => {
+    // Skip initialization during SSR
+    if (typeof window === 'undefined') return;
+    
     const initAI = async () => {
       try {
         cypherAI.current = new CypherAI({

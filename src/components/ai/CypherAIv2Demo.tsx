@@ -24,7 +24,13 @@ import {
 const CypherAIv2Demo: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [showInsights, setShowInsights] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Handle SSR hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   const {
     // States
@@ -120,7 +126,7 @@ const CypherAIv2Demo: React.FC = () => {
     }
   };
 
-  if (!isInitialized) {
+  if (!isMounted || !isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center">

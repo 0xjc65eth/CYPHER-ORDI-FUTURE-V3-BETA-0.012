@@ -20,9 +20,50 @@ import {
   Coins,
   ArrowRight
 } from 'lucide-react';
-import EnhancedQuickTrade from '@/components/quick-trade/EnhancedQuickTrade';
-import MultiChainWallet from '@/components/wallet/MultiChainWallet';
-import MultiChainWalletButton from '@/components/wallet/MultiChainWalletButton';
+import dynamic from 'next/dynamic';
+
+// Carrega componentes com AppKit dinamicamente, apenas no cliente
+const EnhancedQuickTrade = dynamic(
+  () => import('@/components/quick-trade/EnhancedQuickTrade'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-6 bg-white rounded-lg shadow-sm border">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+);
+
+const MultiChainWallet = dynamic(
+  () => import('@/components/wallet/MultiChainWallet'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-6 bg-white rounded-lg shadow-sm border">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+);
+
+const MultiChainWalletButton = dynamic(
+  () => import('@/components/wallet/MultiChainWalletButton'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-4 bg-gray-100 rounded-lg">
+        <div className="w-32 h-10 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    )
+  }
+);
 
 const MultiWalletDemoPage: React.FC = () => {
   return (

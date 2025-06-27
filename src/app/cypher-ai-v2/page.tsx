@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import CypherAIV2 from '@/components/ai/CypherAIV2';
+import CypherAIV2 from '@/components/ai/CypherAIV2Client';
 import { motion } from 'framer-motion';
 import { Sparkles, Brain, Mic, BarChart3, Shield, Zap } from 'lucide-react';
 

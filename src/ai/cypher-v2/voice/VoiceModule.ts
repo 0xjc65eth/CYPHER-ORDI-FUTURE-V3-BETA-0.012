@@ -33,10 +33,14 @@ export class VoiceModule extends EventEmitter {
 
   async initialize(): Promise<void> {
     try {
-      // Initialize Web Speech API
-      if (typeof window !== 'undefined') {
-        this.initWebSpeechAPI();
+      // Only initialize in browser environment
+      if (typeof window === 'undefined') {
+        console.warn('VoiceModule: Skipping initialization in SSR environment');
+        return;
       }
+      
+      // Initialize Web Speech API
+      this.initWebSpeechAPI();
       
       // Initialize audio context for amplitude detection
       await this.initAudioContext();
@@ -44,7 +48,8 @@ export class VoiceModule extends EventEmitter {
       this.emit('initialized');
     } catch (error) {
       console.error('Erro ao inicializar VoiceModule:', error);
-      throw error;
+      // Don't throw error to prevent SSR failures
+      console.warn('VoiceModule: Continuing without voice capabilities');
     }
   }
 

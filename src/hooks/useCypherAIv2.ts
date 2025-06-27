@@ -147,6 +147,9 @@ export function useCypherAIv2(config?: Partial<CypherAIConfig>): UseCypherAIv2Re
 
   // Initialize CYPHER AI v2
   useEffect(() => {
+    // Skip initialization during SSR
+    if (typeof window === 'undefined') return;
+    
     const initializeAI = async () => {
       try {
         console.log('🚀 Inicializando CYPHER AI v2...');
