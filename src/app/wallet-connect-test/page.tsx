@@ -1,7 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import WalletConnectButton from '../../components/dashboard/WalletConnectButton';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to prevent SSR window undefined errors on BitcoinWalletConnect
+const WalletConnectButton = dynamic(
+  () => import('../../components/dashboard/WalletConnectButton'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-lg p-6 animate-pulse">
+        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+        <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+      </div>
+    )
+  }
+);
 
 export default function WalletConnectTestPage() {
   const [walletData, setWalletData] = useState(null);
