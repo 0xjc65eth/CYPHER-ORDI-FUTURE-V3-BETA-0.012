@@ -1,4 +1,19 @@
-import SimpleTest from '@/components/charts/SimpleTest'
+'use client';
+
+import dynamic from 'next/dynamic';
+
+// Carrega SimpleTest dinamicamente, apenas no cliente
+const SimpleTest = dynamic(
+  () => import('@/components/charts/SimpleTest'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando teste de gráfico...</div>
+      </div>
+    ),
+  }
+);
 
 export default function ChartTestPage() {
   return (

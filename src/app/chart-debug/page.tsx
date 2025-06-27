@@ -1,9 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UniversalChart } from '@/components/charts/UniversalChart';
+import dynamic from 'next/dynamic';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
+// Carrega o UniversalChart dinamicamente, apenas no cliente
+const UniversalChart = dynamic(
+  () => import('@/components/charts/UniversalChart').then(mod => ({ default: mod.UniversalChart })),
+  {
+    ssr: false, // CRUCIAL: Desabilita SSR para evitar erros de renderização
+    loading: () => (
+      <div className="w-full h-64 bg-gray-800 rounded-lg flex items-center justify-center">
+        <div className="text-gray-400">Carregando gráfico...</div>
+      </div>
+    ),
+  }
+);
 
 export default function ChartDebugPage() {
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
