@@ -1,10 +1,48 @@
 'use client';
 
 import React from 'react';
-import QuickTradeInterface from '@/components/quick-trade/QuickTradeInterface';
-import { QuickTradePanel } from '@/components/trading/QuickTradePanel';
-import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
+import dynamic from 'next/dynamic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Dynamic imports with SSR disabled to prevent initializeHealthChecks errors
+const QuickTradeInterface = dynamic(
+  () => import('@/components/quick-trade/QuickTradeInterface'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-4"></div>
+        <div className="h-32 bg-gray-700 rounded"></div>
+      </div>
+    )
+  }
+);
+
+const QuickTradePanel = dynamic(
+  () => import('@/components/trading/QuickTradePanel').then(mod => ({ default: mod.QuickTradePanel })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-4"></div>
+        <div className="h-32 bg-gray-700 rounded"></div>
+      </div>
+    )
+  }
+);
+
+const RevenueDashboard = dynamic(
+  () => import('@/components/admin/RevenueDashboard').then(mod => ({ default: mod.RevenueDashboard })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-4"></div>
+        <div className="h-32 bg-gray-700 rounded"></div>
+      </div>
+    )
+  }
+);
 
 export default function QuickTradePage() {
   return (
