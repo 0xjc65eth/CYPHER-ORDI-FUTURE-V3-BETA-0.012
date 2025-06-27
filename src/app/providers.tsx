@@ -8,8 +8,8 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { store } from '@/store'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { NotificationContainer } from '@/components/notifications'
-import { NotificationSystemActivator } from '@/components/notifications/NotificationSystemActivator'
-import { AuthProvider } from '@/lib/auth/AuthContext'
+// import { NotificationSystemActivator } from '@/components/notifications/NotificationSystemActivator'
+// import { AuthProvider } from '@/lib/auth/AuthContext'
 import { WalletProvider } from '@/contexts/WalletContext'
 // Temporarily use simple provider to avoid BigInt issues
 import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/SimpleLaserEyesProvider'
@@ -17,6 +17,7 @@ import { LaserEyesProvider as LaserEyesWalletProvider } from '@/providers/Simple
 // import { LaserEyesSafeWrapper } from '@/components/LaserEyesSafeWrapper'
 import { AudioManager } from '@/components/notifications/AudioManager'
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration'
+import { PremiumProvider } from '@/contexts/PremiumContext'
 
 // Error fallback component
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
@@ -97,17 +98,9 @@ function SafeQueryProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Simple Auth Provider stub for now
 function SafeAuthProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onError={(error) => console.error('Auth Provider Error:', error)}
-    >
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </ErrorBoundary>
-  )
+  return <>{children}</>
 }
 
 function SafeWalletProvider({ children }: { children: React.ReactNode }) {
@@ -138,6 +131,19 @@ function SafeNotificationProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+function SafePremiumProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error) => console.error('Premium Provider Error:', error)}
+    >
+      <PremiumProvider>
+        {children}
+      </PremiumProvider>
+    </ErrorBoundary>
+  )
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   // Apply wallet provider patches on mount
   useEffect(() => {
@@ -154,11 +160,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <SafeQueryProvider>
             <SafeAuthProvider>
               <SafeWalletProvider>
-                <SafeNotificationProvider>
-                  <ServiceWorkerRegistration />
-                  {children}
-                  <NotificationContainer />
-                </SafeNotificationProvider>
+                <SafePremiumProvider>
+                  <SafeNotificationProvider>
+                    <ServiceWorkerRegistration />
+                    {children}
+                    <NotificationContainer />
+                  </SafeNotificationProvider>
+                </SafePremiumProvider>
               </SafeWalletProvider>
             </SafeAuthProvider>
           </SafeQueryProvider>
