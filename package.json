@@ -13,7 +13,7 @@
     "build": "next build",
     "export": "next export",
     "build:export": "next build && next export",
-    "build:netlify": "next build && next export",
+    "build:netlify": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

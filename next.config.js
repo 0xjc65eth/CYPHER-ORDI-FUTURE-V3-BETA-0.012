@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // output: 'export', // Disabled for Vercel - enables API routes
+  output: 'export', // Modern static export for Netlify
   trailingSlash: true,
   images: {
     domains: ['ordinals.com', 'magiceden.io', 'api.coinmarketcap.com', 'api.ordiscan.com'],
