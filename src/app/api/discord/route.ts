@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'; // A LINHA DA VITÓRIA!
+
 export async function POST(request: NextRequest) {
   try {
     const { serverId, channelId, message } = await request.json();
