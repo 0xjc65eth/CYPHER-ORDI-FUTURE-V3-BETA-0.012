@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 // Removed: NotificationBell and UserMenu components
 import { BitcoinPriceDisplay } from '@/components/bitcoin/BitcoinPriceDisplay'
-import WalletButton from '@/components/wallet/WalletButton'
+import { ClientOnlyWalletButton } from '@/components/wallet/ClientOnlyWalletButton'
 import { cn } from '@/lib/utils'
 
 // Professional navigation structure
@@ -311,7 +311,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-3">
             <PWAStatus />
             <div className="h-5 w-px bg-gray-800" />
-            <WalletButton />
+            <ClientOnlyWalletButton />
           </div>
         </header>
 
